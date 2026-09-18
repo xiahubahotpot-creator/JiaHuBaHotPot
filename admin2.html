@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 管理後台 V4 (清爽手動版)</title>
+    <title>呷呼霸 - 管理後台 V5 (旗艦版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -33,11 +33,8 @@
         
         h3 { color: var(--text-main); border-left: 5px solid var(--primary); padding-left: 15px; margin-top: 0; font-size: 20px;}
         
-        /* ============== 排班表寬度加寬 ============== */
         .table-responsive { width: 100%; max-height: 65vh; overflow: auto; background: white; border-radius: 10px; border: 1px solid var(--border); box-shadow: inset 0 0 5px rgba(0,0,0,0.02); }
-        /* 增加整個表格的最少寬度，避免格子被壓縮 */
         table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1800px; }
-        /* td, th 的 min-width 增加到 85px 保證放得下 10:30-14:30 */
         th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 10px 4px; text-align: center; vertical-align: middle; min-width: 85px; }
         
         th { background: #f8f9fa; color: var(--text-sub); font-size: 13px; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
@@ -48,19 +45,18 @@
         tr:hover td { background-color: #fdfdfd; }
         tr:hover td:first-child { background-color: white; }
 
-        /* 輸入框放寬，文字左右留白 */
         .shift-input { width: 100%; min-width: 80px; height: 38px; font-size: 13px; font-weight: bold; color: #333; text-align: center; border: 1px solid #ccc; border-radius: 6px; outline: none; transition: 0.2s; box-sizing: border-box; background: #fff;}
         .shift-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
         .btn-off { font-size: 12px; margin-top: 5px; background: #f1f3f4; color: #5f6368; border: none; border-radius: 6px; cursor: pointer; width: 100%; padding: 6px 0; font-weight: bold; transition: 0.2s;}
         .btn-off:hover { background: #e0e0e0; color: #000; }
-        /* =========================================== */
 
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 15px; }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-primary { background: #1a73e8; color: white; }
         .btn-danger { background: var(--primary); color: white; }
         .btn-success { background: #0f9d58; color: white; }
-        .btn-warning { background: #f4b400; color: #fff; }
+        .btn-warning { background: #f4b400; color: #fff; border: 1px solid #d39e00;}
+        .btn-info { background: #17a2b8; color: #fff; }
         
         input[type="text"], input[type="password"], input[type="month"], select, input[type="number"], input[type="date"] { 
             padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; width: 100%; box-sizing: border-box; transition: 0.2s;
@@ -106,9 +102,13 @@
 
         <!-- 1. 排班管理 -->
         <div id="viewSchedule" class="view-section active">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                 <h3>門市排班管理</h3>
-                <button class="btn btn-success" style="padding: 12px 24px;" onclick="saveSchedule()">💾 儲存並驗證班表</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-warning" onclick="copyLastMonth()"><span style="font-size: 16px;">🔄</span> 複製上月班表</button>
+                    <button class="btn btn-info" onclick="exportCSV()"><span style="font-size: 16px;">📥</span> 匯出 Excel (CSV)</button>
+                    <button class="btn btn-success" onclick="saveSchedule()"><span style="font-size: 16px;">💾</span> 儲存並驗證班表</button>
+                </div>
             </div>
             
             <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: flex; gap: 30px; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
@@ -132,7 +132,10 @@
                 </div>
             </div>
             <div style="font-size: 14px; color: #0056b3; background: #e6f2ff; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b3d7ff;">
-                💡 <b>排班操作提示：</b>可直接在格子內自由輸入時間區段（如：10:30-14:30）。點擊「休」即可快速排休。系統將自動隱藏不存在的日期（如 9月31日）。
+                💡 <b>排班操作提示：</b><br>
+                1. 點擊「複製上月班表」可快速帶入上個月的資料。<br>
+                2. 點擊「匯出 Excel」可將排好的班表下載至電腦列印。<br>
+                3. 可直接在格子內自由輸入時間區段（如：10:30-14:30）。點擊「休」即可快速排休。
             </div>
             
             <div class="table-responsive">
@@ -155,7 +158,7 @@
                     </select>
                 </div>
                 <div>
-                    <button class="btn btn-warning" onclick="clearForm()">➕ 建立新員工 / 清空表單</button>
+                    <button class="btn btn-warning" onclick="clearForm()" style="color:#000;">➕ 建立新員工 / 清空表單</button>
                 </div>
             </div>
 
@@ -350,7 +353,18 @@
 
             displayEmps.forEach(emp => {
                 let name = emp[0];
-                let mySched = globalData.schedule.find(s => s[0] === month && s[2] === name);
+                let mySched = globalData.schedule.find(s => {
+                    // 防禦 Google 表單日期自動轉換
+                    let rMonth = String(s[0]);
+                    if (rMonth.includes("GMT") || rMonth.includes("T")) {
+                         let dateObj = new Date(s[0]);
+                         rMonth = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}`;
+                    } else if (rMonth.includes("/")) {
+                         let parts = rMonth.split('/');
+                         if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
+                    }
+                    return rMonth === month && s[2] === name;
+                });
                 
                 body += `<tr><td>${name}</td>`;
                 for(let i=1; i<=daysInMonth; i++) {
@@ -359,9 +373,24 @@
                     let bgClass = isWeekend ? ' class="weekend-col"' : '';
                     
                     let val = mySched ? mySched[2+i] : "";
+
+                    // 防禦時間亂碼
+                    if (val && String(val).includes('T') && String(val).includes('Z')) {
+                        let parsedDate = new Date(val);
+                        if (!isNaN(parsedDate.getTime())) {
+                            let yr = parsedDate.getFullYear();
+                            if (yr < 2000) {
+                                let hh = String(parsedDate.getHours()).padStart(2, '0');
+                                let mmm = String(parsedDate.getMinutes()).padStart(2, '0');
+                                val = hh + ':' + mmm;
+                            } else {
+                                val = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
+                            }
+                        }
+                    }
+
                     let isOff = (val === '休' || val === '排休');
                     
-                    // 已移除 list="shift-options"
                     body += `<td${bgClass}>
                         <input type="text" class="shift-input" placeholder="時間" value="${isOff ? '休' : val}">
                         <button class="btn-off" onclick="this.previousElementSibling.value='休'">休</button>
@@ -399,6 +428,132 @@
                 if(res.status === 'success') { Swal.fire('成功', res.msg, 'success'); } 
                 else { Swal.fire('阻擋', res.msg, 'error'); }
             } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
+        }
+
+        // ================= 新增：複製上月班表功能 =================
+        function copyLastMonth() {
+            const currentMonthVal = document.getElementById('schedMonth').value;
+            if(!currentMonthVal) return;
+
+            let [yy, mm] = currentMonthVal.split('-');
+            let d = new Date(yy, parseInt(mm) - 1 - 1, 1); 
+            let lastMonthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            let store = document.getElementById('schedStore').value;
+
+            let hasData = globalData.schedule.some(s => {
+                let rMonth = String(s[0]);
+                if (rMonth.includes("GMT") || rMonth.includes("T")) {
+                     let dateObj = new Date(s[0]);
+                     rMonth = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}`;
+                } else if (rMonth.includes("/")) {
+                     let parts = rMonth.split('/');
+                     if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
+                }
+                return rMonth === lastMonthStr && s[1] === store;
+            });
+
+            if (!hasData) {
+                return Swal.fire('提示', `找不到該門市 ${lastMonthStr} 的排班資料可供複製！`, 'info');
+            }
+
+            Swal.fire({
+                title: '確認套用？',
+                text: `確定要將【${lastMonthStr}】的排班紀錄複製到【${currentMonthVal}】嗎？這將覆蓋您目前畫面上輸入的內容。`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f4b400',
+                confirmButtonText: '確定複製'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    applyLastMonthData(lastMonthStr);
+                }
+            });
+        }
+
+        function applyLastMonthData(lastMonthStr) {
+            let rows = document.querySelectorAll('#schedBody tr');
+            rows.forEach(tr => {
+                let nameTd = tr.querySelector('td');
+                if(nameTd && !nameTd.innerText.includes("該門市尚無員工資料")) {
+                    let empName = nameTd.innerText;
+                    
+                    let lastMonthSched = globalData.schedule.find(s => {
+                        let rMonth = String(s[0]);
+                        if (rMonth.includes("GMT") || rMonth.includes("T")) {
+                             let dateObj = new Date(s[0]);
+                             rMonth = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}`;
+                        } else if (rMonth.includes("/")) {
+                             let parts = rMonth.split('/');
+                             if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
+                        }
+                        return rMonth === lastMonthStr && s[2] === empName;
+                    });
+                    
+                    let inputs = tr.querySelectorAll('.shift-input');
+                    inputs.forEach((inp, idx) => {
+                        let dayNumber = idx + 1;
+                        if (lastMonthSched && (2 + dayNumber) < lastMonthSched.length) {
+                            let val = lastMonthSched[2 + dayNumber];
+                            
+                            // 防禦亂碼
+                            if (val && String(val).includes('T') && String(val).includes('Z')) {
+                                let parsedDate = new Date(val);
+                                if (!isNaN(parsedDate.getTime())) {
+                                    let yr = parsedDate.getFullYear();
+                                    if (yr < 2000) {
+                                        let hh = String(parsedDate.getHours()).padStart(2, '0');
+                                        let mmm = String(parsedDate.getMinutes()).padStart(2, '0');
+                                        val = hh + ':' + mmm;
+                                    } else {
+                                        val = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
+                                    }
+                                }
+                            }
+                            inp.value = val ? val : "休";
+                        } else {
+                            inp.value = "休";
+                        }
+                    });
+                }
+            });
+            Swal.fire('已套用', '已將上月班表填入格子中，請確認無誤後點擊「儲存並驗證班表」。', 'success');
+        }
+
+        // ================= 新增：匯出 Excel (CSV) =================
+        function exportCSV() {
+            const month = document.getElementById('schedMonth').value;
+            const store = document.getElementById('schedStore').value;
+            if(!month) return;
+
+            let csvContent = "\uFEFF"; // 確保 Excel 打開不會中文亂碼
+            let rows = document.querySelectorAll('#schedTable tr');
+            
+            rows.forEach(row => {
+                let rowData = [];
+                let cols = row.querySelectorAll('th, td');
+                cols.forEach(col => {
+                    let input = col.querySelector('input');
+                    let text = "";
+                    if (input) {
+                        text = input.value || '休';
+                    } else {
+                        // 清除表頭的換行符號
+                        text = col.innerText.replace(/\n/g, ' ');
+                    }
+                    rowData.push(`"${text}"`); // 用引號包覆避免逗號干擾
+                });
+                csvContent += rowData.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${store}_${month}_排班表.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function updateEmpDropdown() {
@@ -559,7 +714,7 @@
                 let payslipHTML = `
                     <div class="payslip">
                         <div style="display:flex; justify-content:space-between; border-bottom: 2px solid #333; padding-bottom:8px; margin-bottom:15px;">
-                            <h3 style="margin:0; color:#d93025; font-size:18px; border:none; padding:0;">呷呼霸 員工薪薪單</h3>
+                            <h3 style="margin:0; color:#d93025; font-size:18px; border:none; padding:0;">呷呼霸 員工薪資單</h3>
                             <span style="font-weight:bold; color:#555;">${targetMonth}</span>
                         </div>
                         <div style="font-size:14px; line-height:1.8;">
