@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>呷呼霸 - 員工專屬 App</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { 
+            --primary: #d93025; 
+            --primary-light: #fce8e6;
+            --bg: #f4f7f6; 
+            --text-main: #202124; 
+            --text-sub: #5f6368;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); margin: 0; padding: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+        
+        .app-container { width: 100%; max-width: 480px; height: 100%; background: var(--bg); position: relative; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;}
+        
+        #loginScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 30px; background: white; z-index: 100; position: absolute; width: 100%; transition: 0.3s;}
+        .logo-area { text-align: center; margin-bottom: 40px; }
+        .logo-area h1 { color: var(--primary); font-size: 32px; margin: 0; font-weight: 900; letter-spacing: 2px;}
+        .logo-area p { color: var(--text-sub); font-size: 15px; margin-top: 8px; font-weight: bold;}
+        .login-input { width: 100%; padding: 16px; margin-bottom: 20px; border: 1px solid #dadce0; border-radius: 12px; font-size: 16px; outline: none; transition: 0.2s; background: var(--bg); }
+        .login-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px var(--primary-light); }
+        .btn-login { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(217,48,37,0.3); }
+
+        #mainScreen { display: none; flex-direction: column; height: 100%; padding-bottom: 70px; }
+        .header-bg { background: linear-gradient(135deg, #ffffff 0%, #fce8e6 100%); padding: 30px 20px 20px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10;}
+        .app-title { font-weight: 900; color: var(--primary); font-size: 20px; margin-bottom: 10px;}
+        .greeting h2 { font-size: 24px; color: var(--text-main); margin: 0 0 5px 0; font-weight: 800;}
+        .greeting p { font-size: 14px; color: var(--text-sub); margin: 0; font-weight: bold;}
+        .store-badge { display: inline-block; background: var(--primary); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-top: 5px; }
+
+        .view-section { display: none; flex: 1; flex-direction: column; padding: 20px; overflow-y: auto;}
+        .view-section.active { display: flex; }
+        .section-title { font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 10px;}
+
+        .punch-btn-wrapper { position: relative; width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; margin: 40px auto 20px auto;}
+        .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--primary); animation: pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+        .pulse-ring:nth-child(2) { animation-delay: 0.6s; }
+        .punch-btn { width: 140px; height: 140px; background: linear-gradient(135deg, #d93025 0%, #ff6b6b 100%); border-radius: 50%; box-shadow: 0 10px 25px rgba(217,48,37,0.4); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; cursor: pointer; z-index: 10; transition: transform 0.1s;}
+        .punch-btn:active { transform: scale(0.95); }
+        .punch-icon { font-size: 40px; margin-bottom: 5px; }
+        .punch-text { font-size: 18px; font-weight: bold; letter-spacing: 2px;}
+        @keyframes pulse { 0% { transform: scale(0.7); opacity: 0.8; } 100% { transform: scale(1.1); opacity: 0; } }
+
+        .toggle-group { display: flex; background: white; border-radius: 30px; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin: 0 auto; width: 100%; max-width: 250px;}
+        .toggle-group label { flex:1; text-align:center; padding: 12px 0; border-radius: 25px; font-size: 15px; font-weight: bold; color: var(--text-sub); cursor: pointer; transition: 0.3s; }
+        .toggle-group input { display: none; }
+        .toggle-group input:checked + label { background: var(--primary-light); color: var(--primary); }
+        .gps-status { margin-top: 20px; font-size: 14px; font-weight: bold; color: #0f9d58; text-align: center; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+
+        .app-form { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; width: 100%;}
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px;}
+        .form-control { width: 100%; padding: 14px; border: 1px solid #dadce0; border-radius: 12px; font-size: 15px; background-color: var(--bg); outline: none; }
+        .form-control:focus { border-color: var(--primary); background-color: white; }
+        .btn-action { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;}
+
+        .shift-card { background: white; border-left: 5px solid var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04);}
+        .shift-date { font-size: 16px; font-weight: bold; color: var(--text-main); }
+        .shift-time { font-size: 15px; font-weight: bold; background: var(--primary-light); color: var(--primary); padding: 6px 12px; border-radius: 8px; }
+        .shift-off { border-left-color: #5f6368; }
+        .shift-off .shift-time { background: #f1f3f4; color: #5f6368; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; display: flex; justify-content: space-around; padding: 10px 0 20px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 50;}
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #9aa0a6; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; flex: 1;}
+        .nav-icon { font-size: 22px; margin-bottom: 4px; transition: 0.2s;}
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active .nav-icon { transform: translateY(-3px); }
+
+        #loadingOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div id="loadingOverlay"><div class="spinner"></div><div id="loadingText" style="font-weight:bold; color:var(--primary);">處理中...</div></div>
+
+    <!-- 登入畫面 -->
+    <div id="loginScreen">
+        <div class="logo-area">
+            <h1>呷呼霸</h1>
+            <p>門市考勤管理系統</p>
+        </div>
+        <input type="text" id="loginName" class="login-input" placeholder="請輸入您的姓名">
+        <input type="password" id="loginPwd" class="login-input" placeholder="請輸入密碼">
+        <button class="btn-login" onclick="doLogin()">登入系統</button>
+    </div>
+
+    <!-- 主畫面 -->
+    <div id="mainScreen">
+        <div class="header-bg">
+            <div class="app-title">呷呼霸 JIA HU BA</div>
+            <div class="greeting">
+                <h2>Hello, <span id="dispName">員工</span></h2>
+                <span class="store-badge" id="dispStore">載入中...</span>
+                <button onclick="doLogout()" style="float:right; margin-top:5px; background:none; border:none; color:var(--text-sub); font-weight:bold; cursor:pointer;">🚪 登出</button>
+            </div>
+        </div>
+
+        <!-- 📍 打卡視圖 -->
+        <div id="viewPunch" class="view-section active">
+            <div class="toggle-group">
+                <input type="radio" name="punchType" id="typeIn" value="上班" checked>
+                <label for="typeIn">上班打卡</label>
+                <input type="radio" name="punchType" id="typeOut" value="下班">
+                <label for="typeOut">下班打卡</label>
+            </div>
+            
+            <div class="punch-btn-wrapper">
+                <div class="pulse-ring"></div>
+                <div class="pulse-ring"></div>
+                <div class="punch-btn" onclick="submitPunch()">
+                    <div class="punch-icon">👆</div>
+                    <div class="punch-text">打卡</div>
+                </div>
+            </div>
+            <div class="gps-status" id="gpsStatus">📍 獲取定位中...</div>
+        </div>
+
+        <!-- 📅 班表視圖 -->
+        <div id="viewSchedule" class="view-section">
+            <div class="section-title">我的當月班表</div>
+            <div style="text-align:center; margin-bottom:15px; font-weight:bold; color:var(--text-sub);">
+                目前顯示：<span id="schedMonthDisp" style="color:var(--primary);">載入中...</span>
+            </div>
+            <div id="scheduleContent" style="display:flex; flex-direction:column;">
+            </div>
+        </div>
+
+        <!-- 🗣️ 反應事項視圖 -->
+        <div id="viewFeedback" class="view-section">
+            <div class="section-title">反應事項回報</div>
+            <div class="app-form">
+                <div style="font-size:13px; color:#b06000; background:#fff8e1; padding:10px; border-radius:8px; margin-bottom:15px; line-height:1.5;">
+                    💡 設備故障、異常狀況或排班問題，請在此附上照片與說明回報給店長。
+                </div>
+                <div class="form-group">
+                    <label>📝 狀況說明 (必填)</label>
+                    <textarea id="fbText" class="form-control" rows="4" placeholder="請詳細描述遇到的問題..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>📸 現場照片 (選填，可拍照)</label>
+                    <input type="file" id="fbImage" class="form-control" accept="image/*" style="padding:10px; background:white;">
+                </div>
+                <button class="btn-action" onclick="submitFeedback()">🚀 送出回報</button>
+            </div>
+        </div>
+
+        <!-- 底部導覽列 -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchNav('viewPunch', this)">
+                <div class="nav-icon">📍</div>打卡
+            </div>
+            <div class="nav-item" onclick="switchNav('viewSchedule', this); loadSchedule();">
+                <div class="nav-icon">📅</div>班表
+            </div>
+            <div class="nav-item" onclick="switchNav('viewFeedback', this)">
+                <div class="nav-icon">🗣️</div>反映事項
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxMqYMpwUCNOwrsNGcYDdCAO723_Qgu26syp0CZJXLHIgp1nul2dzFW0XinwKZ-1_u5/exec";
+    
+    let userProfile = {};
+    let userLat = null, userLon = null;
+    let isWithinRange = false;
+    const ALLOWED_DIST = 300; 
+
+    const STORE_LOCATIONS = {
+        "呷呼霸土城店": { lat: 24.9796939917096, lon: 121.44271680000001 },
+        "呷呼霸南崁店": { lat: 25.04907755650072, lon: 121.29537739385484 },
+        "呷呼霸長榮店": { lat: 25.105350833998052, lon: 121.46181640409846 },
+        "呷呼霸蘆洲中山店": { lat: 25.087309049331484, lon: 121.47824063907836 },
+        "呷呼霸汐止店": { lat: 25.07326757123323, lon: 121.65359859249163 },
+        "呷呼霸林口店": { lat: 25.080390558411217, lon: 121.38304709932427 },
+        "呷呼霸淡大店": { lat: 25.188705903698462, lon: 121.44580752353794 },
+        "呷呼霸淡水店": { lat: 25.188705903698462, lon: 121.44580752353794 } 
+    };
+
+    window.onload = () => {
+        const saved = localStorage.getItem('jiaHubaUser');
+        if (saved) {
+            userProfile = JSON.parse(saved);
+            showMainScreen();
+            initGPS();
+        }
+    };
+
+    function showLoading(text) { 
+        document.getElementById('loadingText').innerText = text; 
+        document.getElementById('loadingOverlay').style.display = 'flex'; 
+    }
+    function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    async function fetchApi(payload) {
+        const res = await fetch(API_URL + "?t=" + new Date().getTime(), {
+            method: 'POST',
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("伺服器連線異常");
+        return await res.json(); 
+    }
+
+    async function doLogin() {
+        const name = document.getElementById('loginName').value.trim();
+        const pwd = document.getElementById('loginPwd').value.trim();
+        if (!name || !pwd) return Swal.fire('提示', '請輸入姓名與密碼', 'warning');
+        
+        showLoading("驗證中...");
+        try {
+            const res = await fetchApi({ action: "login", name: name, pwd: pwd });
+            hideLoading();
+            if (res.status === "success") {
+                userProfile = res;
+                localStorage.setItem('jiaHubaUser', JSON.stringify(userProfile));
+                showMainScreen();
+                initGPS();
+                Swal.fire({ title: '登入成功', icon: 'success', timer: 1500, showConfirmButton: false });
+            } else {
+                Swal.fire('登入失敗', res.msg, 'error');
+            }
+        } catch (e) { hideLoading(); Swal.fire('網路錯誤', e.message, 'error'); }
+    }
+
+    function doLogout() {
+        localStorage.removeItem('jiaHubaUser');
+        location.reload();
+    }
+
+    function showMainScreen() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainScreen').style.display = 'flex';
+        document.getElementById('dispName').innerText = userProfile.name;
+        document.getElementById('dispStore').innerText = userProfile.store;
+    }
+
+    function switchNav(viewId, element) {
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active'); 
+        element.classList.add('active');
+    }
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const p1 = lat1 * Math.PI/180;
+        const p2 = lat2 * Math.PI/180;
+        const dp = (lat2-lat1) * Math.PI/180;
+        const dl = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c; 
+    }
+
+    function initGPS() {
+        if(navigator.geolocation) {
+            navigator.geolocation.watchPosition(pos => {
+                userLat = pos.coords.latitude; 
+                userLon = pos.coords.longitude;
+                checkLocation();
+            }, error => {
+                userLat = null; userLon = null;
+                updateGPSUI("⚠️ 無法取得定位，請開啟 GPS 權限", "#d93025", false);
+            }, { enableHighAccuracy: true });
+        } else {
+            updateGPSUI("⚠️ 裝置不支援 GPS 定位", "#d93025", false);
+        }
+    }
+
+    function checkLocation() {
+        if (userProfile.role === "老闆") {
+            isWithinRange = true;
+            updateGPSUI("✅ 老闆免定位模式", "#0f9d58", true);
+            return;
+        }
+
+        let store = userProfile.store;
+        if (STORE_LOCATIONS[store]) {
+            let target = STORE_LOCATIONS[store];
+            let dist = getDistance(userLat, userLon, target.lat, target.lon);
+            if (dist <= ALLOWED_DIST) {
+                isWithinRange = true;
+                updateGPSUI(`✅ 已進入範圍 (距門市 ${Math.round(dist)}m)`, "#0f9d58", true);
+            } else {
+                isWithinRange = false;
+                updateGPSUI(`❌ 距離過遠無法打卡 (相距 ${Math.round(dist)}m)`, "#d93025", false);
+            }
+        } else {
+            isWithinRange = true; 
+            updateGPSUI("✅ 未設定此門市座標，預設可打卡", "#0f9d58", true);
+        }
+    }
+
+    function updateGPSUI(text, color, canPunch) {
+        let statusEl = document.getElementById('gpsStatus');
+        if(statusEl) {
+            statusEl.innerText = text;
+            statusEl.style.color = color;
+        }
+        let btn = document.querySelector('.punch-btn');
+        if(btn) {
+            btn.style.pointerEvents = canPunch ? "auto" : "none";
+            btn.style.opacity = canPunch ? "1" : "0.5";
+        }
+    }
+
+    async function submitPunch() {
+        if (!isWithinRange && userProfile.role !== "老闆") {
+            return Swal.fire('定位失敗', '您目前不在門市範圍內，無法進行打卡！', 'error');
+        }
+
+        const type = document.querySelector('input[name="punchType"]:checked').value;
+        
+        Swal.fire({
+            title: `確認要打【${type}】卡？`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '確認打卡',
+            cancelButtonText: '取消'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                showLoading("資料傳送中...");
+                try {
+                    const res = await fetchApi({
+                        action: "punch",
+                        name: userProfile.name,
+                        store: userProfile.store,
+                        type: type,
+                        lat: userLat,
+                        lon: userLon
+                    });
+                    hideLoading();
+                    if (res.status === "success") {
+                        Swal.fire('成功', res.msg, 'success');
+                    } else {
+                        Swal.fire('失敗', res.msg, 'error');
+                    }
+                } catch(e) { hideLoading(); Swal.fire('錯誤', e.message, 'error'); }
+            }
+        });
+    }
+
+    async function loadSchedule() {
+        const container = document.getElementById('scheduleContent');
+        const monthDisp = document.getElementById('schedMonthDisp');
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#5f6368;">班表載入中...</div>';
+        
+        const now = new Date();
+        const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        monthDisp.innerText = monthStr;
+
+        try {
+            const res = await fetchApi({ action: "getData", name: userProfile.name, store: userProfile.store, role: userProfile.role });
+            
+            if (res.status === "success") {
+                const scheds = res.data.schedule;
+                // 強化比對邏輯，支援有日期的情況也能讀取 (處理 Google Sheets 自動格式化問題)
+                const mySched = scheds.find(r => {
+                    let rMonth = String(r[0]);
+                    if (rMonth.includes("GMT") || rMonth.includes("T")) {
+                         // 如果是 Date 物件轉字串，擷取 YYYY-MM
+                         let d = new Date(r[0]);
+                         rMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                    } else if (rMonth.includes("/")) {
+                         // 處理 YYYY/MM 格式
+                         let parts = rMonth.split('/');
+                         if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
+                    }
+                    return rMonth === monthStr && r[2] === userProfile.name;
+                });
+                
+                if (!mySched) {
+                    container.innerHTML = '<div style="text-align:center; padding:20px; color:#d93025; font-weight:bold;">店長尚未發布您當月的班表喔！</div>';
+                    return;
+                }
+
+                let html = "";
+                const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+                const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+
+                for (let i = 1; i <= daysInMonth; i++) {
+                    let d = new Date(now.getFullYear(), now.getMonth(), i);
+                    let weekStr = weekdays[d.getDay()];
+                    let shiftVal = mySched[2 + i] || ""; 
+                    
+                    if (!shiftVal) continue; 
+
+                    let isOff = (shiftVal === "休" || shiftVal === "排休");
+                    let cardClass = isOff ? "shift-card shift-off" : "shift-card";
+                    let displayVal = isOff ? "休假" : shiftVal;
+
+                    html += `
+                        <div class="${cardClass}">
+                            <div class="shift-date">${i} 號 <span style="font-size:13px; color:#999;">(${weekStr})</span></div>
+                            <div class="shift-time">${displayVal}</div>
+                        </div>
+                    `;
+                }
+                container.innerHTML = html || '<div style="text-align:center; padding:20px; color:#5f6368;">本月尚無排班資料</div>';
+            } else {
+                container.innerHTML = `<div style="text-align:center; color:red;">${res.msg}</div>`;
+            }
+        } catch(e) { container.innerHTML = `<div style="text-align:center; color:red;">連線失敗</div>`; }
+    }
+
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    async function submitFeedback() {
+        const text = document.getElementById('fbText').value.trim();
+        const fileInput = document.getElementById('fbImage');
+        
+        if (!text) return Swal.fire('提示', '請填寫狀況說明！', 'warning');
+
+        showLoading("回報傳送中...");
+        let base64Image = "";
+        if (fileInput.files.length > 0) {
+            try { base64Image = await getBase64(fileInput.files[0]); } 
+            catch(e) { hideLoading(); return Swal.fire('圖片錯誤', '無法讀取圖片', 'error'); }
+        }
+
+        try {
+            const res = await fetchApi({
+                action: "submitFeedback",
+                name: userProfile.name,
+                store: userProfile.store,
+                text: text,
+                imageBase64: base64Image
+            });
+            hideLoading();
+            if (res.status === "success") {
+                Swal.fire('回報成功', res.msg, 'success');
+                document.getElementById('fbText').value = "";
+                document.getElementById('fbImage').value = "";
+            } else {
+                Swal.fire('失敗', res.msg, 'error');
+            }
+        } catch(e) { hideLoading(); Swal.fire('錯誤', e.message, 'error'); }
+    }
+</script>
+</body>
+</html>
