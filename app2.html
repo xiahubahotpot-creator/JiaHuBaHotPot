@@ -367,15 +367,12 @@
             
             if (res.status === "success") {
                 const scheds = res.data.schedule;
-                // 強化比對邏輯，支援有日期的情況也能讀取 (處理 Google Sheets 自動格式化問題)
                 const mySched = scheds.find(r => {
                     let rMonth = String(r[0]);
                     if (rMonth.includes("GMT") || rMonth.includes("T")) {
-                         // 如果是 Date 物件轉字串，擷取 YYYY-MM
                          let d = new Date(r[0]);
                          rMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
                     } else if (rMonth.includes("/")) {
-                         // 處理 YYYY/MM 格式
                          let parts = rMonth.split('/');
                          if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
                     }
@@ -394,8 +391,29 @@
                 for (let i = 1; i <= daysInMonth; i++) {
                     let d = new Date(now.getFullYear(), now.getMonth(), i);
                     let weekStr = weekdays[d.getDay()];
-                    let shiftVal = mySched[2 + i] || ""; 
                     
+                    let shiftVal = mySched[2 + i];
+                    if (shiftVal == null) shiftVal = "";
+                    else shiftVal = String(shiftVal);
+
+                    // --- 自動防亂碼過濾器 (攔截 Google Sheets 日期轉換) ---
+                    if (shiftVal.includes('T') && shiftVal.includes('Z')) {
+                        let parsedDate = new Date(shiftVal);
+                        if (!isNaN(parsedDate.getTime())) {
+                            let yr = parsedDate.getFullYear();
+                            if (yr < 2000) {
+                                // 判斷為純時間 (如輸入 10:30 被轉化)
+                                let hh = String(parsedDate.getHours()).padStart(2, '0');
+                                let mm = String(parsedDate.getMinutes()).padStart(2, '0');
+                                shiftVal = hh + ':' + mm;
+                            } else {
+                                // 判斷為日期 (如輸入 10-16 被轉化成 10月16日)
+                                shiftVal = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
+                            }
+                        }
+                    }
+                    // ---------------------------------------------------
+
                     if (!shiftVal) continue; 
 
                     let isOff = (shiftVal === "休" || shiftVal === "排休");
