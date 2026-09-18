@@ -93,7 +93,6 @@
             <button class="tab-btn" onclick="switchTab('viewPayroll', this)">💰 月底薪資結算</button>
         </div>
 
-        <!-- 1. 排班管理 -->
         <div id="viewSchedule" class="view-section active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3>門市排班管理</h3>
@@ -115,6 +114,8 @@
                         <option value="呷呼霸林口店">呷呼霸林口店</option>
                         <option value="呷呼霸汐止店">呷呼霸汐止店</option>
                         <option value="呷呼霸淡大店">呷呼霸淡大店</option>
+                        <option value="呷呼霸淡水店">呷呼霸淡水店</option>
+                        <option value="總公司">總公司</option>
                     </select>
                 </div>
             </div>
@@ -130,7 +131,6 @@
             </div>
         </div>
 
-        <!-- 2. 人事維護 -->
         <div id="viewEmployees" class="view-section">
             <h3>員工基本檔與計薪設定</h3>
             
@@ -157,11 +157,14 @@
                         <option value="呷呼霸林口店">呷呼霸林口店</option>
                         <option value="呷呼霸汐止店">呷呼霸汐止店</option>
                         <option value="呷呼霸淡大店">呷呼霸淡大店</option>
+                        <option value="呷呼霸淡水店">呷呼霸淡水店</option>
+                        <option value="總公司">總公司</option>
                     </select>
                 </div>
                 <div class="form-group"><label>權限角色</label>
                     <select id="empRole">
                         <option value="員工">員工</option>
+                        <option value="副店長">副店長</option>
                         <option value="店長">店長</option>
                         <option value="老闆">老闆</option>
                     </select>
@@ -173,15 +176,29 @@
                         <option value="離職">離職</option>
                     </select>
                 </div>
-                <div class="form-group"><label>計薪方式</label>
+                <div class="form-group"><label>計薪類別</label>
                     <select id="empPayType">
                         <option value="月薪">月薪</option>
                         <option value="時薪">時薪</option>
                     </select>
                 </div>
-                <div class="form-group"><label>底薪/時薪金額</label><input type="number" id="empSalary" placeholder="輸入數字"></div>
-                <div class="form-group" style="display: flex; align-items: flex-end;">
-                    <button class="btn btn-primary" style="width: 100%; height: 42px;" onclick="saveEmployee()">💾 儲存員工資料</button>
+                <div class="form-group"><label>假日計薪身分</label>
+                    <select id="empDutyType">
+                        <option value="一般員工 (有加班費)">🟢 一般員工 (有加班費)</option>
+                        <option value="責任制幹部 (無加班費)">🔴 責任制幹部 (無加班費)</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>基本薪資/時薪</label><input type="number" id="empSalary" placeholder="輸入額度"></div>
+                <div class="form-group"><label>到職日期</label><input type="date" id="empObDate"></div>
+                <div class="form-group"><label>剩餘特休天數</label><input type="number" step="0.5" id="empAnnualLeave" placeholder="可手動校正"></div>
+                <div class="form-group"><label>變動獎金基數</label><input type="number" id="empBonus" value="0"></div>
+                <div class="form-group"><label>勞保自付額</label><input type="number" id="empLaborIns" value="0"></div>
+                <div class="form-group"><label>健保自付額</label><input type="number" id="empHealthIns" value="0"></div>
+                <div class="form-group"><label>健保眷屬人數</label><input type="number" id="empDependents" value="0"></div>
+                <div class="form-group"><label>聯絡電話(手機)</label><input type="text" id="empPhone"></div>
+                <div class="form-group"><label>家裡住址</label><input type="text" id="empAddress"></div>
+                <div class="form-group" style="grid-column: 1 / -1; display: flex; justify-content: flex-end;">
+                    <button class="btn btn-primary" style="padding: 12px 24px;" onclick="saveEmployee()">💾 儲存員工資料</button>
                 </div>
             </div>
 
@@ -199,7 +216,6 @@
             </div>
         </div>
 
-        <!-- 3. 薪資結算 -->
         <div id="viewPayroll" class="view-section">
             <h3>薪資單結算與列印</h3>
             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
@@ -251,7 +267,7 @@
                     document.getElementById('schedMonth').value = mStr;
                     document.getElementById('payrollMonth').value = mStr;
                     
-                    if(res.role === '店長') {
+                    if(res.role === '店長' || res.role === '副店長') {
                         document.getElementById('schedStore').value = res.store;
                         document.getElementById('schedStore').disabled = true; 
                         document.getElementById('empStore').value = res.store;
@@ -359,7 +375,11 @@
         function updateEmpDropdown() {
             let sel = document.getElementById('filterEmp');
             sel.innerHTML = '<option value="">請選擇要編輯的員工...</option>';
-            globalData.employees.forEach(e => {
+            let displayEmps = globalData.employees;
+            if(currentUser.role === '店長' || currentUser.role === '副店長') {
+                displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
+            }
+            displayEmps.forEach(e => {
                 sel.innerHTML += `<option value="${e[0]}">${e[0]} (${e[1]})</option>`;
             });
         }
@@ -376,6 +396,16 @@
                 document.getElementById('empStatus').value = emp[4];
                 document.getElementById('empPayType').value = emp[6] || '月薪';
                 document.getElementById('empSalary').value = emp[7] || 0;
+                
+                document.getElementById('empDutyType').value = emp[8] || '一般員工 (有加班費)';
+                document.getElementById('empObDate').value = emp[9] ? String(emp[9]).split('T')[0] : '';
+                document.getElementById('empAnnualLeave').value = emp[10] || 0;
+                document.getElementById('empBonus').value = emp[11] || 0;
+                document.getElementById('empLaborIns').value = emp[12] || 0;
+                document.getElementById('empHealthIns').value = emp[13] || 0;
+                document.getElementById('empDependents').value = emp[14] || 0;
+                document.getElementById('empPhone').value = emp[15] || '';
+                document.getElementById('empAddress').value = emp[16] || '';
             }
         }
 
@@ -387,7 +417,17 @@
             document.getElementById('empStatus').value = "在職";
             document.getElementById('empPayType').value = "月薪";
             document.getElementById('empRole').value = "員工";
-            if(currentUser.role === '老闆') document.getElementById('empStore').value = "呷呼霸土城店";
+            document.getElementById('empDutyType').value = "一般員工 (有加班費)";
+            document.getElementById('empObDate').value = "";
+            document.getElementById('empAnnualLeave').value = "";
+            ['empBonus', 'empLaborIns', 'empHealthIns', 'empDependents'].forEach(id => document.getElementById(id).value = "0");
+            ['empPhone', 'empAddress'].forEach(id => document.getElementById(id).value = "");
+
+            if(currentUser.role === '店長' || currentUser.role === '副店長') {
+                document.getElementById('empStore').value = currentUser.store;
+            } else {
+                document.getElementById('empStore').value = "呷呼霸土城店";
+            }
         }
 
         async function saveEmployee() {
@@ -399,7 +439,16 @@
                 pwd: document.getElementById('empPwd').value.trim(),
                 status: document.getElementById('empStatus').value,
                 payType: document.getElementById('empPayType').value,
-                salary: document.getElementById('empSalary').value
+                salary: document.getElementById('empSalary').value,
+                dutyType: document.getElementById('empDutyType').value,
+                obDate: document.getElementById('empObDate').value,
+                annualLeave: document.getElementById('empAnnualLeave').value,
+                bonus: document.getElementById('empBonus').value,
+                laborIns: document.getElementById('empLaborIns').value,
+                healthIns: document.getElementById('empHealthIns').value,
+                dependents: document.getElementById('empDependents').value,
+                phone: document.getElementById('empPhone').value,
+                address: document.getElementById('empAddress').value
             };
             if(!payload.name) return Swal.fire('提示', '姓名必填', 'warning');
 
@@ -416,10 +465,15 @@
 
         function renderEmployees() {
             let html = '';
-            globalData.employees.forEach(emp => {
+            let displayEmps = globalData.employees;
+            if(currentUser.role === '店長' || currentUser.role === '副店長') {
+                displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
+            }
+
+            displayEmps.forEach(emp => {
                 let payType = emp[6] || '月薪';
                 let base = emp[7] || 0;
-                let displayBase = currentUser.role === "店長" ? "***" : `$${base}`;
+                let displayBase = (currentUser.role === "店長" || currentUser.role === "副店長") ? "***" : `$${base}`;
                 let statusBadge = emp[4] === "離職" ? `<span style="color:var(--primary); font-weight:bold;">離職</span>` : `<span style="color:#0f9d58; font-weight:bold;">在職</span>`;
 
                 html += `<tr>
@@ -438,12 +492,6 @@
             document.getElementById('empBody').innerHTML = html;
         }
 
-        function quickEdit(name) {
-            document.getElementById('filterEmp').value = name;
-            loadEmpDetails();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
         function generatePayslips() {
             const printArea = document.getElementById('printArea');
             printArea.style.display = 'block';
@@ -452,7 +500,7 @@
             const targetMonth = document.getElementById('payrollMonth').value;
             
             let targetEmps = globalData.employees.filter(e => e[4] !== "離職");
-            if(currentUser.role === "店長") {
+            if(currentUser.role === "店長" || currentUser.role === "副店長") {
                 targetEmps = targetEmps.filter(e => e[1] === currentUser.store);
             }
 
