@@ -34,7 +34,8 @@
         
         .table-responsive { width: 100%; overflow-x: auto; background: white; border-radius: 8px; border: 1px solid var(--border); }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        th, td { border-bottom: 1px solid var(--border); padding: 12px 8px; text-align: center; }
+        /* 縮小排班表 padding 以容納 31 天 */
+        th, td { border-bottom: 1px solid var(--border); padding: 6px 4px; text-align: center; }
         th { background: #f8f9fa; color: var(--text-sub); font-size: 13px; font-weight: bold; border-right: 1px solid var(--border); }
         th:last-child { border-right: none; }
         td { font-size: 14px; border-right: 1px solid var(--border); }
@@ -53,8 +54,9 @@
         }
         input:focus, select:focus { border-color: var(--primary); }
 
-        .shift-input { width: 100%; font-size: 13px; margin-bottom: 4px; text-align: center; border: 1px solid #ccc; border-radius: 4px; padding: 6px 2px; }
-        .btn-off { font-size: 11px; padding: 4px 0; background: #e8eaed; color: var(--text-main); border: 1px solid #ccc; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold;}
+        /* 強制排班表輸入框的寬度與高度，避免被擠壓 */
+        .shift-input { width: 50px; height: 32px; font-size: 13px; margin-bottom: 4px; text-align: center; border: 1px solid #ccc; border-radius: 4px; padding: 0; box-sizing: border-box; }
+        .btn-off { font-size: 11px; padding: 4px 0; background: #e8eaed; color: var(--text-main); border: 1px solid #ccc; border-radius: 4px; cursor: pointer; width: 50px; font-weight: bold;}
         .btn-off:hover { background: #dadce0; }
         
         .hr-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); }
@@ -93,6 +95,7 @@
             <button class="tab-btn" onclick="switchTab('viewPayroll', this)">💰 月底薪資結算</button>
         </div>
 
+        <!-- 排班管理 -->
         <div id="viewSchedule" class="view-section active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3>門市排班管理</h3>
@@ -119,9 +122,6 @@
                     </select>
                 </div>
             </div>
-            <div style="font-size: 13px; color: #b06000; background: #fff8e1; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #fde293;">
-                💡 <b>排班操作提示：</b>可直接在格子內輸入時間區段（如：10:30-14:30），或點擊下方「休」按鈕快速排休。系統將自動阻擋連續上班 6 天。
-            </div>
             
             <div class="table-responsive">
                 <table id="schedTable">
@@ -131,6 +131,7 @@
             </div>
         </div>
 
+        <!-- 人事維護 -->
         <div id="viewEmployees" class="view-section">
             <h3>員工基本檔與計薪設定</h3>
             
@@ -337,7 +338,7 @@
                     if(i <= daysInMonth) {
                         let val = mySched ? mySched[2+i] : "";
                         let isOff = (val === '休' || val === '排休');
-                        body += `<td style="padding: 6px;">
+                        body += `<td>
                             <input type="text" class="shift-input" placeholder="時間" value="${isOff ? '休' : val}">
                             <button class="btn-off" onclick="this.previousElementSibling.value='休'">休</button>
                         </td>`;
@@ -463,6 +464,22 @@
             } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
 
+        // 新增的刪除員工功能
+        async function deleteEmployee(empName) {
+            if(!confirm(`⚠️ 確定要徹底刪除【${empName}】的資料嗎？\n(注意：刪除後將無法復原)`)) return;
+            Swal.fire({title: '刪除中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+            try {
+                const res = await fetchApi({ action: 'deleteEmployee', name: empName });
+                if(res.status === 'success') {
+                    Swal.fire('成功', res.msg, 'success');
+                    loadData();
+                    clearForm();
+                } else {
+                    Swal.fire('錯誤', res.msg, 'error');
+                }
+            } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
+        }
+
         function renderEmployees() {
             let html = '';
             let displayEmps = globalData.employees;
@@ -480,16 +497,25 @@
                     <td style="font-weight:bold; color:var(--primary);">${emp[0]}</td>
                     <td>${emp[1]}</td>
                     <td>${emp[2]}</td>
-                    <td>${emp[3]}</td>
+                    <td style="color:#999; font-size:20px; letter-spacing:2px; vertical-align:middle;">***</td>
                     <td>${statusBadge}</td>
                     <td>${payType}</td>
                     <td>${displayBase}</td>
                     <td>
-                        <button class="btn btn-primary" style="padding:4px 8px; font-size:12px;" onclick="quickEdit('${emp[0]}')">編輯</button>
+                        <div style="display:flex; justify-content:center; gap:5px;">
+                            <button class="btn btn-primary" style="padding:4px 8px; font-size:12px;" onclick="quickEdit('${emp[0]}')">編輯</button>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="deleteEmployee('${emp[0]}')">刪除</button>
+                        </div>
                     </td>
                 </tr>`;
             });
             document.getElementById('empBody').innerHTML = html;
+        }
+
+        function quickEdit(name) {
+            document.getElementById('filterEmp').value = name;
+            loadEmpDetails();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function generatePayslips() {
