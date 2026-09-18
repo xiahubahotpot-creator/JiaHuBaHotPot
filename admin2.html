@@ -3,64 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 管理後台 V3</title>
+    <title>呷呼霸 - 管理後台 V4 (清爽升級版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
             --primary: #d93025; 
             --primary-light: #fce8e6;
-            --bg: #f8f9fa; 
+            --bg: #f4f7f6; 
             --text-main: #202124; 
             --text-sub: #5f6368;
-            --border: #dadce0;
+            --border: #e0e0e0;
         }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin:0; padding:20px; color: var(--text-main); }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .container { max-width: 1400px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
         
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
-        .nav-title { font-size: 24px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .nav-title { font-size: 26px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; letter-spacing: 1px;}
         .nav-title span { color: var(--primary); }
         .user-badge { background: var(--primary-light); color: var(--primary); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; }
         
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; }
-        .nav-tabs button { padding: 12px 24px; border: 1px solid var(--border); background: white; border-radius: 8px; cursor: pointer; font-weight: bold; color: var(--text-sub); transition: 0.2s; font-size: 15px; display: flex; align-items: center; gap: 8px;}
+        .nav-tabs { display: flex; gap: 12px; margin-bottom: 30px; }
+        .nav-tabs button { padding: 14px 28px; border: 1px solid var(--border); background: #fafafa; border-radius: 10px; cursor: pointer; font-weight: bold; color: var(--text-sub); transition: 0.2s; font-size: 16px; display: flex; align-items: center; gap: 8px;}
         .nav-tabs button:hover { background: #f1f3f4; }
-        .nav-tabs button.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 6px rgba(217,48,37,0.3); }
+        .nav-tabs button.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(217,48,37,0.25); }
         
-        .view-section { display: none; }
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
         .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        h3 { color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 12px; margin-top: 0; font-size: 18px;}
+        h3 { color: var(--text-main); border-left: 5px solid var(--primary); padding-left: 15px; margin-top: 0; font-size: 20px;}
         
-        /* 表格優化：強制最小寬度，避免格子被壓縮 */
-        .table-responsive { width: 100%; overflow-x: auto; background: white; border-radius: 8px; border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
-        th, td { border-bottom: 1px solid var(--border); padding: 10px 4px; text-align: center; min-width: 75px; }
-        th { background: #f8f9fa; color: var(--text-sub); font-size: 13px; font-weight: bold; border-right: 1px solid var(--border); }
-        th:last-child { border-right: none; }
-        td { font-size: 14px; border-right: 1px solid var(--border); }
-        td:last-child { border-right: none; }
-        tr:hover td { background-color: #fcfcfc; }
+        /* ============== 排班表極致清爽化與凍結窗格 ============== */
+        .table-responsive { width: 100%; max-height: 65vh; overflow: auto; background: white; border-radius: 10px; border: 1px solid var(--border); box-shadow: inset 0 0 5px rgba(0,0,0,0.02); }
+        table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1600px; }
+        th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 10px 6px; text-align: center; vertical-align: middle; }
         
-        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 14px; }
-        .btn:hover { opacity: 0.9; }
+        /* 凍結表頭 (上下捲動不見) */
+        th { background: #f8f9fa; color: var(--text-sub); font-size: 13px; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
+        /* 凍結第一欄：員工姓名 (左右捲動不見) */
+        th:first-child, td:first-child { position: sticky; left: 0; background: white; z-index: 11; font-weight: bold; font-size: 15px; color: var(--primary); box-shadow: 2px 0 5px rgba(0,0,0,0.04); min-width: 100px;}
+        th:first-child { z-index: 12; background: #f8f9fa; color: var(--text-main); }
+        
+        /* 週末顏色區隔 */
+        .weekend-col { background-color: #fffaf0; } 
+        tr:hover td { background-color: #fdfdfd; }
+        tr:hover td:first-child { background-color: white; }
+
+        /* 排班輸入框：加大、清爽 */
+        .shift-input { width: 100%; min-width: 65px; height: 36px; font-size: 13px; font-weight: bold; color: #333; text-align: center; border: 1px solid #ccc; border-radius: 6px; outline: none; transition: 0.2s; box-sizing: border-box; background: #fff;}
+        .shift-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .btn-off { font-size: 12px; margin-top: 5px; background: #f1f3f4; color: #5f6368; border: none; border-radius: 6px; cursor: pointer; width: 100%; padding: 5px 0; font-weight: bold; transition: 0.2s;}
+        .btn-off:hover { background: #e0e0e0; color: #000; }
+        /* ======================================================= */
+
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 15px; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-primary { background: #1a73e8; color: white; }
         .btn-danger { background: var(--primary); color: white; }
         .btn-success { background: #0f9d58; color: white; }
         .btn-warning { background: #f4b400; color: #fff; }
         
         input[type="text"], input[type="password"], input[type="month"], select, input[type="number"], input[type="date"] { 
-            padding: 10px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 14px; width: 100%; box-sizing: border-box;
+            padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; width: 100%; box-sizing: border-box; transition: 0.2s;
         }
-        input:focus, select:focus { border-color: var(--primary); }
+        input:focus, select:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px var(--primary-light);}
 
-        /* 排班輸入框優化：放大高度與寬度，確保 10:30-14:30 清楚顯示 */
-        .shift-input { width: 100%; min-width: 70px; height: 38px; font-size: 13px; margin-bottom: 4px; text-align: center; border: 1px solid #aaa; border-radius: 4px; padding: 4px; box-sizing: border-box;}
-        .btn-off { font-size: 12px; padding: 6px 0; background: #e8eaed; color: var(--text-main); border: 1px solid #ccc; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold;}
-        .btn-off:hover { background: #dadce0; }
-        
-        .hr-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); }
-        .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 6px; color: var(--text-sub); }
+        .hr-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; background: #fcfcfc; padding: 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
+        .form-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: var(--text-sub); }
         
         @media print {
             body * { visibility: hidden; }
@@ -72,43 +81,52 @@
     </style>
 </head>
 <body>
-    <div id="loginScreen" class="container" style="max-width: 400px; margin-top: 10vh; text-align: center; padding: 40px 30px;">
-        <h2 style="color: var(--primary); font-size: 32px; font-weight: 900; margin-bottom: 5px;">呷呼霸</h2>
-        <p style="color: var(--text-sub); font-weight: bold; margin-bottom: 30px; font-size: 16px;">門市管理後台</p>
-        <input type="text" id="loginName" placeholder="請輸入姓名" style="margin-bottom: 15px;"><br>
-        <input type="password" id="loginPwd" placeholder="請輸入密碼" style="margin-bottom: 25px;"><br>
-        <button class="btn btn-danger" style="width: 100%; padding: 14px; font-size: 16px;" onclick="doLogin()">登入系統</button>
+    <!-- 建立快捷時間選項清單 (Datalist) -->
+    <datalist id="shift-options">
+        <option value="10:30-14:30"></option>
+        <option value="17:00-21:30"></option>
+        <option value="10:30-21:30"></option>
+        <option value="排休"></option>
+    </datalist>
+
+    <div id="loginScreen" class="container" style="max-width: 420px; margin-top: 10vh; text-align: center; padding: 50px 30px;">
+        <h2 style="color: var(--primary); font-size: 36px; font-weight: 900; margin-bottom: 5px; letter-spacing: 2px;">呷呼霸</h2>
+        <p style="color: var(--text-sub); font-weight: bold; margin-bottom: 40px; font-size: 16px;">門市管理後台系統</p>
+        <input type="text" id="loginName" placeholder="請輸入您的姓名" style="margin-bottom: 20px;"><br>
+        <input type="password" id="loginPwd" placeholder="請輸入登入密碼" style="margin-bottom: 30px;"><br>
+        <button class="btn btn-danger" style="width: 100%; padding: 16px; font-size: 18px;" onclick="doLogin()">安全登入</button>
     </div>
 
     <div id="mainScreen" class="container" style="display: none;">
         <div class="top-nav">
-            <div class="nav-title">呷呼霸 <span>管理後台</span></div>
+            <div class="nav-title">呷呼霸 <span>營運管理中心</span></div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <div class="user-badge"><span id="userRole"></span> : <span id="userName"></span> (<span id="userStore"></span>)</div>
-                <button class="btn" style="background: #f1f3f4; color: var(--text-main); border: 1px solid var(--border);" onclick="location.reload()">登出</button>
+                <button class="btn" style="background: #f1f3f4; color: var(--text-main); border: 1px solid var(--border);" onclick="location.reload()">登出系統</button>
             </div>
         </div>
         
         <div class="nav-tabs">
             <button class="tab-btn active" onclick="switchTab('viewSchedule', this)">📅 門市排班表</button>
             <button class="tab-btn" onclick="switchTab('viewEmployees', this)">👥 人事維護與計薪</button>
-            <button class="tab-btn" onclick="switchTab('viewPayroll', this)">💰 月底薪資結算</button>
+            <button class="tab-btn" onclick="switchTab('viewPayroll', this)">💰 薪資單自動結算</button>
         </div>
 
+        <!-- 1. 排班管理 -->
         <div id="viewSchedule" class="view-section active">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3>門市排班管理</h3>
-                <button class="btn btn-success" style="padding: 10px 20px;" onclick="saveSchedule()">💾 儲存並驗證班表</button>
+                <button class="btn btn-success" style="padding: 12px 24px;" onclick="saveSchedule()">💾 儲存並驗證班表</button>
             </div>
             
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); display: flex; gap: 20px; align-items: center;">
+            <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: flex; gap: 30px; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-weight: bold; color: var(--text-sub); font-size: 14px;">選擇月份</span>
-                    <input type="month" id="schedMonth" onchange="loadData()" style="width: 150px;">
+                    <span style="font-weight: bold; color: var(--text-sub); font-size: 15px;">選擇排班月份</span>
+                    <input type="month" id="schedMonth" onchange="loadData()" style="width: 160px; background: #f8f9fa;">
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-weight: bold; color: var(--text-sub); font-size: 14px;">過濾門市</span>
-                    <select id="schedStore" onchange="loadData()" style="width: 200px;">
+                    <span style="font-weight: bold; color: var(--text-sub); font-size: 15px;">過濾檢視門市</span>
+                    <select id="schedStore" onchange="loadData()" style="width: 220px; background: #f8f9fa;">
                         <option value="呷呼霸土城店">呷呼霸土城店</option>
                         <option value="呷呼霸南崁店">呷呼霸南崁店</option>
                         <option value="呷呼霸長榮店">呷呼霸長榮店</option>
@@ -121,8 +139,8 @@
                     </select>
                 </div>
             </div>
-            <div style="font-size: 13px; color: #b06000; background: #fff8e1; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #fde293;">
-                💡 <b>排班操作提示：</b>可直接在格子內輸入時間區段（如：10:30-14:30），或點擊下方「休」按鈕快速排休。系統將自動阻擋連續上班 6 天。
+            <div style="font-size: 14px; color: #0056b3; background: #e6f2ff; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b3d7ff;">
+                💡 <b>排班操作提示：</b>直接點擊格子可「下拉選擇常用時間」或自行輸入。點擊「休」即可快速排休。系統將自動隱藏不存在的日期（如 9月31日）。
             </div>
             
             <div class="table-responsive">
@@ -133,18 +151,19 @@
             </div>
         </div>
 
+        <!-- 2. 人事維護 -->
         <div id="viewEmployees" class="view-section">
             <h3>員工基本檔與計薪設定</h3>
             
-            <div style="background: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #cce0ff; display: flex; gap: 15px; align-items: flex-end;">
+            <div style="background: #f1f8ff; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #cce5ff; display: flex; gap: 20px; align-items: flex-end;">
                 <div style="flex: 1;">
-                    <label style="font-size: 13px; font-weight: bold; color: #1a73e8; display: block; margin-bottom: 5px;">編輯現有員工資料</label>
-                    <select id="filterEmp" onchange="loadEmpDetails()">
-                        <option value="">請選擇員工...</option>
+                    <label style="font-size: 15px; font-weight: bold; color: #0056b3; display: block; margin-bottom: 8px;">編輯現有員工資料</label>
+                    <select id="filterEmp" onchange="loadEmpDetails()" style="background: white;">
+                        <option value="">請點此選擇要編輯的員工...</option>
                     </select>
                 </div>
                 <div>
-                    <button class="btn btn-warning" onclick="clearForm()">➕ 新增員工 / 清空表單</button>
+                    <button class="btn btn-warning" onclick="clearForm()">➕ 建立新員工 / 清空表單</button>
                 </div>
             </div>
 
@@ -171,11 +190,11 @@
                         <option value="老闆">老闆</option>
                     </select>
                 </div>
-                <div class="form-group"><label>登入密碼</label><input type="text" id="empPwd" placeholder="預設 1234"></div>
+                <div class="form-group"><label>APP 登入密碼</label><input type="text" id="empPwd" placeholder="預設建議: 1234 或 手機後四碼"></div>
                 <div class="form-group"><label>在職狀態</label>
                     <select id="empStatus">
-                        <option value="在職">在職</option>
-                        <option value="離職">離職</option>
+                        <option value="在職">🟢 在職中</option>
+                        <option value="離職">🔴 已離職</option>
                     </select>
                 </div>
                 <div class="form-group"><label>計薪類別</label>
@@ -186,31 +205,31 @@
                 </div>
                 <div class="form-group"><label>假日計薪身分</label>
                     <select id="empDutyType">
-                        <option value="一般員工 (有加班費)">🟢 一般員工 (有加班費)</option>
-                        <option value="責任制幹部 (無加班費)">🔴 責任制幹部 (無加班費)</option>
+                        <option value="一般員工 (有加班費)">一般員工 (有加班費)</option>
+                        <option value="責任制幹部 (無加班費)">責任制幹部 (無加班費)</option>
                     </select>
                 </div>
-                <div class="form-group"><label>基本薪資/時薪</label><input type="number" id="empSalary" placeholder="輸入額度"></div>
+                <div class="form-group"><label>基本薪資 / 時薪額度</label><input type="number" id="empSalary" placeholder="輸入數字"></div>
                 <div class="form-group"><label>到職日期</label><input type="date" id="empObDate"></div>
-                <div class="form-group"><label>剩餘特休天數</label><input type="number" step="0.5" id="empAnnualLeave" placeholder="可手動校正"></div>
+                <div class="form-group"><label>剩餘特休天數</label><input type="number" step="0.5" id="empAnnualLeave" placeholder="可輸入小數點"></div>
                 <div class="form-group"><label>變動獎金基數</label><input type="number" id="empBonus" value="0"></div>
-                <div class="form-group"><label>勞保自付額</label><input type="number" id="empLaborIns" value="0"></div>
-                <div class="form-group"><label>健保自付額</label><input type="number" id="empHealthIns" value="0"></div>
-                <div class="form-group"><label>健保眷屬人數</label><input type="number" id="empDependents" value="0"></div>
-                <div class="form-group"><label>聯絡電話(手機)</label><input type="text" id="empPhone"></div>
-                <div class="form-group"><label>家裡住址</label><input type="text" id="empAddress"></div>
-                <div class="form-group" style="grid-column: 1 / -1; display: flex; justify-content: flex-end;">
-                    <button class="btn btn-primary" style="padding: 12px 24px;" onclick="saveEmployee()">💾 儲存員工資料</button>
+                <div class="form-group"><label>勞保自付額 (每月扣除)</label><input type="number" id="empLaborIns" value="0"></div>
+                <div class="form-group"><label>健保自付額 (每月扣除)</label><input type="number" id="empHealthIns" value="0"></div>
+                <div class="form-group"><label>健保依附眷屬人數</label><input type="number" id="empDependents" value="0"></div>
+                <div class="form-group"><label>聯絡電話 (手機)</label><input type="text" id="empPhone"></div>
+                <div class="form-group"><label>通訊住址</label><input type="text" id="empAddress"></div>
+                <div class="form-group" style="grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 10px;">
+                    <button class="btn btn-primary" style="padding: 14px 30px; font-size: 16px;" onclick="saveEmployee()">💾 儲存員工資料</button>
                 </div>
             </div>
 
-            <div class="table-responsive">
-                <table id="empTable">
+            <div class="table-responsive" style="max-height: 50vh;">
+                <table id="empTable" style="min-width: 1000px;">
                     <thead>
                         <tr>
-                            <th>姓名</th><th>門市</th><th>權限角色</th>
+                            <th>姓名</th><th>門市</th><th>角色</th>
                             <th>密碼</th><th>狀態</th><th>計薪方式</th><th>底薪/時薪</th>
-                            <th>操作</th>
+                            <th>操作選項</th>
                         </tr>
                     </thead>
                     <tbody id="empBody"></tbody>
@@ -218,14 +237,15 @@
             </div>
         </div>
 
+        <!-- 3. 薪資結算 -->
         <div id="viewPayroll" class="view-section">
-            <h3>薪資單結算與列印</h3>
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <span style="font-weight: bold; color: var(--text-sub); font-size: 14px; margin-right: 10px;">結算月份</span>
-                    <input type="month" id="payrollMonth" style="width: 150px;">
+            <h3>薪資單自動結算與列印</h3>
+            <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span style="font-weight: bold; color: var(--text-main); font-size: 16px;">選擇結算月份</span>
+                    <input type="month" id="payrollMonth" style="width: 180px; background: #f8f9fa;">
                 </div>
-                <button class="btn btn-success" style="padding: 10px 20px;" onclick="generatePayslips()">🖨️ 產生四合一薪資單並列印</button>
+                <button class="btn btn-success" style="padding: 14px 28px; font-size: 16px;" onclick="generatePayslips()">🖨️ 產生四合一薪資單並列印</button>
             </div>
             <div id="printArea" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border); display: none;"></div>
         </div>
@@ -236,7 +256,6 @@
         let currentUser = {};
         let globalData = { schedule: [], employees: [] };
 
-        // 改良版 fetchApi，攔截異常錯誤
         async function fetchApi(payload) {
             const res = await fetch(API_URL + "?t=" + new Date().getTime(), { 
                 method: 'POST', 
@@ -247,8 +266,7 @@
             try {
                 return JSON.parse(text);
             } catch (e) {
-                console.error("Server HTML Response:", text);
-                throw new Error("伺服器回傳格式異常，請確認 Apps Script 權限是否正確開啟。");
+                throw new Error("伺服器回傳格式異常，請確認 Apps Script 權限是否已設定為『所有人』。");
             }
         }
 
@@ -257,12 +275,12 @@
             const p = document.getElementById('loginPwd').value.trim();
             if(!n || !p) return Swal.fire('提示', '請填寫姓名與密碼', 'warning');
             
-            Swal.fire({title: '驗證中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+            Swal.fire({title: '安全驗證中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
                 const res = await fetchApi({action: 'login', name: n, pwd: p});
                 if(res.status === 'success') {
                     if(res.role === '員工') {
-                        return Swal.fire('權限不足', '員工無法登入管理後台！', 'error');
+                        return Swal.fire('權限不足', '此為管理後台，員工請使用手機版 APP。', 'error');
                     }
                     currentUser = res;
                     document.getElementById('loginScreen').style.display = 'none';
@@ -319,16 +337,18 @@
             const month = document.getElementById('schedMonth').value;
             if(!month) return;
             const [yy, mm] = month.split('-');
+            
+            // 智慧計算該月有幾天 (28, 29, 30 或 31)
             const daysInMonth = new Date(yy, mm, 0).getDate();
             const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
             
-            let head = '<tr><th style="min-width: 80px; position: sticky; left: 0; background: #f8f9fa; z-index: 2;">員工姓名</th>';
-            for(let i=1; i<=31; i++) {
-                if(i <= daysInMonth) {
-                    let d = new Date(yy, parseInt(mm)-1, i);
-                    let isWeekend = (d.getDay()===0 || d.getDay()===6);
-                    head += `<th style="${isWeekend?'color:#d93025; background:#fff0f0;':''}">${i}<br><span style="font-size:11px; font-weight:normal;">(${weekdays[d.getDay()]})</span></th>`;
-                } else { head += `<th style="background:#f1f3f4;"></th>`; }
+            let head = '<tr><th>員工姓名</th>';
+            for(let i=1; i<=daysInMonth; i++) {
+                let d = new Date(yy, parseInt(mm)-1, i);
+                let isWeekend = (d.getDay()===0 || d.getDay()===6);
+                let bgClass = isWeekend ? ' class="weekend-col"' : '';
+                let colorStyle = isWeekend ? ' style="color:#d93025;"' : '';
+                head += `<th${bgClass}${colorStyle}>${i}<br><span style="font-size:11px; font-weight:normal;">(${weekdays[d.getDay()]})</span></th>`;
             }
             head += '</tr>';
             document.getElementById('schedHead').innerHTML = head;
@@ -341,20 +361,29 @@
                 let name = emp[0];
                 let mySched = globalData.schedule.find(s => s[0] === month && s[2] === name);
                 
-                body += `<tr><td style="font-weight:bold; color:var(--primary); position: sticky; left: 0; background: white; z-index: 1;">${name}</td>`;
-                for(let i=1; i<=31; i++) {
-                    if(i <= daysInMonth) {
-                        let val = mySched ? mySched[2+i] : "";
-                        let isOff = (val === '休' || val === '排休');
-                        body += `<td style="padding: 6px;">
-                            <input type="text" class="shift-input" placeholder="時間" value="${isOff ? '休' : val}">
-                            <button class="btn-off" onclick="this.previousElementSibling.value='休'">休</button>
-                        </td>`;
-                    } else { body += `<td style="background:#f1f3f4;"></td>`; }
+                body += `<tr><td>${name}</td>`;
+                for(let i=1; i<=daysInMonth; i++) {
+                    let d = new Date(yy, parseInt(mm)-1, i);
+                    let isWeekend = (d.getDay()===0 || d.getDay()===6);
+                    let bgClass = isWeekend ? ' class="weekend-col"' : '';
+                    
+                    let val = mySched ? mySched[2+i] : "";
+                    let isOff = (val === '休' || val === '排休');
+                    
+                    // list="shift-options" 就是綁定上方建立好的 datalist
+                    body += `<td${bgClass}>
+                        <input type="text" list="shift-options" class="shift-input" placeholder="時間" value="${isOff ? '休' : val}">
+                        <button class="btn-off" onclick="this.previousElementSibling.value='休'">休</button>
+                    </td>`;
                 }
                 body += '</tr>';
             });
-            document.getElementById('schedBody').innerHTML = body || `<tr><td colspan="32" style="padding: 30px; color: var(--text-sub);">該門市尚無員工資料</td></tr>`;
+            
+            if(displayEmps.length === 0) {
+                document.getElementById('schedBody').innerHTML = `<tr><td colspan="${daysInMonth + 1}" style="padding: 40px; color: var(--text-sub); font-size: 16px;">該門市尚無員工資料，請先至「人事維護」建檔。</td></tr>`;
+            } else {
+                document.getElementById('schedBody').innerHTML = body;
+            }
         }
 
         async function saveSchedule() {
@@ -364,8 +393,9 @@
             
             document.querySelectorAll('#schedBody tr').forEach(tr => {
                 let nameTd = tr.querySelector('td');
-                if(nameTd && nameTd.innerText !== "該門市尚無員工資料") {
+                if(nameTd && !nameTd.innerText.includes("該門市尚無員工資料")) {
                     let shifts = [];
+                    // 抓取每一列所有的時間輸入框
                     tr.querySelectorAll('.shift-input').forEach(inp => { shifts.push(inp.value.trim()); });
                     payloadData.push({name: nameTd.innerText, shifts: shifts});
                 }
@@ -383,13 +413,14 @@
 
         function updateEmpDropdown() {
             let sel = document.getElementById('filterEmp');
-            sel.innerHTML = '<option value="">請選擇要編輯的員工...</option>';
+            sel.innerHTML = '<option value="">請點此選擇要編輯的員工...</option>';
             let displayEmps = globalData.employees;
             if(currentUser.role === '店長' || currentUser.role === '副店長') {
                 displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
             }
             displayEmps.forEach(e => {
-                sel.innerHTML += `<option value="${e[0]}">${e[0]} (${e[1]})</option>`;
+                let statusMark = e[4] === "離職" ? " (已離職)" : "";
+                sel.innerHTML += `<option value="${e[0]}">${e[0]} - ${e[1]}${statusMark}</option>`;
             });
         }
 
@@ -459,13 +490,13 @@
                 phone: document.getElementById('empPhone').value,
                 address: document.getElementById('empAddress').value
             };
-            if(!payload.name) return Swal.fire('提示', '姓名必填', 'warning');
+            if(!payload.name) return Swal.fire('提示', '姓名必填寫！', 'warning');
 
-            Swal.fire({title: '儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+            Swal.fire({title: '資料儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
                 const res = await fetchApi(payload);
                 if(res.status === 'success') {
-                    Swal.fire('成功', '員工資料已儲存！', 'success');
+                    Swal.fire('成功', '員工資料已安全儲存！', 'success');
                     loadData(); 
                     clearForm();
                 } else { Swal.fire('錯誤', res.msg, 'error'); }
@@ -473,12 +504,12 @@
         }
 
         async function deleteEmployee(empName) {
-            if(!confirm(`⚠️ 確定要徹底刪除【${empName}】的資料嗎？\n(注意：刪除後將無法復原)`)) return;
-            Swal.fire({title: '刪除中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+            if(!confirm(`⚠️ 嚴重警告：\n您確定要徹底刪除【${empName}】的所有資料嗎？\n此動作無法復原！`)) return;
+            Swal.fire({title: '執行刪除程序...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
                 const res = await fetchApi({ action: 'deleteEmployee', name: empName });
                 if(res.status === 'success') {
-                    Swal.fire('成功', res.msg, 'success');
+                    Swal.fire('已刪除', res.msg, 'success');
                     loadData();
                     clearForm();
                 } else {
@@ -498,20 +529,20 @@
                 let payType = emp[6] || '月薪';
                 let base = emp[7] || 0;
                 let displayBase = (currentUser.role === "店長" || currentUser.role === "副店長") ? "***" : `$${base}`;
-                let statusBadge = emp[4] === "離職" ? `<span style="color:var(--primary); font-weight:bold;">離職</span>` : `<span style="color:#0f9d58; font-weight:bold;">在職</span>`;
+                let statusBadge = emp[4] === "離職" ? `<span style="color:var(--primary); font-weight:bold;">已離職</span>` : `<span style="color:#0f9d58; font-weight:bold;">在職中</span>`;
 
                 html += `<tr>
                     <td style="font-weight:bold; color:var(--primary);">${emp[0]}</td>
                     <td>${emp[1]}</td>
                     <td>${emp[2]}</td>
-                    <td style="color:#999; font-size:16px; letter-spacing:3px; vertical-align:middle;">***</td>
+                    <td style="color:#adb5bd; font-size:18px; letter-spacing:3px; vertical-align:middle;">***</td>
                     <td>${statusBadge}</td>
                     <td>${payType}</td>
-                    <td>${displayBase}</td>
+                    <td style="font-weight:bold;">${displayBase}</td>
                     <td>
-                        <div style="display:flex; justify-content:center; gap:5px;">
-                            <button class="btn btn-primary" style="padding:4px 8px; font-size:12px;" onclick="quickEdit('${emp[0]}')">編輯</button>
-                            <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="deleteEmployee('${emp[0]}')">刪除</button>
+                        <div style="display:flex; justify-content:center; gap:8px;">
+                            <button class="btn btn-primary" style="padding:6px 12px; font-size:13px;" onclick="quickEdit('${emp[0]}')">編輯</button>
+                            <button class="btn btn-danger" style="padding:6px 12px; font-size:13px;" onclick="deleteEmployee('${emp[0]}')">刪除</button>
                         </div>
                     </td>
                 </tr>`;
@@ -537,25 +568,25 @@
                 
                 let payslipHTML = `
                     <div class="payslip">
-                        <div style="display:flex; justify-content:space-between; border-bottom: 2px solid #333; padding-bottom:8px; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; border-bottom: 2px solid #333; padding-bottom:8px; margin-bottom:15px;">
                             <h3 style="margin:0; color:#d93025; font-size:18px; border:none; padding:0;">呷呼霸 員工薪資單</h3>
                             <span style="font-weight:bold; color:#555;">${targetMonth}</span>
                         </div>
-                        <div style="font-size:13px; line-height:1.6;">
+                        <div style="font-size:14px; line-height:1.8;">
                             <span style="display:inline-block; width:48%;"><strong>門市：</strong> ${store}</span>
                             <span style="display:inline-block; width:48%;"><strong>計薪：</strong> ${payType}</span><br>
-                            <span style="display:inline-block; width:48%;"><strong>姓名：</strong> <span style="font-size:15px; color:#1a73e8; font-weight:bold;">${name}</span></span>
+                            <span style="display:inline-block; width:48%;"><strong>姓名：</strong> <span style="font-size:16px; color:#1a73e8; font-weight:bold;">${name}</span></span>
                             <span style="display:inline-block; width:48%;"><strong>底薪/時薪：</strong> $${base}</span>
                         </div>
-                        <hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">
+                        <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
                         <table style="width:100%; text-align:left; border:none; margin:0; min-width:auto;">
-                            <tr><td style="border:none; padding:3px; text-align:left;">🔹 伙食津貼 / 獎金：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$0</td></tr>
-                            <tr><td style="border:none; padding:3px; text-align:left;">🔸 加班費 (含颱風加給)：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$0</td></tr>
-                            <tr><td style="border:none; padding:3px; text-align:left;">🔻 遲到扣款 (費率 $${hourlyDeduct}/hr)：</td><td style="border:none; text-align:right; color:#d93025; font-weight:bold;">-$0</td></tr>
+                            <tr><td style="border:none; padding:4px; text-align:left;">🔹 伙食津貼 / 獎金：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$0</td></tr>
+                            <tr><td style="border:none; padding:4px; text-align:left;">🔸 加班費 (含颱風加給)：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$0</td></tr>
+                            <tr><td style="border:none; padding:4px; text-align:left;">🔻 遲到扣款 (費率 $${hourlyDeduct}/hr)：</td><td style="border:none; text-align:right; color:#d93025; font-weight:bold;">-$0</td></tr>
                         </table>
-                        <div style="background: #f8f9fa; padding:10px; border-radius:6px; margin-top:10px; text-align:right;">
-                            <span style="font-size:12px; color:#555; margin-right:15px;">實發總計</span>
-                            <span style="font-size:18px; font-weight:900; color:#d93025;">$${base}</span>
+                        <div style="background: #f8f9fa; padding:12px; border-radius:8px; margin-top:15px; text-align:right;">
+                            <span style="font-size:13px; color:#555; margin-right:15px;">實發總計</span>
+                            <span style="font-size:22px; font-weight:900; color:#d93025;">$${base}</span>
                         </div>
                     </div>
                 `;
