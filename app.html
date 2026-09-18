@@ -6,11 +6,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>呷呼霸 - 員工專屬 App</title>
-    <!-- 引入 SweetAlert2 彈出視窗套件 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
-            --primary: #d93025; /* 呷呼霸的紅色系 */
+            --primary: #d93025; 
             --primary-light: #fce8e6;
             --bg: #f4f7f6; 
             --text-main: #202124; 
@@ -22,7 +21,6 @@
         
         .app-container { width: 100%; max-width: 480px; height: 100%; background: var(--bg); position: relative; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;}
         
-        /* 登入畫面 */
         #loginScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 30px; background: white; z-index: 100; position: absolute; width: 100%; transition: 0.3s;}
         .logo-area { text-align: center; margin-bottom: 40px; }
         .logo-area h1 { color: var(--primary); font-size: 32px; margin: 0; font-weight: 900; letter-spacing: 2px;}
@@ -31,7 +29,6 @@
         .login-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px var(--primary-light); }
         .btn-login { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(217,48,37,0.3); }
 
-        /* 主畫面架構 */
         #mainScreen { display: none; flex-direction: column; height: 100%; padding-bottom: 70px; }
         .header-bg { background: linear-gradient(135deg, #ffffff 0%, #fce8e6 100%); padding: 30px 20px 20px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10;}
         .app-title { font-weight: 900; color: var(--primary); font-size: 20px; margin-bottom: 10px;}
@@ -39,12 +36,10 @@
         .greeting p { font-size: 14px; color: var(--text-sub); margin: 0; font-weight: bold;}
         .store-badge { display: inline-block; background: var(--primary); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-top: 5px; }
 
-        /* 視圖切換 */
         .view-section { display: none; flex: 1; flex-direction: column; padding: 20px; overflow-y: auto;}
         .view-section.active { display: flex; }
         .section-title { font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 10px;}
 
-        /* 打卡按鈕區 */
         .punch-btn-wrapper { position: relative; width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; margin: 40px auto 20px auto;}
         .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--primary); animation: pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
         .pulse-ring:nth-child(2) { animation-delay: 0.6s; }
@@ -60,7 +55,6 @@
         .toggle-group input:checked + label { background: var(--primary-light); color: var(--primary); }
         .gps-status { margin-top: 20px; font-size: 14px; font-weight: bold; color: #0f9d58; text-align: center; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
 
-        /* 表單與清單 */
         .app-form { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; width: 100%;}
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 14px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px;}
@@ -68,14 +62,12 @@
         .form-control:focus { border-color: var(--primary); background-color: white; }
         .btn-action { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;}
 
-        /* 班表卡片 */
         .shift-card { background: white; border-left: 5px solid var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04);}
         .shift-date { font-size: 16px; font-weight: bold; color: var(--text-main); }
         .shift-time { font-size: 15px; font-weight: bold; background: var(--primary-light); color: var(--primary); padding: 6px 12px; border-radius: 8px; }
         .shift-off { border-left-color: #5f6368; }
         .shift-off .shift-time { background: #f1f3f4; color: #5f6368; }
 
-        /* 底部導覽列 */
         .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; display: flex; justify-content: space-around; padding: 10px 0 20px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 50;}
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #9aa0a6; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; flex: 1;}
         .nav-icon { font-size: 22px; margin-bottom: 4px; transition: 0.2s;}
@@ -180,15 +172,11 @@
 </div>
 
 <script>
-    // ==========================================
-    // 🔗 API 網址設定 (請確定這串是剛才最新部署的網址)
-    // ==========================================
     const API_URL = "https://script.google.com/macros/s/AKfycbxMqYMpwUCNOwrsNGcYDdCAO723_Qgu26syp0CZJXLHIgp1nul2dzFW0XinwKZ-1_u5/exec";
     
     let userProfile = {};
     let userLat = null, userLon = null;
 
-    // 啟動時檢查是否已登入
     window.onload = () => {
         const saved = localStorage.getItem('jiaHubaUser');
         if (saved) {
@@ -204,7 +192,6 @@
     }
     function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
 
-    // 共用 Fetch API 函數
     async function fetchApi(payload) {
         const res = await fetch(API_URL + "?t=" + new Date().getTime(), {
             method: 'POST',
@@ -212,10 +199,9 @@
             body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error("伺服器連線異常");
-        return await res.json(); // 後端已改為回傳標準 JSON 物件
+        return await res.json(); 
     }
 
-    // ================= 1. 登入系統 =================
     async function doLogin() {
         const name = document.getElementById('loginName').value.trim();
         const pwd = document.getElementById('loginPwd').value.trim();
@@ -249,7 +235,6 @@
         document.getElementById('dispStore').innerText = userProfile.store;
     }
 
-    // ================= 2. 視圖切換 =================
     function switchNav(viewId, element) {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -257,7 +242,6 @@
         element.classList.add('active');
     }
 
-    // ================= 3. GPS 定位 =================
     function initGPS() {
         if(navigator.geolocation) {
             navigator.geolocation.watchPosition(pos => {
@@ -273,7 +257,6 @@
         }
     }
 
-    // ================= 4. 打卡功能 =================
     async function submitPunch() {
         const type = document.querySelector('input[name="punchType"]:checked').value;
         
@@ -306,7 +289,6 @@
         });
     }
 
-    // ================= 5. 查詢個人班表 =================
     async function loadSchedule() {
         const container = document.getElementById('scheduleContent');
         const monthDisp = document.getElementById('schedMonthDisp');
@@ -317,12 +299,10 @@
         monthDisp.innerText = monthStr;
 
         try {
-            // 從後台抓資料，後台已經設定好員工只能抓到自己的
             const res = await fetchApi({ action: "getData", name: userProfile.name, store: userProfile.store, role: userProfile.role });
             
             if (res.status === "success") {
                 const scheds = res.data.schedule;
-                // 尋找當月且是本人的紀錄
                 const mySched = scheds.find(r => r[0] === monthStr && r[2] === userProfile.name);
                 
                 if (!mySched) {
@@ -334,13 +314,12 @@
                 const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
                 const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
-                // D欄開始是1號 (陣列索引 3 開始)
                 for (let i = 1; i <= daysInMonth; i++) {
                     let d = new Date(now.getFullYear(), now.getMonth(), i);
                     let weekStr = weekdays[d.getDay()];
-                    let shiftVal = mySched[2 + i] || ""; // 索引3對應1號
+                    let shiftVal = mySched[2 + i] || ""; 
                     
-                    if (!shiftVal) continue; // 如果空白就不顯示，或顯示為未排班
+                    if (!shiftVal) continue; 
 
                     let isOff = (shiftVal === "休" || shiftVal === "排休");
                     let cardClass = isOff ? "shift-card shift-off" : "shift-card";
@@ -360,7 +339,6 @@
         } catch(e) { container.innerHTML = `<div style="text-align:center; color:red;">連線失敗</div>`; }
     }
 
-    // ================= 6. 上傳反應事項 =================
     function getBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
