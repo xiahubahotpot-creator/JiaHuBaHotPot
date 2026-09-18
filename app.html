@@ -133,7 +133,6 @@
                 目前顯示：<span id="schedMonthDisp" style="color:var(--primary);">載入中...</span>
             </div>
             <div id="scheduleContent" style="display:flex; flex-direction:column;">
-                <!-- 班表資料會動態載入這裡 -->
             </div>
         </div>
 
@@ -176,6 +175,20 @@
     
     let userProfile = {};
     let userLat = null, userLon = null;
+    let isWithinRange = false;
+    const ALLOWED_DIST = 300; // 允許打卡的半徑距離 (公尺)，可隨時調整
+
+    // 各門市精準座標
+    const STORE_LOCATIONS = {
+        "呷呼霸土城店": { lat: 24.9796939917096, lon: 121.44271680000001 },
+        "呷呼霸南崁店": { lat: 25.04907755650072, lon: 121.29537739385484 },
+        "呷呼霸長榮店": { lat: 25.105350833998052, lon: 121.46181640409846 },
+        "呷呼霸蘆洲中山店": { lat: 25.087309049331484, lon: 121.47824063907836 },
+        "呷呼霸汐止店": { lat: 25.07326757123323, lon: 121.65359859249163 },
+        "呷呼霸林口店": { lat: 25.080390558411217, lon: 121.38304709932427 },
+        "呷呼霸淡大店": { lat: 25.188705903698462, lon: 121.44580752353794 },
+        "呷呼霸淡水店": { lat: 25.188705903698462, lon: 121.44580752353794 } 
+    };
 
     window.onload = () => {
         const saved = localStorage.getItem('jiaHubaUser');
@@ -242,22 +255,75 @@
         element.classList.add('active');
     }
 
+    // 計算兩座標距離 (Haversine 公式)
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const p1 = lat1 * Math.PI/180;
+        const p2 = lat2 * Math.PI/180;
+        const dp = (lat2-lat1) * Math.PI/180;
+        const dl = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c; 
+    }
+
     function initGPS() {
         if(navigator.geolocation) {
             navigator.geolocation.watchPosition(pos => {
                 userLat = pos.coords.latitude; 
                 userLon = pos.coords.longitude;
-                document.getElementById('gpsStatus').innerText = "✅ 定位成功，可打卡";
-                document.getElementById('gpsStatus').style.color = "#0f9d58";
+                checkLocation();
             }, error => {
                 userLat = null; userLon = null;
-                document.getElementById('gpsStatus').innerText = "⚠️ 無法取得定位，將標記為無定位";
-                document.getElementById('gpsStatus').style.color = "#d93025";
+                updateGPSUI("⚠️ 無法取得定位，請開啟 GPS 權限", "#d93025", false);
             }, { enableHighAccuracy: true });
+        } else {
+            updateGPSUI("⚠️ 裝置不支援 GPS 定位", "#d93025", false);
+        }
+    }
+
+    function checkLocation() {
+        if (userProfile.role === "老闆") {
+            isWithinRange = true;
+            updateGPSUI("✅ 老闆免定位模式", "#0f9d58", true);
+            return;
+        }
+
+        let store = userProfile.store;
+        if (STORE_LOCATIONS[store]) {
+            let target = STORE_LOCATIONS[store];
+            let dist = getDistance(userLat, userLon, target.lat, target.lon);
+            if (dist <= ALLOWED_DIST) {
+                isWithinRange = true;
+                updateGPSUI(`✅ 已進入範圍 (距門市 ${Math.round(dist)}m)`, "#0f9d58", true);
+            } else {
+                isWithinRange = false;
+                updateGPSUI(`❌ 距離過遠無法打卡 (相距 ${Math.round(dist)}m)`, "#d93025", false);
+            }
+        } else {
+            isWithinRange = true; 
+            updateGPSUI("✅ 未設定此門市座標，預設可打卡", "#0f9d58", true);
+        }
+    }
+
+    function updateGPSUI(text, color, canPunch) {
+        let statusEl = document.getElementById('gpsStatus');
+        if(statusEl) {
+            statusEl.innerText = text;
+            statusEl.style.color = color;
+        }
+        let btn = document.querySelector('.punch-btn');
+        if(btn) {
+            btn.style.pointerEvents = canPunch ? "auto" : "none";
+            btn.style.opacity = canPunch ? "1" : "0.5";
         }
     }
 
     async function submitPunch() {
+        if (!isWithinRange && userProfile.role !== "老闆") {
+            return Swal.fire('定位失敗', '您目前不在門市範圍內，無法進行打卡！', 'error');
+        }
+
         const type = document.querySelector('input[name="punchType"]:checked').value;
         
         Swal.fire({
