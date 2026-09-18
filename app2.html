@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>呷呼霸 - 員工專屬 App V3</title>
+    <title>呷呼霸 - 員工專屬 App V3.1</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
-            /* 替換為呷呼霸招牌暖黃/橘黃色系 */
             --primary: #f39c12; 
             --primary-light: #fef5e7;
             --primary-dark: #d68910;
@@ -57,8 +56,8 @@
         .toggle-group input { display: none; }
         .toggle-group input:checked + label { background: var(--primary-light); color: var(--primary-dark); }
         
-        /* 管理區專用切換 */
-        .mgr-toggle { max-width: 100%; margin-bottom: 20px; }
+        .mgr-toggle { max-width: 100%; margin-bottom: 20px; border-radius: 12px; }
+        .mgr-toggle label { border-radius: 8px; padding: 10px 0; font-size: 14px;}
         
         .gps-status { margin-top: 20px; font-size: 14px; font-weight: bold; color: #0f9d58; text-align: center; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
 
@@ -75,7 +74,6 @@
         .shift-off { border-left-color: #5f6368; }
         .shift-off .shift-time { background: #f1f3f4; color: #5f6368; }
 
-        /* 通訊錄卡片 */
         .emp-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #eee; }
         .emp-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #ddd; padding-bottom: 8px;}
         .emp-name { font-size: 16px; font-weight: bold; color: var(--primary-dark); }
@@ -98,7 +96,6 @@
 <div class="app-container">
     <div id="loadingOverlay"><div class="spinner"></div><div id="loadingText" style="font-weight:bold; color:var(--primary-dark);">資料處理中...</div></div>
 
-    <!-- 登入畫面 -->
     <div id="loginScreen">
         <div class="logo-area">
             <h1>呷呼霸</h1>
@@ -109,7 +106,6 @@
         <button class="btn-login" onclick="doLogin()">安全登入</button>
     </div>
 
-    <!-- 主畫面 -->
     <div id="mainScreen">
         <div class="header-bg">
             <div class="app-title">呷呼霸 JIA HU BA</div>
@@ -120,7 +116,6 @@
             </div>
         </div>
 
-        <!-- 📍 打卡視圖 -->
         <div id="viewPunch" class="view-section active">
             <div class="toggle-group">
                 <input type="radio" name="punchType" id="typeIn" value="上班" checked>
@@ -140,17 +135,14 @@
             <div class="gps-status" id="gpsStatus">📍 獲取定位中...</div>
         </div>
 
-        <!-- 📅 班表視圖 -->
         <div id="viewSchedule" class="view-section">
             <div class="section-title">我的當月班表</div>
             <div style="text-align:center; margin-bottom:15px; font-weight:bold; color:var(--text-sub);">
                 目前顯示：<span id="schedMonthDisp" style="color:var(--primary-dark);">載入中...</span>
             </div>
-            <div id="scheduleContent" style="display:flex; flex-direction:column;">
-            </div>
+            <div id="scheduleContent" style="display:flex; flex-direction:column;"></div>
         </div>
 
-        <!-- 🗣️ 反應事項視圖 -->
         <div id="viewFeedback" class="view-section">
             <div class="section-title">反應事項回報</div>
             <div class="app-form">
@@ -169,22 +161,28 @@
             </div>
         </div>
 
-        <!-- 🛡️ 店長管理視圖 (隱藏，依權限開啟) -->
+        <!-- 🛡️ 店長管理視圖 -->
         <div id="viewManager" class="view-section">
             <div class="section-title">主管管理專區</div>
             
             <div class="toggle-group mgr-toggle">
-                <input type="radio" name="mgrType" id="mgrTabDir" value="dir" checked onchange="toggleMgrView()">
-                <label for="mgrTabDir">員工通訊錄</label>
+                <input type="radio" name="mgrType" id="mgrTabDaily" value="daily" checked onchange="toggleMgrView()">
+                <label for="mgrTabDaily">每日人力</label>
                 <input type="radio" name="mgrType" id="mgrTabSched" value="sched" onchange="toggleMgrView()">
-                <label for="mgrTabSched">排班修改</label>
+                <label for="mgrTabSched">單人排班</label>
+                <input type="radio" name="mgrType" id="mgrTabDir" value="dir" onchange="toggleMgrView()">
+                <label for="mgrTabDir">通訊錄</label>
             </div>
 
-            <!-- 通訊錄子頁面 -->
-            <div id="mgrSectionDir">
-                <div id="dirContent">
-                    <div style="text-align:center; padding:20px; color:#5f6368;">載入中...</div>
+            <!-- 每日人力總覽子頁面 -->
+            <div id="mgrSectionDaily">
+                <div class="app-form" style="padding: 15px; margin-bottom: 15px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>選擇檢視日期</label>
+                        <input type="date" id="mgrDailyDate" class="form-control" onchange="renderDailySchedule()">
+                    </div>
                 </div>
+                <div id="mgrDailyContent"></div>
             </div>
 
             <!-- 手動排班修改子頁面 -->
@@ -196,19 +194,19 @@
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label>選擇員工</label>
-                        <select id="mgrEmp" class="form-control" onchange="renderMgrSchedule()">
-                            <!-- 動態載入 -->
-                        </select>
+                        <select id="mgrEmp" class="form-control" onchange="renderMgrSchedule()"></select>
                     </div>
                 </div>
-                <div id="mgrSchedContent" style="display:flex; flex-direction:column;">
-                    <!-- 動態載入班表輸入框 -->
-                </div>
+                <div id="mgrSchedContent" style="display:flex; flex-direction:column;"></div>
                 <button class="btn-action" id="btnSaveMgr" style="display:none; margin-top:20px; background:#0f9d58; box-shadow: 0 4px 10px rgba(15,157,88,0.3);" onclick="saveMgrSchedule()">💾 儲存該員工班表</button>
+            </div>
+
+            <!-- 通訊錄子頁面 -->
+            <div id="mgrSectionDir" style="display:none;">
+                <div id="dirContent"><div style="text-align:center; padding:20px; color:#5f6368;">載入中...</div></div>
             </div>
         </div>
 
-        <!-- 底部導覽列 -->
         <div class="bottom-nav">
             <div class="nav-item active" onclick="switchNav('viewPunch', this)">
                 <div class="nav-icon">📍</div>打卡
@@ -219,7 +217,6 @@
             <div class="nav-item" onclick="switchNav('viewFeedback', this)">
                 <div class="nav-icon">🗣️</div>反映
             </div>
-            <!-- 主管專用按鈕，預設隱藏 -->
             <div class="nav-item" id="navManager" style="display:none;" onclick="switchNav('viewManager', this); loadManagerData();">
                 <div class="nav-icon">🛡️</div>管理區
             </div>
@@ -234,7 +231,7 @@
     let userLat = null, userLon = null;
     let isWithinRange = false;
     const ALLOWED_DIST = 300; 
-    let appGlobalData = null; // 存放管理區拉取的全店資料
+    let appGlobalData = null; 
 
     const STORE_LOCATIONS = {
         "呷呼霸土城店": { lat: 24.9796939917096, lon: 121.44271680000001 },
@@ -304,7 +301,6 @@
         document.getElementById('dispName').innerText = userProfile.name;
         document.getElementById('dispStore').innerText = userProfile.store;
 
-        // 權限判斷：顯示店長管理區
         if (userProfile.role === '店長' || userProfile.role === '副店長' || userProfile.role === '老闆') {
             document.getElementById('navManager').style.display = 'flex';
         }
@@ -499,8 +495,9 @@
     // ================= 店長管理區專用 =================
     function toggleMgrView() {
         let type = document.querySelector('input[name="mgrType"]:checked').value;
-        document.getElementById('mgrSectionDir').style.display = type === 'dir' ? 'block' : 'none';
+        document.getElementById('mgrSectionDaily').style.display = type === 'daily' ? 'block' : 'none';
         document.getElementById('mgrSectionSched').style.display = type === 'sched' ? 'block' : 'none';
+        document.getElementById('mgrSectionDir').style.display = type === 'dir' ? 'block' : 'none';
     }
 
     async function loadManagerData() {
@@ -511,11 +508,13 @@
             if (res.status === "success") {
                 appGlobalData = res.data;
                 
-                // 預設月份
-                if(!document.getElementById('mgrMonth').value) {
-                    let now = new Date();
-                    document.getElementById('mgrMonth').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-                }
+                // 預設月份與日期
+                let now = new Date();
+                let mStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+                let dStr = `${mStr}-${String(now.getDate()).padStart(2,'0')}`;
+
+                if(!document.getElementById('mgrMonth').value) document.getElementById('mgrMonth').value = mStr;
+                if(!document.getElementById('mgrDailyDate').value) document.getElementById('mgrDailyDate').value = dStr;
                 
                 // 產生員工下拉選單
                 let sel = document.getElementById('mgrEmp');
@@ -528,16 +527,98 @@
 
                 renderDirectory();
                 renderMgrSchedule();
+                renderDailySchedule();
             } else {
                 Swal.fire('錯誤', res.msg, 'error');
             }
         } catch(e) { hideLoading(); Swal.fire('錯誤', '連線失敗', 'error'); }
     }
 
+    // --- 新增：每日人力總覽 ---
+    function renderDailySchedule() {
+        const dateStr = document.getElementById('mgrDailyDate').value;
+        const container = document.getElementById('mgrDailyContent');
+        if(!dateStr || !appGlobalData) return;
+
+        let d = new Date(dateStr);
+        let yyyy = d.getFullYear();
+        let mm = String(d.getMonth() + 1).padStart(2, '0');
+        let dd = d.getDate();
+        let monthStr = `${yyyy}-${mm}`;
+
+        let activeEmps = appGlobalData.employees.filter(e => e[1] === userProfile.store && e[4] !== "離職");
+
+        let workingHTML = '';
+        let offHTML = '';
+        let workCount = 0;
+        let offCount = 0;
+
+        activeEmps.forEach(emp => {
+            let empName = emp[0];
+            let mySched = appGlobalData.schedule.find(s => {
+                let rMonth = String(s[0]);
+                if (rMonth.includes("GMT") || rMonth.includes("T")) {
+                     let dateObj = new Date(s[0]);
+                     rMonth = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}`;
+                } else if (rMonth.includes("/")) {
+                     let parts = rMonth.split('/');
+                     if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
+                }
+                return rMonth === monthStr && s[2] === empName;
+            });
+
+            let val = mySched ? mySched[2 + dd] : "未排班";
+            if (val == null || val === "") val = "未排班";
+            else val = String(val);
+
+            // 防禦亂碼
+            if (val.includes('T') && val.includes('Z')) {
+                let parsedDate = new Date(val);
+                if (!isNaN(parsedDate.getTime())) {
+                    let yr = parsedDate.getFullYear();
+                    if (yr < 2000) {
+                        let hh = String(parsedDate.getHours()).padStart(2, '0');
+                        let mmm = String(parsedDate.getMinutes()).padStart(2, '0');
+                        val = hh + ':' + mmm;
+                    } else {
+                        val = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
+                    }
+                }
+            }
+
+            let isOff = (val === '休' || val === '排休' || val === '未排班');
+
+            let card = `
+            <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid #f1f3f4;">
+                <span style="font-weight:bold; color:var(--text-main); font-size:15px;">${empName}</span>
+                <span style="color:${isOff ? '#999' : 'var(--primary-dark)'}; font-weight:bold; font-size:15px;">${val}</span>
+            </div>`;
+
+            if(isOff) {
+                offHTML += card;
+                offCount++;
+            } else {
+                workingHTML += card;
+                workCount++;
+            }
+        });
+
+        let html = `
+        <div style="background:white; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-left: 5px solid #0f9d58;">
+            <h4 style="margin:0 0 10px 0; color:#0f9d58; display:flex; justify-content:space-between;"><span>🟢 今日上班</span> <span>${workCount} 人</span></h4>
+            ${workingHTML || '<div style="color:#999; font-size:13px; text-align:center; padding:10px;">本日無人上班</div>'}
+        </div>
+        <div style="background:white; border-radius:12px; padding:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-left: 5px solid #9aa0a6;">
+            <h4 style="margin:0 0 10px 0; color:#5f6368; display:flex; justify-content:space-between;"><span>⚪ 休假/未排班</span> <span>${offCount} 人</span></h4>
+            ${offHTML || '<div style="color:#999; font-size:13px; text-align:center; padding:10px;">本日無人休假</div>'}
+        </div>
+        `;
+        container.innerHTML = html;
+    }
+
     function renderDirectory() {
         let container = document.getElementById('dirContent');
         let html = '';
-        
         let activeEmps = appGlobalData.employees.filter(e => e[4] !== "離職");
         
         activeEmps.forEach(emp => {
@@ -552,11 +633,10 @@
                     <div class="emp-name">${name}</div>
                     <div class="emp-role">${role}</div>
                 </div>
-                <div class="emp-info">📞 手機：<a href="tel:${phone}" style="color:#1a73e8; font-weight:bold; text-decoration:none;">${phone}</a></div>
+                <div class="emp-info">📞 手機：<a href="tel:${phone}" style="color:var(--primary-dark); font-weight:bold; text-decoration:none;">${phone}</a></div>
                 <div class="emp-info">🏠 住址：${address}</div>
             </div>`;
         });
-        
         container.innerHTML = html || '<div style="text-align:center; padding:20px; color:#5f6368;">尚無員工資料</div>';
     }
 
@@ -599,7 +679,6 @@
             if (val == null) val = "";
             else val = String(val);
 
-            // 防禦亂碼
             if (val.includes('T') && val.includes('Z')) {
                 let parsedDate = new Date(val);
                 if (!isNaN(parsedDate.getTime())) {
@@ -641,7 +720,7 @@
             if (inp) {
                 shifts.push(inp.value.trim());
             } else {
-                shifts.push(""); // 不足 31 天的月份補空值
+                shifts.push(""); 
             }
         }
 
@@ -652,7 +731,6 @@
             const res = await fetchApi({ action: 'saveSchedule', month: monthStr, store: userProfile.store, scheduleData: payloadData });
             if(res.status === 'success') { 
                 Swal.fire('成功', res.msg, 'success'); 
-                // 重新抓取資料確保同步
                 loadManagerData();
             } 
             else { Swal.fire('阻擋', res.msg, 'error'); }
