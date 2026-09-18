@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>呷呼霸 - 員工專屬 App</title>
+    <title>呷呼霸 - 員工專屬 App V3</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
-            --primary: #d93025; 
-            --primary-light: #fce8e6;
-            --bg: #f4f7f6; 
+            /* 替換為呷呼霸招牌暖黃/橘黃色系 */
+            --primary: #f39c12; 
+            --primary-light: #fef5e7;
+            --primary-dark: #d68910;
+            --bg: #fdfbf7; 
             --text-main: #202124; 
             --text-sub: #5f6368;
             --white: #ffffff;
@@ -23,36 +25,41 @@
         
         #loginScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 30px; background: white; z-index: 100; position: absolute; width: 100%; transition: 0.3s;}
         .logo-area { text-align: center; margin-bottom: 40px; }
-        .logo-area h1 { color: var(--primary); font-size: 32px; margin: 0; font-weight: 900; letter-spacing: 2px;}
+        .logo-area h1 { color: var(--primary-dark); font-size: 36px; margin: 0; font-weight: 900; letter-spacing: 2px;}
         .logo-area p { color: var(--text-sub); font-size: 15px; margin-top: 8px; font-weight: bold;}
         .login-input { width: 100%; padding: 16px; margin-bottom: 20px; border: 1px solid #dadce0; border-radius: 12px; font-size: 16px; outline: none; transition: 0.2s; background: var(--bg); }
         .login-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px var(--primary-light); }
-        .btn-login { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(217,48,37,0.3); }
+        .btn-login { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(243,156,18,0.3); }
 
-        #mainScreen { display: none; flex-direction: column; height: 100%; padding-bottom: 70px; }
-        .header-bg { background: linear-gradient(135deg, #ffffff 0%, #fce8e6 100%); padding: 30px 20px 20px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10;}
-        .app-title { font-weight: 900; color: var(--primary); font-size: 20px; margin-bottom: 10px;}
+        #mainScreen { display: none; flex-direction: column; height: 100%; padding-bottom: 80px; }
+        .header-bg { background: linear-gradient(135deg, #ffffff 0%, #fef5e7 100%); padding: 30px 20px 20px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10;}
+        .app-title { font-weight: 900; color: var(--primary-dark); font-size: 20px; margin-bottom: 10px;}
         .greeting h2 { font-size: 24px; color: var(--text-main); margin: 0 0 5px 0; font-weight: 800;}
         .greeting p { font-size: 14px; color: var(--text-sub); margin: 0; font-weight: bold;}
         .store-badge { display: inline-block; background: var(--primary); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-top: 5px; }
 
         .view-section { display: none; flex: 1; flex-direction: column; padding: 20px; overflow-y: auto;}
-        .view-section.active { display: flex; }
+        .view-section.active { display: flex; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
         .section-title { font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 10px;}
 
         .punch-btn-wrapper { position: relative; width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; margin: 40px auto 20px auto;}
         .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--primary); animation: pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
         .pulse-ring:nth-child(2) { animation-delay: 0.6s; }
-        .punch-btn { width: 140px; height: 140px; background: linear-gradient(135deg, #d93025 0%, #ff6b6b 100%); border-radius: 50%; box-shadow: 0 10px 25px rgba(217,48,37,0.4); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; cursor: pointer; z-index: 10; transition: transform 0.1s;}
+        .punch-btn { width: 140px; height: 140px; background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%); border-radius: 50%; box-shadow: 0 10px 25px rgba(243,156,18,0.4); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; cursor: pointer; z-index: 10; transition: transform 0.1s;}
         .punch-btn:active { transform: scale(0.95); }
         .punch-icon { font-size: 40px; margin-bottom: 5px; }
-        .punch-text { font-size: 18px; font-weight: bold; letter-spacing: 2px;}
-        @keyframes pulse { 0% { transform: scale(0.7); opacity: 0.8; } 100% { transform: scale(1.1); opacity: 0; } }
+        .punch-text { font-size: 18px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);}
 
         .toggle-group { display: flex; background: white; border-radius: 30px; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin: 0 auto; width: 100%; max-width: 250px;}
         .toggle-group label { flex:1; text-align:center; padding: 12px 0; border-radius: 25px; font-size: 15px; font-weight: bold; color: var(--text-sub); cursor: pointer; transition: 0.3s; }
         .toggle-group input { display: none; }
-        .toggle-group input:checked + label { background: var(--primary-light); color: var(--primary); }
+        .toggle-group input:checked + label { background: var(--primary-light); color: var(--primary-dark); }
+        
+        /* 管理區專用切換 */
+        .mgr-toggle { max-width: 100%; margin-bottom: 20px; }
+        
         .gps-status { margin-top: 20px; font-size: 14px; font-weight: bold; color: #0f9d58; text-align: center; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
 
         .app-form { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; width: 100%;}
@@ -60,18 +67,25 @@
         .form-group label { display: block; font-size: 14px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px;}
         .form-control { width: 100%; padding: 14px; border: 1px solid #dadce0; border-radius: 12px; font-size: 15px; background-color: var(--bg); outline: none; }
         .form-control:focus { border-color: var(--primary); background-color: white; }
-        .btn-action { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;}
+        .btn-action { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(243,156,18,0.3);}
 
         .shift-card { background: white; border-left: 5px solid var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04);}
         .shift-date { font-size: 16px; font-weight: bold; color: var(--text-main); }
-        .shift-time { font-size: 15px; font-weight: bold; background: var(--primary-light); color: var(--primary); padding: 6px 12px; border-radius: 8px; }
+        .shift-time { font-size: 15px; font-weight: bold; background: var(--primary-light); color: var(--primary-dark); padding: 6px 12px; border-radius: 8px; }
         .shift-off { border-left-color: #5f6368; }
         .shift-off .shift-time { background: #f1f3f4; color: #5f6368; }
+
+        /* 通訊錄卡片 */
+        .emp-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #eee; }
+        .emp-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #ddd; padding-bottom: 8px;}
+        .emp-name { font-size: 16px; font-weight: bold; color: var(--primary-dark); }
+        .emp-role { font-size: 12px; background: #e8eaed; padding: 2px 8px; border-radius: 10px; color: #333;}
+        .emp-info { font-size: 14px; color: var(--text-sub); margin-bottom: 5px; display: flex; align-items: center; gap: 8px;}
 
         .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; display: flex; justify-content: space-around; padding: 10px 0 20px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 50;}
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #9aa0a6; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; flex: 1;}
         .nav-icon { font-size: 22px; margin-bottom: 4px; transition: 0.2s;}
-        .nav-item.active { color: var(--primary); }
+        .nav-item.active { color: var(--primary-dark); }
         .nav-item.active .nav-icon { transform: translateY(-3px); }
 
         #loadingOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
@@ -82,7 +96,7 @@
 <body>
 
 <div class="app-container">
-    <div id="loadingOverlay"><div class="spinner"></div><div id="loadingText" style="font-weight:bold; color:var(--primary);">處理中...</div></div>
+    <div id="loadingOverlay"><div class="spinner"></div><div id="loadingText" style="font-weight:bold; color:var(--primary-dark);">資料處理中...</div></div>
 
     <!-- 登入畫面 -->
     <div id="loginScreen">
@@ -92,7 +106,7 @@
         </div>
         <input type="text" id="loginName" class="login-input" placeholder="請輸入您的姓名">
         <input type="password" id="loginPwd" class="login-input" placeholder="請輸入密碼">
-        <button class="btn-login" onclick="doLogin()">登入系統</button>
+        <button class="btn-login" onclick="doLogin()">安全登入</button>
     </div>
 
     <!-- 主畫面 -->
@@ -130,7 +144,7 @@
         <div id="viewSchedule" class="view-section">
             <div class="section-title">我的當月班表</div>
             <div style="text-align:center; margin-bottom:15px; font-weight:bold; color:var(--text-sub);">
-                目前顯示：<span id="schedMonthDisp" style="color:var(--primary);">載入中...</span>
+                目前顯示：<span id="schedMonthDisp" style="color:var(--primary-dark);">載入中...</span>
             </div>
             <div id="scheduleContent" style="display:flex; flex-direction:column;">
             </div>
@@ -155,6 +169,45 @@
             </div>
         </div>
 
+        <!-- 🛡️ 店長管理視圖 (隱藏，依權限開啟) -->
+        <div id="viewManager" class="view-section">
+            <div class="section-title">主管管理專區</div>
+            
+            <div class="toggle-group mgr-toggle">
+                <input type="radio" name="mgrType" id="mgrTabDir" value="dir" checked onchange="toggleMgrView()">
+                <label for="mgrTabDir">員工通訊錄</label>
+                <input type="radio" name="mgrType" id="mgrTabSched" value="sched" onchange="toggleMgrView()">
+                <label for="mgrTabSched">排班修改</label>
+            </div>
+
+            <!-- 通訊錄子頁面 -->
+            <div id="mgrSectionDir">
+                <div id="dirContent">
+                    <div style="text-align:center; padding:20px; color:#5f6368;">載入中...</div>
+                </div>
+            </div>
+
+            <!-- 手動排班修改子頁面 -->
+            <div id="mgrSectionSched" style="display:none;">
+                <div class="app-form" style="padding: 15px;">
+                    <div class="form-group">
+                        <label>選擇修改月份</label>
+                        <input type="month" id="mgrMonth" class="form-control" onchange="renderMgrSchedule()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>選擇員工</label>
+                        <select id="mgrEmp" class="form-control" onchange="renderMgrSchedule()">
+                            <!-- 動態載入 -->
+                        </select>
+                    </div>
+                </div>
+                <div id="mgrSchedContent" style="display:flex; flex-direction:column;">
+                    <!-- 動態載入班表輸入框 -->
+                </div>
+                <button class="btn-action" id="btnSaveMgr" style="display:none; margin-top:20px; background:#0f9d58; box-shadow: 0 4px 10px rgba(15,157,88,0.3);" onclick="saveMgrSchedule()">💾 儲存該員工班表</button>
+            </div>
+        </div>
+
         <!-- 底部導覽列 -->
         <div class="bottom-nav">
             <div class="nav-item active" onclick="switchNav('viewPunch', this)">
@@ -164,7 +217,11 @@
                 <div class="nav-icon">📅</div>班表
             </div>
             <div class="nav-item" onclick="switchNav('viewFeedback', this)">
-                <div class="nav-icon">🗣️</div>反映事項
+                <div class="nav-icon">🗣️</div>反映
+            </div>
+            <!-- 主管專用按鈕，預設隱藏 -->
+            <div class="nav-item" id="navManager" style="display:none;" onclick="switchNav('viewManager', this); loadManagerData();">
+                <div class="nav-icon">🛡️</div>管理區
             </div>
         </div>
     </div>
@@ -177,6 +234,7 @@
     let userLat = null, userLon = null;
     let isWithinRange = false;
     const ALLOWED_DIST = 300; 
+    let appGlobalData = null; // 存放管理區拉取的全店資料
 
     const STORE_LOCATIONS = {
         "呷呼霸土城店": { lat: 24.9796939917096, lon: 121.44271680000001 },
@@ -245,6 +303,11 @@
         document.getElementById('mainScreen').style.display = 'flex';
         document.getElementById('dispName').innerText = userProfile.name;
         document.getElementById('dispStore').innerText = userProfile.store;
+
+        // 權限判斷：顯示店長管理區
+        if (userProfile.role === '店長' || userProfile.role === '副店長' || userProfile.role === '老闆') {
+            document.getElementById('navManager').style.display = 'flex';
+        }
     }
 
     function switchNav(viewId, element) {
@@ -254,6 +317,7 @@
         element.classList.add('active');
     }
 
+    // ================= 打卡與定位 =================
     function getDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const p1 = lat1 * Math.PI/180;
@@ -281,9 +345,9 @@
     }
 
     function checkLocation() {
-        if (userProfile.role === "老闆") {
+        if (userProfile.role === "老闆" || userProfile.role === "店長" || userProfile.role === "副店長") {
             isWithinRange = true;
-            updateGPSUI("✅ 老闆免定位模式", "#0f9d58", true);
+            updateGPSUI("✅ 主管免定位模式", "#0f9d58", true);
             return;
         }
 
@@ -318,7 +382,7 @@
     }
 
     async function submitPunch() {
-        if (!isWithinRange && userProfile.role !== "老闆") {
+        if (!isWithinRange) {
             return Swal.fire('定位失敗', '您目前不在門市範圍內，無法進行打卡！', 'error');
         }
 
@@ -329,6 +393,7 @@
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: '確認打卡',
+            confirmButtonColor: '#f39c12',
             cancelButtonText: '取消'
         }).then(async (result) => {
             if (result.isConfirmed) {
@@ -353,6 +418,7 @@
         });
     }
 
+    // ================= 員工查看班表 =================
     async function loadSchedule() {
         const container = document.getElementById('scheduleContent');
         const monthDisp = document.getElementById('schedMonthDisp');
@@ -396,23 +462,19 @@
                     if (shiftVal == null) shiftVal = "";
                     else shiftVal = String(shiftVal);
 
-                    // --- 自動防亂碼過濾器 (攔截 Google Sheets 日期轉換) ---
                     if (shiftVal.includes('T') && shiftVal.includes('Z')) {
                         let parsedDate = new Date(shiftVal);
                         if (!isNaN(parsedDate.getTime())) {
                             let yr = parsedDate.getFullYear();
                             if (yr < 2000) {
-                                // 判斷為純時間 (如輸入 10:30 被轉化)
                                 let hh = String(parsedDate.getHours()).padStart(2, '0');
-                                let mm = String(parsedDate.getMinutes()).padStart(2, '0');
-                                shiftVal = hh + ':' + mm;
+                                let mmm = String(parsedDate.getMinutes()).padStart(2, '0');
+                                shiftVal = hh + ':' + mmm;
                             } else {
-                                // 判斷為日期 (如輸入 10-16 被轉化成 10月16日)
                                 shiftVal = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
                             }
                         }
                     }
-                    // ---------------------------------------------------
 
                     if (!shiftVal) continue; 
 
@@ -434,6 +496,171 @@
         } catch(e) { container.innerHTML = `<div style="text-align:center; color:red;">連線失敗</div>`; }
     }
 
+    // ================= 店長管理區專用 =================
+    function toggleMgrView() {
+        let type = document.querySelector('input[name="mgrType"]:checked').value;
+        document.getElementById('mgrSectionDir').style.display = type === 'dir' ? 'block' : 'none';
+        document.getElementById('mgrSectionSched').style.display = type === 'sched' ? 'block' : 'none';
+    }
+
+    async function loadManagerData() {
+        showLoading("拉取門市資料...");
+        try {
+            const res = await fetchApi({ action: "getData", name: userProfile.name, store: userProfile.store, role: userProfile.role });
+            hideLoading();
+            if (res.status === "success") {
+                appGlobalData = res.data;
+                
+                // 預設月份
+                if(!document.getElementById('mgrMonth').value) {
+                    let now = new Date();
+                    document.getElementById('mgrMonth').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+                }
+                
+                // 產生員工下拉選單
+                let sel = document.getElementById('mgrEmp');
+                sel.innerHTML = '<option value="">請點此選擇員工...</option>';
+                appGlobalData.employees.forEach(e => {
+                    if (e[4] !== "離職") {
+                        sel.innerHTML += `<option value="${e[0]}">${e[0]} (${e[2]})</option>`;
+                    }
+                });
+
+                renderDirectory();
+                renderMgrSchedule();
+            } else {
+                Swal.fire('錯誤', res.msg, 'error');
+            }
+        } catch(e) { hideLoading(); Swal.fire('錯誤', '連線失敗', 'error'); }
+    }
+
+    function renderDirectory() {
+        let container = document.getElementById('dirContent');
+        let html = '';
+        
+        let activeEmps = appGlobalData.employees.filter(e => e[4] !== "離職");
+        
+        activeEmps.forEach(emp => {
+            let name = emp[0];
+            let role = emp[2];
+            let phone = emp[15] || '未填寫';
+            let address = emp[16] || '未填寫';
+
+            html += `
+            <div class="emp-card">
+                <div class="emp-card-header">
+                    <div class="emp-name">${name}</div>
+                    <div class="emp-role">${role}</div>
+                </div>
+                <div class="emp-info">📞 手機：<a href="tel:${phone}" style="color:#1a73e8; font-weight:bold; text-decoration:none;">${phone}</a></div>
+                <div class="emp-info">🏠 住址：${address}</div>
+            </div>`;
+        });
+        
+        container.innerHTML = html || '<div style="text-align:center; padding:20px; color:#5f6368;">尚無員工資料</div>';
+    }
+
+    function renderMgrSchedule() {
+        const monthStr = document.getElementById('mgrMonth').value;
+        const empName = document.getElementById('mgrEmp').value;
+        const container = document.getElementById('mgrSchedContent');
+        const btnSave = document.getElementById('btnSaveMgr');
+
+        if (!monthStr || !empName) {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">請選擇月份與員工開始排班</div>';
+            btnSave.style.display = 'none';
+            return;
+        }
+
+        let [yy, mm] = monthStr.split('-');
+        const daysInMonth = new Date(yy, mm, 0).getDate();
+        const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+
+        let mySched = appGlobalData.schedule.find(r => {
+            let rMonth = String(r[0]);
+            if (rMonth.includes("GMT") || rMonth.includes("T")) {
+                 let d = new Date(r[0]);
+                 rMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+            } else if (rMonth.includes("/")) {
+                 let parts = rMonth.split('/');
+                 if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
+            }
+            return rMonth === monthStr && r[2] === empName;
+        });
+
+        let html = '';
+        for (let i = 1; i <= daysInMonth; i++) {
+            let d = new Date(yy, parseInt(mm)-1, i);
+            let weekStr = weekdays[d.getDay()];
+            let isWeekend = (d.getDay()===0 || d.getDay()===6);
+            let colorStyle = isWeekend ? 'color: var(--primary-dark);' : 'color: var(--text-main);';
+            
+            let val = mySched ? mySched[2 + i] : "";
+            if (val == null) val = "";
+            else val = String(val);
+
+            // 防禦亂碼
+            if (val.includes('T') && val.includes('Z')) {
+                let parsedDate = new Date(val);
+                if (!isNaN(parsedDate.getTime())) {
+                    let yr = parsedDate.getFullYear();
+                    if (yr < 2000) {
+                        let hh = String(parsedDate.getHours()).padStart(2, '0');
+                        let mmm = String(parsedDate.getMinutes()).padStart(2, '0');
+                        val = hh + ':' + mmm;
+                    } else {
+                        val = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
+                    }
+                }
+            }
+
+            let isOff = (val === '休' || val === '排休');
+
+            html += `
+            <div class="shift-card" style="padding:10px 15px;">
+                <div class="shift-date" style="${colorStyle} width: 60px;">${i} 號<br><span style="font-size:12px; color:#999; font-weight:normal;">(${weekStr})</span></div>
+                <div style="flex:1; display:flex; gap:8px; align-items:center;">
+                    <input type="text" class="form-control" style="padding:8px; font-weight:bold; text-align:center;" id="mgrInput_${i}" value="${isOff ? '休' : val}" placeholder="時間">
+                    <button class="btn-action" style="margin:0; padding:8px 12px; background:#e8eaed; color:#333; box-shadow:none;" onclick="document.getElementById('mgrInput_${i}').value='休'">休</button>
+                </div>
+            </div>`;
+        }
+        
+        container.innerHTML = html;
+        btnSave.style.display = 'block';
+    }
+
+    async function saveMgrSchedule() {
+        const monthStr = document.getElementById('mgrMonth').value;
+        const empName = document.getElementById('mgrEmp').value;
+        if (!monthStr || !empName) return;
+
+        let shifts = [];
+        for (let i = 1; i <= 31; i++) {
+            let inp = document.getElementById(`mgrInput_${i}`);
+            if (inp) {
+                shifts.push(inp.value.trim());
+            } else {
+                shifts.push(""); // 不足 31 天的月份補空值
+            }
+        }
+
+        let payloadData = [{ name: empName, shifts: shifts }];
+
+        Swal.fire({title: '驗證與儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+        try {
+            const res = await fetchApi({ action: 'saveSchedule', month: monthStr, store: userProfile.store, scheduleData: payloadData });
+            if(res.status === 'success') { 
+                Swal.fire('成功', res.msg, 'success'); 
+                // 重新抓取資料確保同步
+                loadManagerData();
+            } 
+            else { Swal.fire('阻擋', res.msg, 'error'); }
+        } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
+    }
+
+
+    // ================= 回報事項 =================
     function getBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
