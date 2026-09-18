@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 管理後台 V4 (清爽升級版)</title>
+    <title>呷呼霸 - 管理後台 V4 (清爽手動版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -33,28 +33,27 @@
         
         h3 { color: var(--text-main); border-left: 5px solid var(--primary); padding-left: 15px; margin-top: 0; font-size: 20px;}
         
-        /* ============== 排班表極致清爽化與凍結窗格 ============== */
+        /* ============== 排班表寬度加寬 ============== */
         .table-responsive { width: 100%; max-height: 65vh; overflow: auto; background: white; border-radius: 10px; border: 1px solid var(--border); box-shadow: inset 0 0 5px rgba(0,0,0,0.02); }
-        table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1600px; }
-        th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 10px 6px; text-align: center; vertical-align: middle; }
+        /* 增加整個表格的最少寬度，避免格子被壓縮 */
+        table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1800px; }
+        /* td, th 的 min-width 增加到 85px 保證放得下 10:30-14:30 */
+        th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 10px 4px; text-align: center; vertical-align: middle; min-width: 85px; }
         
-        /* 凍結表頭 (上下捲動不見) */
         th { background: #f8f9fa; color: var(--text-sub); font-size: 13px; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
-        /* 凍結第一欄：員工姓名 (左右捲動不見) */
         th:first-child, td:first-child { position: sticky; left: 0; background: white; z-index: 11; font-weight: bold; font-size: 15px; color: var(--primary); box-shadow: 2px 0 5px rgba(0,0,0,0.04); min-width: 100px;}
         th:first-child { z-index: 12; background: #f8f9fa; color: var(--text-main); }
         
-        /* 週末顏色區隔 */
         .weekend-col { background-color: #fffaf0; } 
         tr:hover td { background-color: #fdfdfd; }
         tr:hover td:first-child { background-color: white; }
 
-        /* 排班輸入框：加大、清爽 */
-        .shift-input { width: 100%; min-width: 65px; height: 36px; font-size: 13px; font-weight: bold; color: #333; text-align: center; border: 1px solid #ccc; border-radius: 6px; outline: none; transition: 0.2s; box-sizing: border-box; background: #fff;}
+        /* 輸入框放寬，文字左右留白 */
+        .shift-input { width: 100%; min-width: 80px; height: 38px; font-size: 13px; font-weight: bold; color: #333; text-align: center; border: 1px solid #ccc; border-radius: 6px; outline: none; transition: 0.2s; box-sizing: border-box; background: #fff;}
         .shift-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
-        .btn-off { font-size: 12px; margin-top: 5px; background: #f1f3f4; color: #5f6368; border: none; border-radius: 6px; cursor: pointer; width: 100%; padding: 5px 0; font-weight: bold; transition: 0.2s;}
+        .btn-off { font-size: 12px; margin-top: 5px; background: #f1f3f4; color: #5f6368; border: none; border-radius: 6px; cursor: pointer; width: 100%; padding: 6px 0; font-weight: bold; transition: 0.2s;}
         .btn-off:hover { background: #e0e0e0; color: #000; }
-        /* ======================================================= */
+        /* =========================================== */
 
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 15px; }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
@@ -81,13 +80,6 @@
     </style>
 </head>
 <body>
-    <!-- 建立快捷時間選項清單 (Datalist) -->
-    <datalist id="shift-options">
-        <option value="10:30-14:30"></option>
-        <option value="17:00-21:30"></option>
-        <option value="10:30-21:30"></option>
-        <option value="排休"></option>
-    </datalist>
 
     <div id="loginScreen" class="container" style="max-width: 420px; margin-top: 10vh; text-align: center; padding: 50px 30px;">
         <h2 style="color: var(--primary); font-size: 36px; font-weight: 900; margin-bottom: 5px; letter-spacing: 2px;">呷呼霸</h2>
@@ -140,7 +132,7 @@
                 </div>
             </div>
             <div style="font-size: 14px; color: #0056b3; background: #e6f2ff; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b3d7ff;">
-                💡 <b>排班操作提示：</b>直接點擊格子可「下拉選擇常用時間」或自行輸入。點擊「休」即可快速排休。系統將自動隱藏不存在的日期（如 9月31日）。
+                💡 <b>排班操作提示：</b>可直接在格子內自由輸入時間區段（如：10:30-14:30）。點擊「休」即可快速排休。系統將自動隱藏不存在的日期（如 9月31日）。
             </div>
             
             <div class="table-responsive">
@@ -338,7 +330,6 @@
             if(!month) return;
             const [yy, mm] = month.split('-');
             
-            // 智慧計算該月有幾天 (28, 29, 30 或 31)
             const daysInMonth = new Date(yy, mm, 0).getDate();
             const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
             
@@ -370,9 +361,9 @@
                     let val = mySched ? mySched[2+i] : "";
                     let isOff = (val === '休' || val === '排休');
                     
-                    // list="shift-options" 就是綁定上方建立好的 datalist
+                    // 已移除 list="shift-options"
                     body += `<td${bgClass}>
-                        <input type="text" list="shift-options" class="shift-input" placeholder="時間" value="${isOff ? '休' : val}">
+                        <input type="text" class="shift-input" placeholder="時間" value="${isOff ? '休' : val}">
                         <button class="btn-off" onclick="this.previousElementSibling.value='休'">休</button>
                     </td>`;
                 }
@@ -395,7 +386,6 @@
                 let nameTd = tr.querySelector('td');
                 if(nameTd && !nameTd.innerText.includes("該門市尚無員工資料")) {
                     let shifts = [];
-                    // 抓取每一列所有的時間輸入框
                     tr.querySelectorAll('.shift-input').forEach(inp => { shifts.push(inp.value.trim()); });
                     payloadData.push({name: nameTd.innerText, shifts: shifts});
                 }
@@ -569,7 +559,7 @@
                 let payslipHTML = `
                     <div class="payslip">
                         <div style="display:flex; justify-content:space-between; border-bottom: 2px solid #333; padding-bottom:8px; margin-bottom:15px;">
-                            <h3 style="margin:0; color:#d93025; font-size:18px; border:none; padding:0;">呷呼霸 員工薪資單</h3>
+                            <h3 style="margin:0; color:#d93025; font-size:18px; border:none; padding:0;">呷呼霸 員工薪薪單</h3>
                             <span style="font-weight:bold; color:#555;">${targetMonth}</span>
                         </div>
                         <div style="font-size:14px; line-height:1.8;">
