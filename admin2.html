@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 管理後台 V5 (護眼與隱藏金鑰版)</title>
+    <title>呷呼霸 - 管理後台 V5.1 (高階排班版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
-            /* 護眼品牌配色 */
             --brand-blue: #003b6d; 
-            --brand-blue-soft: #e8f0fe; /* 柔和淡藍色，保護眼睛 */
+            --brand-blue-soft: #e8f0fe; 
             --brand-yellow: #ffc107;
             --bg: #f4f7f6; 
             --text-main: #202124; 
@@ -21,12 +20,10 @@
         
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
         .nav-title { font-size: 26px; font-weight: 900; color: var(--brand-blue); display: flex; align-items: center; gap: 10px; letter-spacing: 1px;}
-        /* 隱藏金鑰的觸發區塊，加上 pointer 讓它可點擊 */
         .nav-title span { color: var(--brand-blue); background: var(--brand-yellow); padding: 4px 10px; border-radius: 8px; font-size: 18px; cursor: pointer; transition: 0.2s;}
         .nav-title span:hover { filter: brightness(0.95); }
         .user-badge { background: var(--brand-blue-soft); color: var(--brand-blue); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; }
         
-        /* 頁籤護眼優化 */
         .nav-tabs { display: flex; gap: 12px; margin-bottom: 30px; border-bottom: 2px solid var(--border); padding-bottom: 0; }
         .nav-tabs button { padding: 12px 24px; border: none; background: transparent; cursor: pointer; font-weight: bold; color: var(--text-sub); transition: 0.2s; font-size: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 4px solid transparent; margin-bottom: -2px;}
         .nav-tabs button:hover { color: var(--brand-blue); }
@@ -38,23 +35,29 @@
         
         h3 { color: var(--brand-blue); border-left: 5px solid var(--brand-yellow); padding-left: 15px; margin-top: 0; font-size: 20px;}
         
-        /* 表格護眼優化 */
+        /* 表格與凍結窗格優化 */
         .table-responsive { width: 100%; max-height: 65vh; overflow: auto; background: white; border-radius: 10px; border: 1px solid var(--border); box-shadow: inset 0 0 5px rgba(0,0,0,0.02); }
         table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1800px; }
-        th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 10px 4px; text-align: center; vertical-align: middle; min-width: 85px; }
+        th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 8px 4px; text-align: center; vertical-align: middle; min-width: 90px; }
         
-        /* 表頭改為柔和藍色底、深色字 */
-        th { background: var(--brand-blue-soft); color: var(--brand-blue); font-size: 13px; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
-        th:first-child, td:first-child { position: sticky; left: 0; background: white; z-index: 11; font-weight: bold; font-size: 15px; color: var(--brand-blue); box-shadow: 2px 0 5px rgba(0,0,0,0.04); min-width: 100px;}
-        th:first-child { z-index: 12; background: var(--brand-blue-soft); color: var(--brand-blue); }
+        th { background: var(--brand-blue-soft); color: var(--brand-blue); font-size: 13px; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.1);}
+        
+        /* 雙重凍結：第一欄(職稱)、第二欄(姓名) */
+        .sticky-col-1 { position: sticky; left: 0; background: white; z-index: 11; width: 70px; min-width: 70px; font-weight: bold; font-size: 13px; color: #555; box-shadow: 1px 0 2px rgba(0,0,0,0.02);}
+        .sticky-col-2 { position: sticky; left: 70px; background: white; z-index: 11; width: 80px; min-width: 80px; font-weight: bold; font-size: 15px; color: var(--brand-blue); box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
+        th.sticky-col-1, th.sticky-col-2 { z-index: 12; background: var(--brand-blue-soft); color: var(--brand-blue); }
         
         .weekend-col { background-color: #fffaf0; } 
         tr:hover td { background-color: #fdfdfd; }
-        tr:hover td:first-child { background-color: white; }
+        tr:hover td.sticky-col-1, tr:hover td.sticky-col-2 { background-color: #fafafa; }
 
-        .shift-input { width: 100%; min-width: 80px; height: 38px; font-size: 13px; font-weight: bold; color: #333; text-align: center; border: 1px solid #ccc; border-radius: 6px; outline: none; transition: 0.2s; box-sizing: border-box; background: #fff;}
+        /* 輸入框視覺還原：加寬、紅字判定 */
+        .shift-input { width: 100%; height: 38px; font-size: 13px; font-weight: bold; text-align: center; border: 1px solid #ccc; border-radius: 6px; outline: none; transition: 0.2s; box-sizing: border-box; background: #fff;}
         .shift-input:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px var(--brand-blue-soft); }
-        .btn-off { font-size: 12px; margin-top: 5px; background: #f1f3f4; color: #5f6368; border: none; border-radius: 6px; cursor: pointer; width: 100%; padding: 6px 0; font-weight: bold; transition: 0.2s;}
+        .shift-input.is-off { color: #d93025; } /* 休假自動變紅 */
+        .shift-input.is-work { color: #333; }   /* 上班黑色 */
+        
+        .btn-off { font-size: 12px; margin-top: 4px; background: #f1f3f4; color: #5f6368; border: none; border-radius: 6px; cursor: pointer; width: 100%; padding: 4px 0; font-weight: bold; transition: 0.2s;}
         .btn-off:hover { background: #e0e0e0; color: #000; }
 
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 15px; }
@@ -176,9 +179,11 @@
                         <option value="總公司">總公司</option>
                     </select>
                 </div>
-                <div class="form-group"><label>權限角色</label>
+                <div class="form-group"><label>權限角色(職稱)</label>
                     <select id="empRole">
-                        <option value="員工">員工</option>
+                        <option value="外場/前台">外場/前台</option>
+                        <option value="廚房">廚房</option>
+                        <option value="打烊">打烊</option>
                         <option value="副店長">副店長</option>
                         <option value="店長">店長</option>
                         <option value="老闆">老闆</option>
@@ -221,7 +226,7 @@
                 <table id="empTable" style="min-width: 1000px;">
                     <thead>
                         <tr>
-                            <th>姓名</th><th>門市</th><th>角色</th>
+                            <th>姓名</th><th>門市</th><th>職稱角色</th>
                             <th>密碼</th><th>狀態</th><th>計薪方式</th><th>底薪/時薪</th>
                             <th>操作選項</th>
                         </tr>
@@ -274,7 +279,6 @@
                     document.getElementById('schedMonth').value = mStr;
                     document.getElementById('payrollMonth').value = mStr;
                     
-                    // 鎖定非老闆的門市選擇權限
                     if(res.role === '店長' || res.role === '副店長') {
                         document.getElementById('schedStore').value = res.store;
                         document.getElementById('schedStore').disabled = true; 
@@ -286,7 +290,6 @@
             } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
 
-        // ================= 隱藏金鑰機制 (點擊營運管理中心觸發) =================
         async function unlockMasterKey() {
             if(currentUser.role === '老闆') return Swal.fire('提示', '您已經擁有最高權限！', 'info');
             
@@ -300,16 +303,15 @@
                 cancelButtonText: '取消'
             });
 
-            // 預設金鑰為 boss888
             if (key === 'boss888') {
-                currentUser.role = '老闆'; // 強制提升前端權限
+                currentUser.role = '老闆'; 
                 document.getElementById('schedStore').disabled = false;
                 document.getElementById('empStore').disabled = false;
                 document.getElementById('userRole').innerText = '最高管理員 (解鎖)';
                 document.getElementById('userRole').style.color = '#d93025';
                 
                 Swal.fire('解鎖成功！', '已為您開啟跨門市所有數據檢視與管理權限。', 'success');
-                loadData(); // 重新拉取所有資料
+                loadData(); 
             } else if (key) {
                 Swal.fire('錯誤', '金鑰無效，無法解鎖', 'error');
             }
@@ -334,13 +336,24 @@
             } catch(e) {}
         }
 
+        // ================= 排班表渲染 (加入職稱、字體變色) =================
+        function handleShiftChange(input) {
+            if(input.value.trim() === '休') {
+                input.className = 'shift-input is-off';
+            } else {
+                input.className = 'shift-input is-work';
+            }
+        }
+
         function renderSchedule() {
             const month = document.getElementById('schedMonth').value;
             if(!month) return;
             const [yy, mm] = month.split('-');
             const daysInMonth = new Date(yy, mm, 0).getDate();
             const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
-            let head = '<tr><th>員工姓名</th>';
+            
+            // 表頭：雙固定欄位 (職稱, 姓名)
+            let head = '<tr><th class="sticky-col-1">職稱</th><th class="sticky-col-2">員工姓名</th>';
             for(let i=1; i<=daysInMonth; i++) {
                 let d = new Date(yy, parseInt(mm)-1, i);
                 let isWeekend = (d.getDay()===0 || d.getDay()===6);
@@ -350,29 +363,38 @@
             }
             head += '</tr>';
             document.getElementById('schedHead').innerHTML = head;
+            
             let body = '';
             let targetStore = document.getElementById('schedStore').value;
             let displayEmps = globalData.employees.filter(e => e[1] === targetStore && e[4] !== "離職");
 
             displayEmps.forEach(emp => {
                 let name = emp[0];
+                let role = emp[2]; // 職稱
                 let mySched = globalData.schedule.find(s => String(s[0]).includes(month) && s[2] === name);
-                body += `<tr><td>${name}</td>`;
+                
+                body += `<tr>
+                    <td class="sticky-col-1">${role}</td>
+                    <td class="sticky-col-2">${name}</td>`;
+                    
                 for(let i=1; i<=daysInMonth; i++) {
                     let d = new Date(yy, parseInt(mm)-1, i);
                     let isWeekend = (d.getDay()===0 || d.getDay()===6);
                     let bgClass = isWeekend ? ' class="weekend-col"' : '';
                     let val = mySched ? mySched[2+i] : "";
+                    
                     if(String(val).includes('T')) { val = new Date(val); val = val.getFullYear()<2000 ? String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0') : (val.getMonth()+1)+'-'+val.getDate(); }
                     let isOff = (val === '休' || val === '排休');
+                    let textClass = isOff ? 'shift-input is-off' : 'shift-input is-work';
+
                     body += `<td${bgClass}>
-                        <input type="text" class="shift-input" value="${isOff ? '休' : val}">
-                        <button class="btn-off" onclick="this.previousElementSibling.value='休'">休</button>
+                        <input type="text" class="${textClass}" value="${isOff ? '休' : val}" oninput="handleShiftChange(this)">
+                        <button class="btn-off" onclick="let inp = this.previousElementSibling; inp.value='休'; handleShiftChange(inp);">休</button>
                     </td>`;
                 }
                 body += '</tr>';
             });
-            document.getElementById('schedBody').innerHTML = body || `<tr><td colspan="${daysInMonth + 1}" style="padding: 40px; font-size:16px;">尚無員工資料，請先至人事維護建檔</td></tr>`;
+            document.getElementById('schedBody').innerHTML = body || `<tr><td colspan="${daysInMonth + 2}" style="padding: 40px; font-size:16px;">尚無員工資料，請先至人事維護建檔</td></tr>`;
         }
 
         async function saveSchedule() {
@@ -380,7 +402,7 @@
             const store = document.getElementById('schedStore').value;
             let payloadData = [];
             document.querySelectorAll('#schedBody tr').forEach(tr => {
-                let nameTd = tr.querySelector('td');
+                let nameTd = tr.querySelector('.sticky-col-2');
                 if(nameTd && !nameTd.innerText.includes("尚無員工資料")) {
                     let shifts = [];
                     tr.querySelectorAll('.shift-input').forEach(inp => { shifts.push(inp.value.trim()); });
@@ -413,7 +435,7 @@
                 if(result.isConfirmed) {
                     let rows = document.querySelectorAll('#schedBody tr');
                     rows.forEach(tr => {
-                        let nameTd = tr.querySelector('td');
+                        let nameTd = tr.querySelector('.sticky-col-2');
                         if(nameTd && !nameTd.innerText.includes("尚無員工資料")) {
                             let empName = nameTd.innerText;
                             let lastMonthSched = globalData.schedule.find(s => String(s[0]).includes(lastMonthStr) && s[2] === empName);
@@ -425,6 +447,7 @@
                                     if(String(val).includes('T')) { val = new Date(val); val = val.getFullYear()<2000 ? String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0') : (val.getMonth()+1)+'-'+val.getDate(); }
                                     inp.value = val ? val : "休";
                                 } else { inp.value = "休"; }
+                                handleShiftChange(inp);
                             });
                         }
                     });
