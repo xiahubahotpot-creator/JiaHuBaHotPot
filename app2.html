@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>呷呼霸 - 員工專屬 App V12 (店務通報整合版)</title>
+    <title>呷呼霸 - 員工專屬 App V13 (防呆與病特休優化版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -229,7 +229,6 @@
 
             <div id="mgrSectionDir" style="display:none;"><div id="dirContent"></div></div>
             
-            <!-- 全新：店務通報列表區塊 -->
             <div id="mgrSectionFb" style="display:none;"><div id="mgrFbContent"></div></div>
         </div>
 
@@ -314,10 +313,9 @@
         } catch(e) { hideLoading(); Swal.fire('連線異常', e.message, 'error'); }
     }
 
-    // === 【核心升級】：檢查最近的店務通報並顯示橫幅 ===
     function checkRecentFeedbacks() {
         if(!appGlobalData || !appGlobalData.feedbacks) return;
-        if(userProfile.role === '員工') return; // 一般員工不顯示通報橫幅
+        if(userProfile.role === '員工') return; 
 
         let now = new Date();
         let recentCount = 0;
@@ -326,11 +324,9 @@
             let fbTime = new Date(fb.time);
             if(!isNaN(fbTime.getTime())) {
                 let diffHours = (now - fbTime) / (1000 * 60 * 60);
-                if(diffHours <= 72) { // 顯示最近 72 小時內的通報
-                    recentCount++;
-                }
+                if(diffHours <= 72) { recentCount++; }
             } else {
-                recentCount++; // 時間無法解析時也列入
+                recentCount++; 
             }
         });
 
@@ -351,7 +347,6 @@
         }
     }
 
-    // === 渲染管理員通報列表 ===
     function renderManagerFeedbacks() {
         let container = document.getElementById('mgrFbContent');
         if(!appGlobalData || !appGlobalData.feedbacks || appGlobalData.feedbacks.length === 0) {
@@ -374,6 +369,7 @@
         container.innerHTML = html;
     }
 
+    // === 【核心升級：病假與特休防呆】 ===
     async function checkMyDailyPunch() {
         let now = new Date(); let todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
         let monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -381,10 +377,16 @@
             if(!appGlobalData) return;
             let mySched = appGlobalData.schedule.find(s => getMonthStr(s[0]) === monthStr && s[2] === userProfile.name);
             let val = decodeShift(mySched ? mySched[2 + now.getDate()] : ""); 
-            let isOff = (!val || val === "休" || val === "排休");
+            
+            // 加入病假與特休的排除邏輯
+            let isOff = (!val || val === "休" || val === "排休" || val.includes("病假") || val.includes("特休"));
+            
             if (!isOff) {
                 const pRes = await fetchApi({ action: "checkMyPunches", name: userProfile.name, date: todayStr });
-                if(pRes.status === "success") { let punches = pRes.punches; if (punches.length === 0 || punches.length === 1) document.getElementById('punchWarning').style.display = 'block'; }
+                if(pRes.status === "success") { 
+                    let punches = pRes.punches; 
+                    if (punches.length === 0 || punches.length === 1) document.getElementById('punchWarning').style.display = 'block'; 
+                }
             }
         } catch(e) {}
     }
@@ -557,15 +559,15 @@
             let mySched = appGlobalData.schedule.find(s => getMonthStr(s[0]) === monthStr && s[2] === emp[0]);
             let val = decodeShift(mySched ? mySched[2 + dd] : "未排班"); 
             
-            let isOff = (!val || val === '休' || val === '排休' || val === '未排班');
+            let isOff = (!val || val === '休' || val === '排休' || val === '未排班' || val.includes('病假') || val.includes('特休'));
             let card = `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #f1f3f4;">
                 <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${emp[0]}</span>
                 <span style="color:${isOff ? '#999' : 'var(--brand-blue)'}; font-weight:bold; font-size:14px;">${val}</span></div>`;
             if(isOff) { offHTML += card; offCount++; } else { workingHTML += card; workCount++; }
         });
         container.innerHTML = `
-        <div style="background:white; border-radius:12px; padding:12px; margin-bottom:12px; border-left: 5px solid #0f9d58;"><h4 style="margin:0 0 8px 0; color:#0f9d58; display:flex; justify-content:space-between;"><span>🟢 今日上班</span> <span>${workCount} 人</span></h4>${workingHTML}</div>
-        <div style="background:white; border-radius:12px; padding:12px; border-left: 5px solid #9aa0a6;"><h4 style="margin:0 0 8px 0; color:#5f6368; display:flex; justify-content:space-between;"><span>⚪ 休假/未排班</span> <span>${offCount} 人</span></h4>${offHTML}</div>`;
+        <div style="background:white; border-radius:12px; padding:12px; margin-bottom:12px; border-left: 5px solid #0f9d58;"><h4 style="margin:0 0 8px 0; color:#0f9d58; display:flex; justify-content:space-between;"><span>🟢 今日應到</span> <span>${workCount} 人</span></h4>${workingHTML}</div>
+        <div style="background:white; border-radius:12px; padding:12px; border-left: 5px solid #9aa0a6;"><h4 style="margin:0 0 8px 0; color:#5f6368; display:flex; justify-content:space-between;"><span>⚪ 休假/其他</span> <span>${offCount} 人</span></h4>${offHTML}</div>`;
     }
 
     function renderDirectory() {
@@ -618,9 +620,10 @@
         try {
             const res = await fetchApi({ action: 'saveSchedule', month: monthStr, store: userProfile.store, scheduleData: payloadData });
             if(res.status === 'success') { Swal.fire('成功', res.msg, 'success'); loadManagerData(); } else { Swal.fire('阻擋', res.msg, 'error'); }
-        } catch(e) {}
+        } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
     }
 
+    function getBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); }); }
     async function submitFeedback() {
         const text = document.getElementById('fbText').value.trim(); const fileInput = document.getElementById('fbImage');
         if (!text) return Swal.fire('提示', '請填寫狀況說明！', 'warning');
