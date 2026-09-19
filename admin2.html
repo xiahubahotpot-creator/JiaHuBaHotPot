@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 營運管理中心 V7 (完全還原版)</title>
+    <title>呷呼霸 - 營運管理中心 V8 (動態職稱版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -35,23 +35,20 @@
         
         h3 { color: var(--brand-blue); border-left: 5px solid var(--brand-yellow); padding-left: 15px; margin-top: 0; font-size: 20px;}
         
-        /* ============== 排班表格優化 ============== */
         .table-responsive { width: 100%; max-height: 70vh; overflow: auto; background: white; border-radius: 10px; border: 1px solid var(--border); box-shadow: inset 0 0 5px rgba(0,0,0,0.02); }
         table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1200px; }
         th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 6px; text-align: center; vertical-align: middle; }
         
         th { background: var(--brand-blue-soft); color: var(--brand-blue); font-size: 14px; font-weight: 900; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.1); padding: 10px;}
         
-        /* 雙凍結窗格 */
-        .col-role { position: sticky; left: 0; background: #fffcf0; z-index: 11; width: 80px; font-weight: bold; font-size: 13px; color: #555; box-shadow: 1px 0 2px rgba(0,0,0,0.05);}
-        .col-name { position: sticky; left: 80px; background: white; z-index: 11; width: 80px; font-weight: bold; font-size: 15px; color: var(--brand-blue); box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
+        .col-role { position: sticky; left: 0; background: #fffcf0; z-index: 11; width: 85px; font-weight: bold; font-size: 13px; color: #555; box-shadow: 1px 0 2px rgba(0,0,0,0.05);}
+        .col-name { position: sticky; left: 85px; background: white; z-index: 11; width: 80px; font-weight: bold; font-size: 15px; color: var(--brand-blue); box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
         th.col-role, th.col-name { z-index: 21; background: var(--brand-blue-soft); color: var(--brand-blue); }
         
         tr:hover td { background-color: #fdfdfd; }
         tr:hover td.col-role { background-color: #fcf8e3; }
         tr:hover td.col-name { background-color: #fafafa; }
 
-        /* 系統任務專屬樣式 (還原照片) */
         .sys-task-1 td { background: var(--brand-yellow) !important; color: var(--brand-blue) !important; border-bottom: 1px solid #d39e00;}
         .sys-task-1 input { background: #fff3cd !important; color: #856404 !important; font-weight: 900;}
         .sys-task-1 input:focus { box-shadow: 0 0 0 2px #ffeeba !important; }
@@ -60,13 +57,14 @@
         .sys-task-2 input { background: #e8f4f8 !important; color: #0c5460 !important; font-weight: 900;}
         .sys-task-2 input:focus { box-shadow: 0 0 0 2px #c3e6cb !important; }
 
-        /* 輸入框樣式 */
         .shift-input { width: 100%; min-width: 100px; height: 38px; font-size: 14px; font-weight: bold; text-align: center; border: 1px solid transparent; border-radius: 4px; outline: none; transition: 0.2s; box-sizing: border-box; background: transparent;}
         .shift-input:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 2px var(--brand-blue-soft); }
         .shift-input.is-off { color: #d93025; } 
         .shift-input.is-work { color: #202124; }
         
-        /* 底部加總區塊 */
+        .custom-role-input { width: 100%; height: 34px; font-size: 13px; font-weight: bold; text-align: center; border: 1px dashed #ccc; border-radius: 4px; outline: none; background: transparent; color: #d93025;}
+        .custom-role-input:focus { border: 1px solid var(--brand-blue); background: #fff;}
+
         .summary-row td { background: var(--brand-blue-soft); color: var(--brand-blue); font-weight: 900; font-size: 16px; border-top: 2px solid var(--brand-blue); padding: 12px 6px;}
         .summary-row.alt td { background: #fff8e1; color: #b07d00; border-top: 1px solid #ffe082;}
 
@@ -151,7 +149,6 @@
             </div>
         </div>
 
-        <!-- 人事與薪資區塊 -->
         <div id="viewEmployees" class="view-section">
             <h3>員工基本檔與計薪設定</h3>
             <div style="background: var(--brand-blue-soft); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #cce5ff; display: flex; gap: 20px; align-items: flex-end;">
@@ -177,11 +174,10 @@
                         <option value="總公司">總公司</option>
                     </select>
                 </div>
-                <div class="form-group"><label>職稱 / 權限角色</label>
+                <div class="form-group"><label>權限角色</label>
                     <select id="empRole">
-                        <option value="外場/前台">外場/前台</option>
-                        <option value="廚房">廚房</option>
-                        <option value="打烊">打烊</option>
+                        <option value="正職">正職</option>
+                        <option value="PT">PT</option>
                         <option value="副店長">副店長</option>
                         <option value="店長">店長</option>
                         <option value="老闆">老闆</option>
@@ -207,7 +203,7 @@
 
             <div class="table-responsive" style="max-height: 50vh;">
                 <table id="empTable" style="min-width: 1000px;">
-                    <thead><tr><th>姓名</th><th>門市</th><th>職稱</th><th>密碼</th><th>狀態</th><th>計薪</th><th>底薪/時薪</th><th>操作選項</th></tr></thead>
+                    <thead><tr><th>姓名</th><th>門市</th><th>角色</th><th>密碼</th><th>狀態</th><th>計薪</th><th>底薪/時薪</th><th>操作選項</th></tr></thead>
                     <tbody id="empBody"></tbody>
                 </table>
             </div>
@@ -306,10 +302,9 @@
             } catch(e) {}
         }
 
-        // ================= 完美還原照片的排班邏輯 =================
+        // ================= 班表與自動計算邏輯 =================
         function handleShiftChange(input) {
             let val = input.value.trim();
-            // 系統任務列維持原本樣式，一般員工才套用紅黑字判定
             if(!input.getAttribute('data-emp').includes('[系統]')) {
                 if(val === '休' || val === '排休') {
                     input.className = 'shift-input is-off';
@@ -340,7 +335,7 @@
             if(day !== 1) selectedDate.setHours(-24 * (day - 1)); 
             
             let weekDates = [];
-            let theadHtml = '<tr><th class="col-role">職稱</th><th class="col-name">姓名</th>';
+            let theadHtml = '<tr><th class="col-role">職稱方向</th><th class="col-name">姓名</th>';
             for(let i=0; i<7; i++) {
                 let d = new Date(selectedDate);
                 d.setDate(selectedDate.getDate() + i);
@@ -354,12 +349,11 @@
 
             let bodyHtml = '';
 
-            // --- 加入置頂的「系統任務列」 ---
             let taskRow1 = `<tr class="sys-task-1">
-                <td class="col-role" style="background:var(--brand-yellow); color:var(--brand-blue);">職稱</td>
-                <td class="col-name" style="background:var(--brand-yellow); color:var(--brand-blue);">姓名</td>`;
+                <td class="col-role" style="background:var(--brand-yellow); color:var(--brand-blue);">職稱任務</td>
+                <td class="col-name" style="background:var(--brand-yellow); color:var(--brand-blue);"></td>`;
             let taskRow2 = `<tr class="sys-task-2">
-                <td class="col-role" style="background:#d1ecf1; color:#0c5460; font-size:12px;">開班人數</td>
+                <td class="col-role" style="background:#d1ecf1; color:#0c5460; font-size:12px;">開班備註</td>
                 <td class="col-name" style="background:#d1ecf1; color:#0c5460;"></td>`;
 
             weekDates.forEach((date, i) => {
@@ -373,16 +367,19 @@
             });
             taskRow1 += `</tr>`; taskRow2 += `</tr>`;
             bodyHtml += taskRow1 + taskRow2;
-            // --------------------------------
 
             let emps = globalData.employees.filter(e => e[1] === targetStore && e[4] !== "離職");
-            const roleOrder = {"店長":1, "副店長":2, "外場/前台":3, "廚房":4, "打烊":5, "員工":6};
+            const roleOrder = {"老闆":1, "店長":2, "副店長":3, "正職":4, "PT":5};
             emps.sort((a,b) => (roleOrder[a[2]]||99) - (roleOrder[b[2]]||99));
 
             emps.forEach(emp => {
                 let name = emp[0];
-                let role = emp[2];
-                bodyHtml += `<tr><td class="col-role">${role}</td><td class="col-name">${name}</td>`;
+                let hrRole = emp[2]; 
+                // 判斷是否為管理階層，若是則顯示職稱，若否則顯示隱形輸入框
+                let isManager = (hrRole === '店長' || hrRole === '副店長' || hrRole === '老闆');
+                let displayRoleUI = isManager ? hrRole : `<input type="text" class="custom-role-input" placeholder="填寫方向" oninput="calculateTotals()">`;
+
+                bodyHtml += `<tr><td class="col-role">${displayRoleUI}</td><td class="col-name">${name}</td>`;
                 
                 weekDates.forEach((date, i) => {
                     let monthStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
@@ -421,14 +418,17 @@
             document.querySelectorAll('#schedBody tr').forEach(tr => {
                 let roleCell = tr.querySelector('.col-role');
                 if(!roleCell) return;
-                let role = roleCell.innerText;
-                if(role === '職稱' || role === '開班人數' || role === '開班任務') return; // 略過標題列
+                if(roleCell.innerText.includes('職稱') || roleCell.innerText.includes('備註')) return; 
+                
+                // 抓取機動填寫的職稱方向
+                let roleInput = roleCell.querySelector('.custom-role-input');
+                let roleText = roleInput ? roleInput.value.trim() : roleCell.innerText.trim();
                 
                 let inputs = tr.querySelectorAll('.shift-input');
                 inputs.forEach((inp, idx) => {
                     let val = inp.value.trim();
                     if(val && val !== '休' && val !== '排休') {
-                        if(role.includes('打烊')) { 
+                        if(roleText.includes('打烊')) { 
                             closeCounts[idx]++; 
                         } else {
                             if(val.includes('10') || val.includes('11') || val.includes('12') || val.includes('13') || val.includes('09')) earlyCounts[idx]++;
@@ -490,7 +490,6 @@
                 for (let m of monthsToSave) {
                     let payloadData = [];
                     let emps = globalData.employees.filter(e => e[1] === store && e[4] !== "離職");
-                    // 【關鍵】將任務列一起送進去存檔
                     let namesToProcess = ['[系統]每日任務', '[系統]開班備註', ...emps.map(e => e[0])];
                     
                     namesToProcess.forEach(empName => {
@@ -559,8 +558,16 @@
             rows.forEach(row => {
                 let rowData = [];
                 row.querySelectorAll('th, td').forEach(col => {
-                    let input = col.querySelector('input');
-                    rowData.push(`"${input ? (input.value || '') : col.innerText.replace(/\n/g, ' ')}"`);
+                    let customRoleInput = col.querySelector('.custom-role-input');
+                    let shiftInput = col.querySelector('.shift-input');
+                    
+                    if (customRoleInput) {
+                        rowData.push(`"${customRoleInput.value || ''}"`);
+                    } else if (shiftInput) {
+                        rowData.push(`"${shiftInput.value || '休'}"`);
+                    } else {
+                        rowData.push(`"${col.innerText.replace(/\n/g, ' ')}"`);
+                    }
                 });
                 csvContent += rowData.join(",") + "\n";
             });
@@ -595,7 +602,7 @@
         function clearForm() {
             document.getElementById('filterEmp').value = ""; document.getElementById('empName').value = ""; document.getElementById('empPwd').value = "";
             document.getElementById('empSalary').value = ""; document.getElementById('empStatus').value = "在職"; document.getElementById('empPayType').value = "月薪";
-            document.getElementById('empRole').value = "外場/前台"; document.getElementById('empDutyType').value = "一般員工"; document.getElementById('empObDate').value = "";
+            document.getElementById('empRole').value = "正職"; document.getElementById('empDutyType').value = "一般員工"; document.getElementById('empObDate').value = "";
             document.getElementById('empAnnualLeave').value = ""; ['empBonus', 'empLaborIns', 'empHealthIns', 'empDependents'].forEach(id => document.getElementById(id).value = "0");
             ['empPhone', 'empAddress'].forEach(id => document.getElementById(id).value = "");
             document.getElementById('empStore').value = (currentUser.role === '店長' || currentUser.role === '副店長') ? currentUser.store : "呷呼霸土城店";
