@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>呷呼霸 - 員工專屬 App V10 (效期除錯版)</title>
+    <title>呷呼霸 - 員工專屬 App V11 (連線防護版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -70,8 +70,8 @@
         .shift-date { font-size: 15px; font-weight: bold; color: var(--text-main); }
         .shift-time { font-size: 14px; font-weight: bold; background: var(--brand-yellow); color: var(--brand-blue); padding: 5px 12px; border-radius: 6px; }
         .shift-off { border-left-color: #5f6368; } .shift-off .shift-time { background: #f1f3f4; color: #5f6368; }
-        .shift-sick { border-left-color: #f4b400; } .shift-sick .shift-time { background: #fff3cd; color: #856404; }
-        .shift-annual { border-left-color: #0f9d58; } .shift-annual .shift-time { background: #e6f4ea; color: #0f9d58; }
+        .shift-sick { border-left-color: #f4b400; } .shift-sick .shift-time { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .shift-annual { border-left-color: #0f9d58; } .shift-annual .shift-time { background: #e6f4ea; color: #0f9d58; border: 1px solid #c3e6cb; }
 
         .shift-input { width: 100%; min-width: 80px; height: 38px; font-size: 14px; font-weight: bold; text-align: center; border: 1px solid transparent; border-radius: 4px; outline: none; transition: 0.2s; box-sizing: border-box; background: transparent;}
         .shift-input:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 2px var(--brand-blue-light); }
@@ -233,7 +233,17 @@
     let userProfile = {}; let userLat = null, userLon = null; let isWithinRange = false; const ALLOWED_DIST = 300; let appGlobalData = null; 
     let STORE_LOCATIONS = {}; 
 
-    // === 全域效期解析引擎：攔截所有 Google Sheets 日期亂碼並還原 ===
+    // === 【連線防護強化區】攔截網路錯誤並轉譯 ===
+    async function fetchApi(payload) { 
+        try {
+            const res = await fetch(API_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); 
+            const text = await res.text();
+            return JSON.parse(text);
+        } catch (e) {
+            throw new Error("後台大腦尚未正確連線。\n請至試算表 Apps Script 確認：\n1. 是否已選擇「建立新版本」\n2. 權限是否設定為「所有人」\n(錯誤碼: " + e.message + ")");
+        }
+    }
+
     function decodeShift(val) {
         if(val && String(val).includes('T') && String(val).includes('Z')) { 
             let dObj = new Date(val); 
@@ -248,14 +258,11 @@
         if(rM.includes('/')) return rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0'); 
         return rM;
     }
-    // ========================================================
 
     window.onload = () => { const saved = localStorage.getItem('jiaHubaUser'); if (saved) { userProfile = JSON.parse(saved); showMainScreen(); loadDataForGPS(); } };
 
     function showLoading(text) { document.getElementById('loadingText').innerText = text; document.getElementById('loadingOverlay').style.display = 'flex'; }
     function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
-
-    async function fetchApi(payload) { const res = await fetch(API_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); return await res.json(); }
 
     async function doLogin() {
         const n = document.getElementById('loginName').value.trim(); const p = document.getElementById('loginPwd').value.trim();
@@ -267,7 +274,7 @@
                 if (res.name === '陳柏叡' || res.name === '鄭煒霖') res.role = '老闆';
                 userProfile = res; localStorage.setItem('jiaHubaUser', JSON.stringify(userProfile)); showMainScreen(); loadDataForGPS();
             } else { hideLoading(); Swal.fire('登入失敗', res.msg, 'error'); }
-        } catch (e) { hideLoading(); Swal.fire('登入異常', '系統無回應，請確認網路連線！', 'error'); }
+        } catch (e) { hideLoading(); Swal.fire('登入異常', e.message, 'error'); }
     }
 
     function doLogout() { localStorage.removeItem('jiaHubaUser'); location.reload(); }
@@ -373,7 +380,6 @@
         });
     }
 
-    // === 【核心防呆還原】個人班表顯示 ===
     async function loadSchedule() {
         const container = document.getElementById('scheduleContent'); const monthDisp = document.getElementById('schedMonthDisp');
         container.innerHTML = '<div style="text-align:center; padding:20px; color:#5f6368;">班表載入中...</div>';
@@ -386,7 +392,7 @@
                 
                 for (let i = 1; i <= daysInMonth; i++) {
                     let d = new Date(now.getFullYear(), now.getMonth(), i); let weekStr = weekdays[d.getDay()]; 
-                    let val = decodeShift(mySched[2 + i] || ""); // 使用全域解析引擎
+                    let val = decodeShift(mySched[2 + i] || ""); 
                     
                     if (!val) continue; 
                     let isOff = (val === "休" || val === "排休");
@@ -403,10 +409,8 @@
 
     function toggleMgrView() {
         let type = document.querySelector('input[name="mgrType"]:checked').value;
-        document.getElementById('mgrSectionAtt').style.display = type === 'att' ? 'block' : 'none';
-        document.getElementById('mgrSectionDaily').style.display = type === 'daily' ? 'block' : 'none';
-        document.getElementById('mgrSectionSched').style.display = type === 'sched' ? 'block' : 'none';
-        document.getElementById('mgrSectionDir').style.display = type === 'dir' ? 'block' : 'none';
+        document.getElementById('mgrSectionAtt').style.display = type === 'att' ? 'block' : 'none'; document.getElementById('mgrSectionDaily').style.display = type === 'daily' ? 'block' : 'none';
+        document.getElementById('mgrSectionSched').style.display = type === 'sched' ? 'block' : 'none'; document.getElementById('mgrSectionDir').style.display = type === 'dir' ? 'block' : 'none';
         if (type === 'att') loadAttendanceRecords();
     }
 
@@ -462,54 +466,7 @@
         } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
     }
 
-    function handleShiftChange(input) { 
-        let val = input.value.trim(); 
-        if(!input.getAttribute('data-emp').includes('[系統]')) { 
-            input.className = 'form-control';
-            if(!val || val === '休' || val === '排休') input.classList.add('is-off'); 
-            else if(val.includes('病假')) input.classList.add('is-sick'); 
-            else if(val.includes('特休')) input.classList.add('is-annual'); 
-            else input.classList.add('is-work'); 
-        } 
-    }
-
-    // === 【核心防呆還原】管理員每日人力顯示 ===
-    function renderDailySchedule() {
-        const dateStr = document.getElementById('mgrDailyDate').value; const container = document.getElementById('mgrDailyContent');
-        if(!dateStr || !appGlobalData) return;
-        let d = new Date(dateStr); let monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; let dd = d.getDate();
-
-        let activeEmps = appGlobalData.employees.filter(e => e[1] === userProfile.store && e[4] !== "離職");
-        let workingHTML = ''; let offHTML = ''; let workCount = 0; let offCount = 0;
-        
-        activeEmps.forEach(emp => {
-            let mySched = appGlobalData.schedule.find(s => getMonthStr(s[0]) === monthStr && s[2] === emp[0]);
-            let val = decodeShift(mySched ? mySched[2 + dd] : "未排班"); // 強制解析
-            
-            let isOff = (!val || val === '休' || val === '排休' || val === '未排班');
-            let card = `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #f1f3f4;">
-                <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${emp[0]}</span>
-                <span style="color:${isOff ? '#999' : 'var(--brand-blue)'}; font-weight:bold; font-size:14px;">${val}</span></div>`;
-            if(isOff) { offHTML += card; offCount++; } else { workingHTML += card; workCount++; }
-        });
-        container.innerHTML = `
-        <div style="background:white; border-radius:12px; padding:12px; margin-bottom:12px; border-left: 5px solid #0f9d58;"><h4 style="margin:0 0 8px 0; color:#0f9d58; display:flex; justify-content:space-between;"><span>🟢 今日上班</span> <span>${workCount} 人</span></h4>${workingHTML}</div>
-        <div style="background:white; border-radius:12px; padding:12px; border-left: 5px solid #9aa0a6;"><h4 style="margin:0 0 8px 0; color:#5f6368; display:flex; justify-content:space-between;"><span>⚪ 休假/未排班</span> <span>${offCount} 人</span></h4>${offHTML}</div>`;
-    }
-
-    function renderDirectory() {
-        let container = document.getElementById('dirContent'); let html = '';
-        let activeEmps = appGlobalData.employees.filter(e => e[4] !== "離職");
-        activeEmps.forEach(emp => {
-            html += `<div class="emp-card">
-                <div class="emp-card-header"><div class="emp-name">${emp[0]}</div><div class="emp-role">${emp[2]}</div></div>
-                <div class="emp-info">📞 手機：<a href="tel:${emp[15]}" style="color:var(--brand-blue); font-weight:bold; text-decoration:none;">${emp[15]||'未填'}</a></div>
-            </div>`;
-        });
-        container.innerHTML = html || '<div style="text-align:center;">尚無資料</div>';
-    }
-
-    // === 【核心防呆還原】管理員單人排班修改 ===
+    function handleShiftChange(input) { let val = input.value.trim(); if(!input.getAttribute('data-emp').includes('[系統]')) { input.className = 'form-control'; if(!val || val === '休' || val === '排休') input.classList.add('is-off'); else if(val.includes('病假')) input.classList.add('is-sick'); else if(val.includes('特休')) input.classList.add('is-annual'); else input.classList.add('is-work'); } }
     function renderMgrSchedule() {
         const monthStr = document.getElementById('mgrMonth').value; const empName = document.getElementById('mgrEmp').value;
         const container = document.getElementById('mgrSchedContent'); const btnSave = document.getElementById('btnSaveMgr');
@@ -521,8 +478,7 @@
         let html = '';
         for (let i = 1; i <= daysInMonth; i++) {
             let d = new Date(yy, parseInt(mm)-1, i); let weekStr = weekdays[d.getDay()]; let colorStyle = (d.getDay()===0||d.getDay()===6) ? 'color: var(--brand-blue);' : 'color: var(--text-main);';
-            
-            let val = decodeShift(mySched ? mySched[2 + i] : ""); // 強制解析
+            let val = decodeShift(mySched ? mySched[2 + i] : ""); 
             
             let textClass = 'form-control';
             if(!val || val === '休' || val === '排休') textClass += ' is-off';
@@ -548,16 +504,50 @@
         try {
             const res = await fetchApi({ action: 'saveSchedule', month: monthStr, store: userProfile.store, scheduleData: payloadData });
             if(res.status === 'success') { Swal.fire('成功', res.msg, 'success'); loadManagerData(); } else { Swal.fire('阻擋', res.msg, 'error'); }
-        } catch(e) {}
+        } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
+    }
+
+    function renderDailySchedule() {
+        const dateStr = document.getElementById('mgrDailyDate').value; const container = document.getElementById('mgrDailyContent');
+        if(!dateStr || !appGlobalData) return;
+        let d = new Date(dateStr); let monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; let dd = d.getDate();
+
+        let activeEmps = appGlobalData.employees.filter(e => e[1] === userProfile.store && e[4] !== "離職");
+        let workingHTML = ''; let offHTML = ''; let workCount = 0; let offCount = 0;
+        
+        activeEmps.forEach(emp => {
+            let mySched = appGlobalData.schedule.find(s => getMonthStr(s[0]) === monthStr && s[2] === emp[0]);
+            let val = decodeShift(mySched ? mySched[2 + dd] : "未排班"); 
+            
+            let isOff = (!val || val === '休' || val === '排休' || val === '未排班');
+            let card = `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #f1f3f4;">
+                <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${emp[0]}</span>
+                <span style="color:${isOff ? '#999' : 'var(--brand-blue)'}; font-weight:bold; font-size:14px;">${val}</span></div>`;
+            if(isOff) { offHTML += card; offCount++; } else { workingHTML += card; workCount++; }
+        });
+        container.innerHTML = `
+        <div style="background:white; border-radius:12px; padding:12px; margin-bottom:12px; border-left: 5px solid #0f9d58;"><h4 style="margin:0 0 8px 0; color:#0f9d58; display:flex; justify-content:space-between;"><span>🟢 今日上班</span> <span>${workCount} 人</span></h4>${workingHTML}</div>
+        <div style="background:white; border-radius:12px; padding:12px; border-left: 5px solid #9aa0a6;"><h4 style="margin:0 0 8px 0; color:#5f6368; display:flex; justify-content:space-between;"><span>⚪ 休假/未排班</span> <span>${offCount} 人</span></h4>${offHTML}</div>`;
+    }
+
+    function renderDirectory() {
+        let container = document.getElementById('dirContent'); let html = '';
+        let activeEmps = appGlobalData.employees.filter(e => e[4] !== "離職");
+        activeEmps.forEach(emp => {
+            html += `<div class="emp-card">
+                <div class="emp-card-header"><div class="emp-name">${emp[0]}</div><div class="emp-role">${emp[2]}</div></div>
+                <div class="emp-info">📞 手機：<a href="tel:${emp[15]}" style="color:var(--brand-blue); font-weight:bold; text-decoration:none;">${emp[15]||'未填'}</a></div>
+            </div>`;
+        });
+        container.innerHTML = html || '<div style="text-align:center;">尚無資料</div>';
     }
 
     function getBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); }); }
-
     async function submitFeedback() {
         const text = document.getElementById('fbText').value.trim(); const fileInput = document.getElementById('fbImage');
         if (!text) return Swal.fire('提示', '請填寫狀況說明！', 'warning');
         showLoading("傳送中..."); let base64Image = "";
-        if (fileInput.files.length > 0) { try { const reader = new FileReader(); reader.readAsDataURL(fileInput.files[0]); base64Image = await new Promise((res) => { reader.onload = () => res(reader.result.split(',')[1]); }); } catch(e) {} }
+        if (fileInput.files.length > 0) { try { base64Image = await getBase64(fileInput.files[0]); } catch(e) {} }
         try {
             const res = await fetchApi({ action: "submitFeedback", name: userProfile.name, store: userProfile.store, text: text, imageBase64: base64Image });
             hideLoading(); if (res.status === "success") { Swal.fire('成功', res.msg, 'success'); document.getElementById('fbText').value = ""; document.getElementById('fbImage').value = ""; } else { Swal.fire('失敗', res.msg, 'error'); }
