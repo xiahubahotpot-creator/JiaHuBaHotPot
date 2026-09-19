@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 營運管理中心 V9 (旗艦動態 ERP 版)</title>
+    <title>呷呼霸 - 營運管理中心 V10 (自動最高權限版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -81,7 +81,6 @@
         .hr-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; background: #fcfcfc; padding: 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
         .form-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: var(--brand-blue); }
         
-        /* 列印薪資單專用設定 */
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
@@ -109,7 +108,7 @@
 
     <div id="mainScreen" class="container" style="display: none;">
         <div class="top-nav">
-            <div class="nav-title">呷呼霸 <span onclick="unlockMasterKey()" title="點擊解鎖最高權限">營運管理中心</span></div>
+            <div class="nav-title">呷呼霸 <span onclick="unlockMasterKey()" title="點擊輸入金鑰解鎖系統">營運管理中心</span></div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <div class="user-badge"><span id="userRole"></span> : <span id="userName"></span> (<span id="userStore"></span>)</div>
                 <button class="btn" style="background: #f1f3f4; color: var(--text-main); border: 1px solid var(--border);" onclick="location.reload()">登出系統</button>
@@ -216,7 +215,6 @@
             <div id="printArea" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border); display: none;"></div>
         </div>
 
-        <!-- 隱藏版門市管理 (僅老闆可見) -->
         <div id="viewStores" class="view-section">
             <h3>🏢 門市管理設定</h3>
             <div class="hr-form-grid">
@@ -256,6 +254,12 @@
                 const res = await fetchApi({action: 'login', name: n, pwd: p});
                 if(res.status === 'success') {
                     if(res.role === '員工') return Swal.fire('權限不足', '此為管理後台', 'error');
+                    
+                    // 核心修改：陳柏叡與鄭煒霖登入，直接綁定老闆最高權限
+                    if (res.name === '陳柏叡' || res.name === '鄭煒霖') {
+                        res.role = '老闆';
+                    }
+
                     currentUser = res;
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('mainScreen').style.display = 'block';
@@ -269,6 +273,14 @@
                     
                     if(res.role === '老闆') {
                         document.getElementById('tabStores').style.display = 'flex';
+                        document.getElementById('schedStore').disabled = false;
+                        document.getElementById('empStore').disabled = false;
+                        document.getElementById('payrollStore').disabled = false;
+                    } else if(res.role === '店長' || res.role === '副店長') {
+                        document.getElementById('schedStore').value = res.store;
+                        document.getElementById('schedStore').disabled = true; 
+                        document.getElementById('empStore').value = res.store;
+                        document.getElementById('empStore').disabled = true;
                     }
                     Swal.close(); loadData();
                 } else { Swal.fire('失敗', res.msg, 'error'); }
@@ -330,7 +342,6 @@
             } catch(e) {}
         }
 
-        // ================= 門市動態管理 =================
         function renderStoreManagerList() {
             let html = '';
             globalData.stores.forEach((s, idx) => {
@@ -366,7 +377,6 @@
             } catch(e) {}
         }
 
-        // ================= 排班表 =================
         function handleShiftChange(input) {
             let val = input.value.trim();
             if(!input.getAttribute('data-emp').includes('[系統]')) {
@@ -550,7 +560,6 @@
             });
         }
 
-        // ================= 智能工時與面額計算引擎 =================
         function parseTimeStr(t) {
             if(t.includes(':')) { let p = t.split(':'); return parseInt(p[0])*60 + parseInt(p[1]); }
             return parseInt(t)*60;
@@ -558,13 +567,12 @@
 
         function calculateDailyHours(shiftStr) {
             if (!shiftStr || shiftStr === '休' || shiftStr === '排休') return 0;
-            let cleanStr = shiftStr.replace(/\(.*?\)/g, ''); // 移除 (廁), (洗) 等備註
+            let cleanStr = shiftStr.replace(/\(.*?\)/g, ''); 
             let regex = /(\d{1,2}(?::\d{2})?)\s*-\s*(\d{1,2}(?::\d{2})?)/g;
             let match; let totalMinutes = 0;
             while ((match = regex.exec(cleanStr)) !== null) {
-                let start = parseTimeStr(match[1]);
-                let end = parseTimeStr(match[2]);
-                if (end < start) end += 24 * 60; // 跨夜班 (例如 22-01)
+                let start = parseTimeStr(match[1]); let end = parseTimeStr(match[2]);
+                if (end < start) end += 24 * 60; 
                 totalMinutes += (end - start);
             }
             return totalMinutes / 60;
@@ -579,7 +587,6 @@
             return res.join(' , ');
         }
 
-        // ================= 人事維護與計薪 =================
         function updateEmpDropdown() {
             let sel = document.getElementById('filterEmp'); sel.innerHTML = '<option value="">請選擇員工...</option>';
             let displayEmps = globalData.employees;
@@ -659,12 +666,11 @@
                 let name = emp[0]; let store = emp[1]; let payType = emp[6] || '月薪'; let baseRate = Number(emp[7]) || 0; 
                 let laborIns = Number(emp[12]) || 0; let healthIns = Number(emp[13]) || 0;
                 
-                // 抓取排班紀錄計算工時
                 let sRow = globalData.schedule.find(s => {
                     let rM = String(s[0]);
                     if(rM.includes('T')) rM = `${new Date(s[0]).getFullYear()}-${String(new Date(s[0]).getMonth()+1).padStart(2,'0')}`;
                     else if(rM.includes('/')) rM = rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0');
-                    return rM === targetMonth && s[2] === name;
+                    return rM === targetMonth && s[2] === name && s[1] === store;
                 });
 
                 let totalRegularHours = 0; let totalOTHours = 0;
@@ -680,7 +686,7 @@
                     if(payType === '時薪' && dailyHours > 0) {
                         let reg = Math.min(8, dailyHours);
                         let otRaw = Math.max(0, dailyHours - 8);
-                        let otCalculated = Math.floor(otRaw / 0.5) * 0.5; // 以 0.5 小時為基數
+                        let otCalculated = Math.floor(otRaw / 0.5) * 0.5; 
                         totalRegularHours += reg;
                         totalOTHours += otCalculated;
                     }
@@ -692,12 +698,11 @@
                 let calculationDetail = '';
                 if(payType === '時薪') {
                     let regPay = totalRegularHours * baseRate;
-                    let otPay = totalOTHours * (baseRate * 1.34); // 假設基礎加班費率 1.34 倍，可依需求調整
+                    let otPay = totalOTHours * (baseRate * 1.34); 
                     finalPay = Math.round(regPay + otPay);
                     calculationDetail = `(正常 ${totalRegularHours}h + 加班 ${totalOTHours}h)`;
                 }
 
-                // 扣除勞健保
                 let totalDeduct = laborIns + healthIns;
                 let actualPay = finalPay - totalDeduct;
                 let breakdownStr = getCashBreakdown(actualPay);
