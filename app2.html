@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>呷呼霸 - 員工專屬 App V9 (變形工時版)</title>
+    <title>呷呼霸 - 員工專屬 App V10 (完整修復版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        :root { 
-            --brand-blue: #003b6d; --brand-blue-light: #e6f0f9; --brand-yellow: #ffc107;
-            --bg: #fdfbf7; --text-main: #202124; --text-sub: #5f6368; --border: #dadce0;
-        }
+        :root { --brand-blue: #003b6d; --brand-blue-light: #e6f0f9; --brand-yellow: #ffc107; --bg: #fdfbf7; --text-main: #202124; --text-sub: #5f6368; --border: #dadce0; }
         * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); margin: 0; padding: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
         .app-container { width: 100%; max-width: 480px; height: 100%; background: var(--bg); position: relative; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;}
@@ -70,7 +67,6 @@
         .shift-date { font-size: 15px; font-weight: bold; color: var(--text-main); }
         .shift-time { font-size: 14px; font-weight: bold; background: var(--brand-yellow); color: var(--brand-blue); padding: 5px 12px; border-radius: 6px; }
         .shift-off { border-left-color: #5f6368; } .shift-off .shift-time { background: #f1f3f4; color: #5f6368; }
-        
         .shift-sick { border-left-color: #f4b400; } .shift-sick .shift-time { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
         .shift-annual { border-left-color: #0f9d58; } .shift-annual .shift-time { background: #e6f4ea; color: #0f9d58; border: 1px solid #c3e6cb; }
 
@@ -181,7 +177,6 @@
                     <div style="flex:1;"><label style="font-weight:bold; color:var(--brand-blue); font-size:13px; margin-bottom:5px;">出勤日期</label><input type="date" id="mgrAttDate" class="form-control" onchange="loadAttendanceRecords()"></div>
                     <div><label style="font-weight:bold; color:var(--brand-blue); font-size:13px; margin-bottom:5px;">選項</label><button class="btn-action" style="margin:0; padding:12px; font-size:13px; background:#f4b400;" onclick="document.getElementById('mobileManualPanel').style.display='block'">補登</button></div>
                 </div>
-
                 <div id="mobileManualPanel" style="display:none; background:#fff3cd; border-left: 4px solid var(--brand-yellow); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
                     <div style="font-weight:bold; color:#856404; margin-bottom:10px;">手動補登作業</div>
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">
@@ -276,10 +271,13 @@
         try {
             if(!appGlobalData) return;
             let mySched = appGlobalData.schedule.find(s => String(s[0]).includes(todayStr.substring(0,7)) && s[2] === userProfile.name);
-            let val = mySched ? mySched[2 + now.getDate()] : ""; let isOff = (!val || val === "休" || val === "排休");
+            let val = mySched ? mySched[2 + now.getDate()] : ""; let isOff = (!val || val === "休" || val === "排休" || val.includes("病假") || val.includes("特休"));
             if (!isOff) {
                 const pRes = await fetchApi({ action: "checkMyPunches", name: userProfile.name, date: todayStr });
-                if(pRes.status === "success") { let punches = pRes.punches; if (punches.length === 0 || punches.length === 1) document.getElementById('punchWarning').style.display = 'block'; }
+                if(pRes.status === "success") {
+                    let punches = pRes.punches; 
+                    if (punches.length === 0 || punches.length === 1) document.getElementById('punchWarning').style.display = 'block';
+                }
             }
         } catch(e) {}
     }
@@ -301,14 +299,15 @@
                 try {
                     const res = await fetchApi({ action: "updateAvatar", name: userProfile.name, avatarBase64: base64Data });
                     hideLoading(); if (res.status === "success") { userProfile.avatar = base64Data; localStorage.setItem('jiaHubaUser', JSON.stringify(userProfile)); document.getElementById('dispAvatar').src = base64Data; }
-                } catch(err) { hideLoading(); }
+                    else { Swal.fire('更新失敗', res.msg, 'error'); }
+                } catch(err) { hideLoading(); Swal.fire('錯誤', err.message, 'error'); }
             };
         }; reader.readAsDataURL(file);
     }
 
     async function changeMyPassword() {
         const { value: newPwd } = await Swal.fire({ title: '修改密碼', input: 'password', showCancelButton: true, confirmButtonColor: '#003b6d', confirmButtonText: '確認' });
-        if (newPwd) { showLoading("變更中..."); try { const res = await fetchApi({ action: "updatePassword", name: userProfile.name, newPwd: newPwd }); hideLoading(); if (res.status === "success") Swal.fire('成功', res.msg, 'success'); } catch(err) { hideLoading(); } }
+        if (newPwd) { showLoading("變更中..."); try { const res = await fetchApi({ action: "updatePassword", name: userProfile.name, newPwd: newPwd }); hideLoading(); if (res.status === "success") Swal.fire('成功', res.msg, 'success'); else Swal.fire('失敗', res.msg, 'error'); } catch(err) { hideLoading(); Swal.fire('錯誤', err.message, 'error'); } }
     }
 
     function getDistance(lat1, lon1, lat2, lon2) { const R = 6371e3; const p1 = lat1 * Math.PI/180; const p2 = lat2 * Math.PI/180; const dp = (lat2-lat1) * Math.PI/180; const dl = (lon2-lon1) * Math.PI/180; const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2); return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); }
@@ -360,6 +359,7 @@
                 for (let i = 1; i <= daysInMonth; i++) {
                     let d = new Date(now.getFullYear(), now.getMonth(), i); let weekStr = weekdays[d.getDay()]; let val = mySched[2 + i] || "";
                     if (!val) continue; 
+                    
                     let isOff = (val === "休" || val === "排休");
                     let dayClass = isOff ? 'shift-off' : '';
                     if(val.includes('病假')) dayClass = 'shift-sick';
@@ -431,7 +431,44 @@
         } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
     }
 
-    function handleShiftChange(input) { let val = input.value.trim(); if(!input.getAttribute('data-emp').includes('[系統]')) { if(val === '休' || val === '排休') input.className = 'shift-input is-off'; else if (val.includes('病假')) input.className = 'shift-input is-sick'; else if (val.includes('特休')) input.className = 'shift-input is-annual'; else input.className = 'shift-input is-work'; } }
+    // 補齊遺失的通訊錄功能
+    function renderDirectory() {
+        let container = document.getElementById('dirContent'); let html = '';
+        let activeEmps = appGlobalData.employees.filter(e => e[4] !== "離職");
+        activeEmps.forEach(emp => {
+            html += `<div class="emp-card">
+                <div class="emp-card-header"><div class="emp-name">${emp[0]}</div><div class="emp-role">${emp[2]}</div></div>
+                <div class="emp-info">📞 手機：<a href="tel:${emp[15]}" style="color:var(--brand-blue); font-weight:bold; text-decoration:none;">${emp[15]||'未填'}</a></div>
+            </div>`;
+        });
+        container.innerHTML = html || '<div style="text-align:center;">尚無資料</div>';
+    }
+
+    // 補齊遺失的每日排班功能
+    function renderDailySchedule() {
+        const dateStr = document.getElementById('mgrDailyDate').value; const container = document.getElementById('mgrDailyContent');
+        if(!dateStr || !appGlobalData) return;
+        let d = new Date(dateStr); let monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; let dd = d.getDate();
+
+        let activeEmps = appGlobalData.employees.filter(e => e[1] === userProfile.store && e[4] !== "離職");
+        let workingHTML = ''; let offHTML = ''; let workCount = 0; let offCount = 0;
+        activeEmps.forEach(emp => {
+            let mySched = appGlobalData.schedule.find(s => String(s[0]).includes(monthStr) && s[2] === emp[0]);
+            let val = mySched ? mySched[2 + dd] : "未排班";
+            let isOff = (!val || val === '休' || val === '排休' || val === '未排班');
+            let card = `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #f1f3f4;">
+                <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${emp[0]}</span>
+                <span style="color:${isOff ? '#999' : 'var(--brand-blue)'}; font-weight:bold; font-size:14px;">${val}</span></div>`;
+            if(isOff) { offHTML += card; offCount++; } else { workingHTML += card; workCount++; }
+        });
+        container.innerHTML = `
+        <div style="background:white; border-radius:12px; padding:12px; margin-bottom:12px; border-left: 5px solid #0f9d58;"><h4 style="margin:0 0 8px 0; color:#0f9d58; display:flex; justify-content:space-between;"><span>🟢 今日上班</span> <span>${workCount} 人</span></h4>${workingHTML}</div>
+        <div style="background:white; border-radius:12px; padding:12px; border-left: 5px solid #9aa0a6;"><h4 style="margin:0 0 8px 0; color:#5f6368; display:flex; justify-content:space-between;"><span>⚪ 休假/未排班</span> <span>${offCount} 人</span></h4>${offHTML}</div>`;
+    }
+
+    // 補齊遺失的管理員排班修改功能
+    function handleShiftChange(input) { let val = input.value.trim(); if(!input.getAttribute('data-emp').includes('[系統]')) { if(val === '休' || val === '排休') input.className = 'form-control is-off'; else if (val.includes('病假')) input.className = 'form-control is-sick'; else if (val.includes('特休')) input.className = 'form-control is-annual'; else input.className = 'form-control'; } }
+    
     function renderMgrSchedule() {
         const monthStr = document.getElementById('mgrMonth').value; const empName = document.getElementById('mgrEmp').value;
         const container = document.getElementById('mgrSchedContent'); const btnSave = document.getElementById('btnSaveMgr');
@@ -453,7 +490,7 @@
             html += `<div class="shift-card" style="padding:8px 12px;">
                 <div class="shift-date" style="${colorStyle} width: 55px;">${i} 號<br><span style="font-size:11px; color:#999;">(${weekStr})</span></div>
                 <div style="flex:1; display:flex; gap:8px; align-items:center;">
-                    <input type="text" class="${textClass}" style="padding:6px; font-weight:bold; text-align:center; border:1px solid #ccc;" id="mgrInput_${i}" value="${!val ? '休' : val}" oninput="handleShiftChange(this)">
+                    <input type="text" class="${textClass}" style="padding:6px; font-weight:bold; text-align:center; border:1px solid #ccc;" id="mgrInput_${i}" data-emp="${empName}" value="${!val ? '休' : val}" oninput="handleShiftChange(this)">
                     <button class="btn-action" style="margin:0; padding:6px 10px; background:#e8eaed; color:#333;" onclick="let inp = document.getElementById('mgrInput_${i}'); inp.value='休'; handleShiftChange(inp);">休</button>
                 </div></div>`;
         }
@@ -471,8 +508,6 @@
             if(res.status === 'success') { Swal.fire('成功', res.msg, 'success'); loadManagerData(); } else { Swal.fire('阻擋', res.msg, 'error'); }
         } catch(e) {}
     }
-
-    function getBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); }); }
 
     async function submitFeedback() {
         const text = document.getElementById('fbText').value.trim(); const fileInput = document.getElementById('fbImage');
