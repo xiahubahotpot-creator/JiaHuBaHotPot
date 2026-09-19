@@ -3,29 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 營運管理中心 V20 (一鍵班表匯出版)</title>
+    <title>呷呼霸 - 營運管理中心 V21 (國假變形工時版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --brand-blue: #003b6d; --brand-blue-soft: #e8f0fe; --brand-yellow: #ffc107; --bg: #f4f7f6; --text-main: #202124; --text-sub: #5f6368; --border: #dadce0; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin:0; padding:20px; color: var(--text-main); }
         .container { max-width: 1400px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-        
-        /* 導航列與標題 */
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
         .nav-title { font-size: 26px; font-weight: 900; color: var(--brand-blue); display: flex; align-items: center; gap: 10px; letter-spacing: 1px; white-space: nowrap;}
         .nav-title span { color: var(--brand-blue); background: var(--brand-yellow); padding: 4px 10px; border-radius: 8px; font-size: 18px; cursor: pointer; transition: 0.2s;}
         .nav-title span:hover { filter: brightness(0.95); }
         .user-badge { background: var(--brand-blue-soft); color: var(--brand-blue); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; white-space: nowrap;}
-        
         .nav-tabs { display: flex; gap: 12px; margin-bottom: 30px; border-bottom: 2px solid var(--border); padding-bottom: 0; }
         .nav-tabs button { padding: 12px 24px; border: none; background: transparent; cursor: pointer; font-weight: bold; color: var(--text-sub); transition: 0.2s; font-size: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 4px solid transparent; margin-bottom: -2px; white-space: nowrap;}
         .nav-tabs button:hover, .nav-tabs button.active { color: var(--brand-blue); border-bottom: 4px solid var(--brand-yellow); }
-        
         .view-section { display: none; animation: fadeIn 0.3s ease; } .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         h3 { color: var(--brand-blue); border-left: 5px solid var(--brand-yellow); padding-left: 15px; margin-top: 0; font-size: 20px;}
-        
-        /* 表格區塊 */
         .table-responsive { width: 100%; max-height: 70vh; overflow: auto; background: white; border-radius: 10px; border: 1px solid var(--border); box-shadow: inset 0 0 5px rgba(0,0,0,0.02); }
         table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1200px; }
         th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 6px; text-align: center; vertical-align: middle; }
@@ -34,8 +28,6 @@
         .col-name { position: sticky; left: 85px; background: white; z-index: 11; width: 80px; font-weight: bold; font-size: 15px; color: var(--brand-blue); box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
         th.col-role, th.col-name { z-index: 21; background: var(--brand-blue-soft); color: var(--brand-blue); }
         tr:hover td { background-color: #fdfdfd; } tr:hover td.col-role { background-color: #fcf8e3; } tr:hover td.col-name { background-color: #fafafa; }
-        
-        /* 排班輸入框與系統列 */
         .sys-task-1 td { background: var(--brand-yellow) !important; color: var(--brand-blue) !important; border-bottom: 1px solid #d39e00;}
         .sys-task-1 input { background: #fff3cd !important; color: #856404 !important; font-weight: 900;}
         .sys-task-2 td { background: #d1ecf1 !important; color: #0c5460 !important; border-bottom: 1px solid #bee5eb;}
@@ -47,18 +39,17 @@
         .shift-input.is-work { color: #202124; }
         .shift-input.is-sick { color: #f4b400; } 
         .shift-input.is-annual { color: #0f9d58; }
+        .shift-input.is-national { color: #e74c3c; } /* 新增國定假日紅字 */
 
         .custom-role-input { width: 100%; height: 34px; font-size: 13px; font-weight: bold; text-align: center; border: 1px dashed #ccc; border-radius: 4px; outline: none; background: transparent; color: #d93025;}
         .custom-role-input:focus { border: 1px solid var(--brand-blue); background: #fff;}
         .summary-row td { background: var(--brand-blue-soft); color: var(--brand-blue); font-weight: 900; font-size: 16px; border-top: 2px solid var(--brand-blue); padding: 12px 6px;}
         .summary-row.alt td { background: #fff8e1; color: #b07d00; border-top: 1px solid #ffe082;}
-        
-        /* 按鈕與表單 */
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 15px; white-space: nowrap;}
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-primary { background: var(--brand-blue); color: white; } .btn-success { background: #0f9d58; color: white; }
         .btn-warning { background: var(--brand-yellow); color: var(--brand-blue); } .btn-danger { background: #d93025; color: white; }
-        .btn-info { background: #17a2b8; color: white; } /* 新增列印按鈕顏色 */
+        .btn-info { background: #17a2b8; color: white; } 
         
         input[type="text"], input[type="password"], input[type="date"], input[type="time"], input[type="month"], select, input[type="number"] { padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; width: 100%; box-sizing: border-box; transition: 0.2s; }
         input:focus, select:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 3px var(--brand-blue-soft);}
@@ -67,16 +58,11 @@
         .att-badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
         .badge-in { background: #e6f4ea; color: #137333; } .badge-out { background: #fce8e6; color: #c5221f; }
         
-        /* === 強化列印排版設計 === */
         @media print {
             body * { visibility: hidden; } 
-            
-            /* 針對薪資單列印 */
             #printArea, #printArea * { visibility: visible; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; }
             .payslip { width: 48%; display: inline-block; box-sizing: border-box; padding: 20px; border: 2px dashed #999; margin: 1%; vertical-align: top; page-break-inside: avoid; }
-            
-            /* 針對班表列印 */
             #schedPrintTitle { visibility: visible; display: block !important; position: absolute; top: 0; left: 0; width: 100%; text-align: center; margin-bottom: 20px;}
             #schedTable, #schedTable * { visibility: visible; }
             #schedTable { position: absolute; top: 60px; left: 0; width: 100%; margin: 0; }
@@ -84,15 +70,14 @@
             #schedTable input { border: none; background: transparent; padding: 0; text-align: center; font-size: 12px; color: black !important;}
             #schedTable input::placeholder { color: transparent; }
             .col-role, .col-name { position: static !important; box-shadow: none !important; }
-            
             .page-break { page-break-after: always; display: block; height: 0; }
         }
-
         .payslip-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 15px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
         .payslip-day { text-align: center; font-size: 11px; padding: 4px; background: white; border-radius: 4px; border: 1px solid #eee; }
         .payslip-day.off { color: #d93025; background: #fce8e6; } 
         .payslip-day.sick { color: #856404; background: #fff3cd; border-color:#ffeeba; }
         .payslip-day.annual { color: #0f9d58; background: #e6f4ea; border-color:#c3e6cb;}
+        .payslip-day.national { color: #c0392b; background: #fdedec; border-color:#f5b7b1; } /* 新增國假列印色 */
         .payslip-day .d-num { font-weight: bold; color: var(--brand-blue); margin-bottom: 2px; }
         .payslip-cash { background: #fff3cd; padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 4px solid var(--brand-yellow); font-size: 13px; color: #856404; font-weight: bold; }
 
@@ -142,11 +127,10 @@
         <!-- 排班表 -->
         <div id="viewSchedule" class="view-section active">
             <div class="mobile-stack" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-                <h3 style="margin-bottom:0;">門市排班管理 <span style="font-size:14px; color:#999; font-weight:normal; margin-left:10px;">(動態職稱版)</span></h3>
+                <h3 style="margin-bottom:0;">門市排班管理 <span style="font-size:14px; color:#999; font-weight:normal; margin-left:10px;">(可標註: 病假/特休/國假)</span></h3>
                 <div class="mobile-stack" style="display: flex; gap: 10px;">
                     <button class="btn btn-warning" onclick="copyLastWeek()"><span style="font-size: 16px;">🔄</span> 複製上週</button>
                     <button class="btn btn-success" onclick="saveWeeklySchedule()"><span style="font-size: 16px;">💾</span> 儲存排班</button>
-                    <!-- 全新：列印班表按鈕 -->
                     <button class="btn btn-info" onclick="printSchedule()"><span style="font-size: 16px;">🖨️</span> 列印/匯出本週</button>
                 </div>
             </div>
@@ -208,7 +192,7 @@
                 <div class="form-group"><label>APP 登入密碼</label><input type="text" id="empPwd" placeholder="預設建議: 1234"></div>
                 <div class="form-group"><label>在職狀態</label><select id="empStatus"><option value="在職">🟢 在職中</option><option value="離職">🔴 已離職</option></select></div>
                 <div class="form-group"><label>計薪類別</label><select id="empPayType"><option value="時薪">時薪 (預設)</option><option value="月薪">月薪</option></select></div>
-                <div class="form-group"><label>假日計薪身分</label><select id="empDutyType"><option value="一般員工 (有加班費)">一般員工 (有加班費)</option><option value="責任制幹部 (無加班費)">責任制幹部 (無加班費)</option></select></div>
+                <!-- 移除「假日計薪身分」欄位，改由後端自動寫入變形工時 -->
                 <div class="form-group"><label>基本薪資/時薪</label><input type="number" id="empSalary" placeholder="輸入數字"></div>
                 <div class="form-group"><label>到職日期</label><input type="date" id="empObDate"></div>
                 <div class="form-group" id="groupAnnualLeave" style="display:none;"><label style="color:#d93025;">⭐ 剩餘特休天數</label><input type="number" step="0.5" id="empAnnualLeave"></div>
@@ -440,7 +424,19 @@
             } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
 
-        function handleShiftChange(input) { let val = input.value.trim(); if(!input.getAttribute('data-emp').includes('[系統]')) { input.className = 'shift-input'; if(!val || val === '休' || val === '排休') input.classList.add('is-off'); else if(val.includes('病假')) input.classList.add('is-sick'); else if(val.includes('特休')) input.classList.add('is-annual'); else input.classList.add('is-work'); } calculateTotals(); }
+        function handleShiftChange(input) { 
+            let val = input.value.trim(); 
+            if(!input.getAttribute('data-emp').includes('[系統]')) { 
+                input.className = 'shift-input';
+                if(!val || val === '休' || val === '排休') input.classList.add('is-off'); 
+                else if(val.includes('病假')) input.classList.add('is-sick'); 
+                else if(val.includes('特休')) input.classList.add('is-annual'); 
+                else if(val.includes('國假')) input.classList.add('is-national'); // 國假紅字
+                else input.classList.add('is-work'); 
+            } 
+            calculateTotals(); 
+        }
+
         function getSysTask(monthStr, dd, sysName, store) { let mySched = globalData.schedule.find(s => { return getMonthStr(s[0]) === monthStr && s[2] === sysName && s[1] === store; }); return mySched ? mySched[2+dd] : ""; }
         
         function renderWeeklySchedule() {
@@ -467,6 +463,7 @@
                     if(!val || val === '休' || val === '排休') textClass = 'shift-input is-off';
                     else if(val.includes('病假')) textClass = 'shift-input is-sick';
                     else if(val.includes('特休')) textClass = 'shift-input is-annual';
+                    else if(val.includes('國假')) textClass = 'shift-input is-national';
 
                     bodyHtml += `<td><input type="text" class="${textClass}" value="${!val ? '休' : val}" data-emp="${name}" data-month="${monthStr}" data-day="${dd}" oninput="handleShiftChange(this)" ondblclick="this.value='休'; handleShiftChange(this)"></td>`;
                 });
@@ -541,13 +538,11 @@
             });
         }
         
-        // === 全新：列印/匯出排班表功能 ===
         function printSchedule() {
             const dateStr = document.getElementById('schedWeekDate').value; 
             const storeName = document.getElementById('schedStore').value;
             if(!dateStr || !storeName) return Swal.fire('提示', '請先選擇日期與門市', 'warning');
             
-            // 設定列印標題
             let d = new Date(dateStr);
             let dEnd = new Date(d); dEnd.setDate(dEnd.getDate() + 6);
             let titleStr = `呷呼霸 (${storeName}) 門市排班表 <br><span style="font-size:16px;">${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ~ ${dEnd.getFullYear()}/${dEnd.getMonth()+1}/${dEnd.getDate()}</span>`;
@@ -594,7 +589,7 @@
             if(emp) {
                 document.getElementById('empName').value = emp[0]; document.getElementById('empStore').value = emp[1]; document.getElementById('empRole').value = emp[2];
                 document.getElementById('empPwd').value = emp[3]; document.getElementById('empStatus').value = emp[4]; document.getElementById('empPayType').value = emp[6] || '月薪';
-                document.getElementById('empSalary').value = emp[7] || 0; document.getElementById('empDutyType').value = emp[8] || '一般員工'; document.getElementById('empObDate').value = emp[9] ? String(emp[9]).split('T')[0] : '';
+                document.getElementById('empSalary').value = emp[7] || 0; document.getElementById('empObDate').value = emp[9] ? String(emp[9]).split('T')[0] : '';
                 document.getElementById('empAnnualLeave').value = emp[10] || 0; document.getElementById('empBonus').value = emp[11] || 0; document.getElementById('empLaborIns').value = emp[12] || 0;
                 document.getElementById('empHealthIns').value = emp[13] || 0; document.getElementById('empDependents').value = emp[14] || 0; document.getElementById('empPhone').value = emp[15] || ''; document.getElementById('empAddress').value = emp[16] || '';
             }
@@ -603,7 +598,7 @@
         function clearForm() {
             document.getElementById('filterEmp').value = ""; document.getElementById('empName').value = ""; document.getElementById('empPwd').value = "";
             document.getElementById('empSalary').value = ""; document.getElementById('empStatus').value = "在職"; document.getElementById('empPayType').value = "時薪";
-            document.getElementById('empRole').value = "正職"; document.getElementById('empDutyType').value = "一般員工"; document.getElementById('empObDate').value = "";
+            document.getElementById('empRole').value = "正職"; document.getElementById('empObDate').value = "";
             document.getElementById('empAnnualLeave').value = ""; ['empBonus', 'empLaborIns', 'empHealthIns', 'empDependents'].forEach(id => document.getElementById(id).value = "0");
             ['empPhone', 'empAddress'].forEach(id => document.getElementById(id).value = ""); 
             let sName = globalData.stores[0] ? (typeof globalData.stores[0] === 'string' ? globalData.stores[0] : globalData.stores[0].name) : "";
@@ -614,7 +609,7 @@
             let payload = {
                 action: "saveEmployee", name: document.getElementById('empName').value.trim(), store: document.getElementById('empStore').value, role: document.getElementById('empRole').value,
                 pwd: document.getElementById('empPwd').value.trim(), status: document.getElementById('empStatus').value, payType: document.getElementById('empPayType').value, salary: document.getElementById('empSalary').value,
-                dutyType: document.getElementById('empDutyType').value, obDate: document.getElementById('empObDate').value, annualLeave: document.getElementById('empAnnualLeave').value, bonus: document.getElementById('empBonus').value,
+                dutyType: "變形工時", obDate: document.getElementById('empObDate').value, annualLeave: document.getElementById('empAnnualLeave').value, bonus: document.getElementById('empBonus').value,
                 laborIns: document.getElementById('empLaborIns').value, healthIns: document.getElementById('empHealthIns').value, dependents: document.getElementById('empDependents').value, phone: document.getElementById('empPhone').value, address: document.getElementById('empAddress').value
             };
             if(!payload.name) return Swal.fire('提示', '姓名必填寫！', 'warning'); Swal.fire({title: '儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
@@ -656,7 +651,7 @@
 
                     let sRow = globalData.schedule.find(s => { return getMonthStr(s[0]) === targetMonth && s[2] === name; });
 
-                    let totalRegularHours = 0; let totalOTHours = 0; let totalSickHours = 0; let totalAnnualHours = 0;
+                    let totalRegularHours = 0; let totalOTHours = 0; let totalSickHours = 0; let totalAnnualHours = 0; let totalNationalHours = 0;
                     for(let i=1; i<=daysInMonth; i++) {
                         let shiftStr = decodeShift(sRow ? sRow[2+i] : "");
                         
@@ -664,6 +659,8 @@
                             let m = shiftStr.match(/\d+(\.\d+)?/); totalSickHours += m ? parseFloat(m[0]) : (payType==='時薪'? 4 : 8);
                         } else if(shiftStr.includes('特休')) {
                             let m = shiftStr.match(/\d+(\.\d+)?/); totalAnnualHours += m ? parseFloat(m[0]) : (payType==='時薪'? 4 : 8);
+                        } else if(shiftStr.includes('國假')) {
+                            let dailyHours = calculateDailyHours(shiftStr); totalNationalHours += dailyHours;
                         } else {
                             let dailyHours = calculateDailyHours(shiftStr);
                             if(payType === '時薪' && dailyHours > 0) {
@@ -679,11 +676,13 @@
                         let otPay = totalOTHours * (baseRate * 1.34);
                         let sickPay = totalSickHours * baseRate * 0.5;
                         let annualPay = totalAnnualHours * baseRate;
-                        finalPay = Math.round(regPay + otPay + sickPay + annualPay);
+                        let nationalPay = totalNationalHours * baseRate * 2; // 國假雙倍薪水
+                        finalPay = Math.round(regPay + otPay + sickPay + annualPay + nationalPay);
                     } else {
                         let hourlyRate = Math.round(baseRate / 30 / 8);
                         let sickDeduct = totalSickHours * hourlyRate * 0.5;
-                        finalPay = Math.round(baseRate - sickDeduct);
+                        let nationalBonus = totalNationalHours * hourlyRate; // 國假加發一倍時薪
+                        finalPay = Math.round(baseRate - sickDeduct + nationalBonus);
                     }
 
                     let actualPay = finalPay - (laborIns + healthIns);
@@ -729,11 +728,12 @@
             const printArea = document.getElementById('printArea'); printArea.style.display = 'block'; let html = ''; let count = 0; const targetMonth = document.getElementById('payrollMonth').value; const selectedStore = document.getElementById('payrollStore').value;
             let targetEmps = globalData.employees.filter(e => e[4] !== "離職"); if(currentUser.role === "店長" || currentUser.role === "副店長") targetEmps = targetEmps.filter(e => e[1] === currentUser.store); else if(selectedStore !== "全公司") targetEmps = targetEmps.filter(e => e[1] === selectedStore);
             const daysInMonth = new Date(targetMonth.split('-')[0], targetMonth.split('-')[1], 0).getDate();
+            
             targetEmps.forEach((emp) => {
                 let name = emp[0]; let store = emp[1]; let payType = emp[6] || '月薪'; let baseRate = Number(emp[7]) || 0; let laborIns = Number(emp[12]) || 0; let healthIns = Number(emp[13]) || 0;
                 let sRow = globalData.schedule.find(s => { return getMonthStr(s[0]) === targetMonth && s[2] === name; });
                 
-                let totalRegularHours = 0; let totalOTHours = 0; let totalSickHours = 0; let totalAnnualHours = 0; let daysHTML = '';
+                let totalRegularHours = 0; let totalOTHours = 0; let totalSickHours = 0; let totalAnnualHours = 0; let totalNationalHours = 0; let daysHTML = '';
                 
                 for(let i=1; i<=daysInMonth; i++) {
                     let shiftStr = decodeShift(sRow ? sRow[2+i] : "");
@@ -744,6 +744,8 @@
                         let m = shiftStr.match(/\d+(\.\d+)?/); dSick = m ? parseFloat(m[0]) : (payType==='時薪'? 4 : 8); totalSickHours += dSick; displayVal = `病${dSick}h`;
                     } else if(shiftStr.includes('特休')) {
                         let m = shiftStr.match(/\d+(\.\d+)?/); dAnnual = m ? parseFloat(m[0]) : (payType==='時薪'? 4 : 8); totalAnnualHours += dAnnual; displayVal = `特${dAnnual}h`;
+                    } else if(shiftStr.includes('國假')) {
+                        totalNationalHours += dailyHours; displayVal = `國${dailyHours}h`;
                     } else if(payType === '時薪' && dailyHours > 0) { 
                         let reg = Math.min(8, dailyHours); let otRaw = Math.max(0, dailyHours - 8); let otCalculated = Math.floor(otRaw / 0.5) * 0.5; 
                         totalRegularHours += reg; totalOTHours += otCalculated; 
@@ -755,19 +757,24 @@
                     let dayClass = isOff ? 'off' : '';
                     if(shiftStr.includes('病假')) dayClass = 'sick';
                     if(shiftStr.includes('特休')) dayClass = 'annual';
+                    if(shiftStr.includes('國假')) dayClass = 'national';
 
                     daysHTML += `<div class="payslip-day ${dayClass}"><div class="d-num">${i}號</div><div style="font-size:10px;">${displayVal}</div></div>`;
                 }
 
                 let finalPay = baseRate; let calculationDetail = '';
                 if(payType === '時薪') { 
-                    let regPay = totalRegularHours * baseRate; let otPay = totalOTHours * (baseRate * 1.34); let sickPay = totalSickHours * baseRate * 0.5; let annualPay = totalAnnualHours * baseRate;
-                    finalPay = Math.round(regPay + otPay + sickPay + annualPay); 
-                    calculationDetail = `(正常 ${totalRegularHours}h + 加班 ${totalOTHours}h + 特休 ${totalAnnualHours}h + 病假半薪 ${totalSickHours}h)`; 
+                    let regPay = totalRegularHours * baseRate; let otPay = totalOTHours * (baseRate * 1.34); let sickPay = totalSickHours * baseRate * 0.5; let annualPay = totalAnnualHours * baseRate; let nationalPay = totalNationalHours * baseRate * 2;
+                    finalPay = Math.round(regPay + otPay + sickPay + annualPay + nationalPay); 
+                    calculationDetail = `(正常 ${totalRegularHours}h + 加班 ${totalOTHours}h + 國假 ${totalNationalHours}h + 特休 ${totalAnnualHours}h + 病假半薪 ${totalSickHours}h)`; 
                 } else {
-                    let hourlyRate = Math.round(baseRate / 30 / 8); let sickDeduct = totalSickHours * hourlyRate * 0.5;
-                    finalPay = Math.round(baseRate - sickDeduct);
-                    if (totalSickHours > 0 || totalAnnualHours > 0) calculationDetail = `(包含特休 ${totalAnnualHours}h, 扣除病假半薪 -$${sickDeduct})`;
+                    let hourlyRate = Math.round(baseRate / 30 / 8); let sickDeduct = totalSickHours * hourlyRate * 0.5; let nationalBonus = totalNationalHours * hourlyRate;
+                    finalPay = Math.round(baseRate - sickDeduct + nationalBonus);
+                    if (totalSickHours > 0 || totalAnnualHours > 0 || totalNationalHours > 0) {
+                        calculationDetail = `(扣除病假半薪 -$${sickDeduct}`;
+                        if(totalNationalHours > 0) calculationDetail += `, 國假加班加給 +$${nationalBonus}`;
+                        calculationDetail += `)`;
+                    }
                 }
 
                 let totalDeduct = laborIns + healthIns; let actualPay = finalPay - totalDeduct; let breakdownStr = getCashBreakdown(actualPay);
