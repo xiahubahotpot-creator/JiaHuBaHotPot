@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 營運管理中心 V18 (連線防護版)</title>
+    <title>呷呼霸 - 營運管理中心 V18 (完整無損修復版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --brand-blue: #003b6d; --brand-blue-soft: #e8f0fe; --brand-yellow: #ffc107; --bg: #f4f7f6; --text-main: #202124; --text-sub: #5f6368; --border: #dadce0; }
@@ -29,6 +29,7 @@
         .col-name { position: sticky; left: 85px; background: white; z-index: 11; width: 80px; font-weight: bold; font-size: 15px; color: var(--brand-blue); box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
         th.col-role, th.col-name { z-index: 21; background: var(--brand-blue-soft); color: var(--brand-blue); }
         tr:hover td { background-color: #fdfdfd; } tr:hover td.col-role { background-color: #fcf8e3; } tr:hover td.col-name { background-color: #fafafa; }
+        
         .sys-task-1 td { background: var(--brand-yellow) !important; color: var(--brand-blue) !important; border-bottom: 1px solid #d39e00;}
         .sys-task-1 input { background: #fff3cd !important; color: #856404 !important; font-weight: 900;}
         .sys-task-2 td { background: #d1ecf1 !important; color: #0c5460 !important; border-bottom: 1px solid #bee5eb;}
@@ -49,6 +50,7 @@
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-primary { background: var(--brand-blue); color: white; } .btn-success { background: #0f9d58; color: white; }
         .btn-warning { background: var(--brand-yellow); color: var(--brand-blue); } .btn-danger { background: #d93025; color: white; }
+        
         input[type="text"], input[type="password"], input[type="date"], input[type="time"], input[type="month"], select, input[type="number"] { padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; width: 100%; box-sizing: border-box; transition: 0.2s; }
         input:focus, select:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 3px var(--brand-blue-soft);}
         .hr-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; background: #fcfcfc; padding: 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
@@ -151,7 +153,11 @@
                 <div class="form-group"><label>所屬門市</label><select id="empStore" class="dynamic-store-select"></select></div>
                 <div class="form-group"><label>職稱 / 權限角色</label>
                     <select id="empRole">
-                        <option value="正職">正職</option><option value="PT">PT</option><option value="副店長">副店長</option><option value="店長">店長</option><option value="老闆">老闆</option>
+                        <option value="正職">正職</option>
+                        <option value="PT">PT</option>
+                        <option value="副店長">副店長</option>
+                        <option value="店長">店長</option>
+                        <option value="老闆">老闆</option>
                     </select>
                 </div>
                 <div class="form-group"><label>APP 登入密碼</label><input type="text" id="empPwd" placeholder="預設建議: 1234"></div>
@@ -390,7 +396,18 @@
             } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
 
-        function handleShiftChange(input) { let val = input.value.trim(); if(!input.getAttribute('data-emp').includes('[系統]')) { input.className = 'form-control'; if(!val || val === '休' || val === '排休') input.classList.add('is-off'); else if(val.includes('病假')) input.classList.add('is-sick'); else if(val.includes('特休')) input.classList.add('is-annual'); else input.classList.add('is-work'); } calculateTotals(); }
+        function handleShiftChange(input) { 
+            let val = input.value.trim(); 
+            if(!input.getAttribute('data-emp').includes('[系統]')) { 
+                input.className = 'shift-input';
+                if(!val || val === '休' || val === '排休') input.classList.add('is-off'); 
+                else if(val.includes('病假')) input.classList.add('is-sick'); 
+                else if(val.includes('特休')) input.classList.add('is-annual'); 
+                else input.classList.add('is-work'); 
+            } 
+            calculateTotals(); 
+        }
+
         function getSysTask(monthStr, dd, sysName, store) { let mySched = globalData.schedule.find(s => { return getMonthStr(s[0]) === monthStr && s[2] === sysName && s[1] === store; }); return mySched ? mySched[2+dd] : ""; }
         
         function renderWeeklySchedule() {
@@ -515,6 +532,16 @@
             return res.join(' , ');
         }
 
+        // === 【核心補回區】人事維護下拉選單功能 ===
+        function updateEmpDropdown() {
+            let sel = document.getElementById('filterEmp'); 
+            if(!sel) return;
+            sel.innerHTML = '<option value="">請選擇員工...</option>'; 
+            let displayEmps = globalData.employees;
+            if(currentUser.role === '店長' || currentUser.role === '副店長') displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
+            displayEmps.forEach(e => { sel.innerHTML += `<option value="${e[0]}">${e[0]} - ${e[1]}</option>`; });
+        }
+
         function loadEmpDetails() {
             let name = document.getElementById('filterEmp').value; if(!name) return clearForm(); let emp = globalData.employees.find(e => e[0] === name);
             if(emp) {
@@ -528,7 +555,7 @@
 
         function clearForm() {
             document.getElementById('filterEmp').value = ""; document.getElementById('empName').value = ""; document.getElementById('empPwd').value = "";
-            document.getElementById('empSalary').value = ""; document.getElementById('empStatus').value = "在職"; document.getElementById('empPayType').value = "時薪"; // 預設時薪
+            document.getElementById('empSalary').value = ""; document.getElementById('empStatus').value = "在職"; document.getElementById('empPayType').value = "時薪";
             document.getElementById('empRole').value = "正職"; document.getElementById('empDutyType').value = "一般員工"; document.getElementById('empObDate').value = "";
             document.getElementById('empAnnualLeave').value = ""; ['empBonus', 'empLaborIns', 'empHealthIns', 'empDependents'].forEach(id => document.getElementById(id).value = "0");
             ['empPhone', 'empAddress'].forEach(id => document.getElementById(id).value = ""); 
