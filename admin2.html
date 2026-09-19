@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 營運管理中心 V8 (動態職稱版)</title>
+    <title>呷呼霸 - 營運管理中心 V9 (旗艦動態 ERP 版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -51,11 +51,9 @@
 
         .sys-task-1 td { background: var(--brand-yellow) !important; color: var(--brand-blue) !important; border-bottom: 1px solid #d39e00;}
         .sys-task-1 input { background: #fff3cd !important; color: #856404 !important; font-weight: 900;}
-        .sys-task-1 input:focus { box-shadow: 0 0 0 2px #ffeeba !important; }
         
         .sys-task-2 td { background: #d1ecf1 !important; color: #0c5460 !important; border-bottom: 1px solid #bee5eb;}
         .sys-task-2 input { background: #e8f4f8 !important; color: #0c5460 !important; font-weight: 900;}
-        .sys-task-2 input:focus { box-shadow: 0 0 0 2px #c3e6cb !important; }
 
         .shift-input { width: 100%; min-width: 100px; height: 38px; font-size: 14px; font-weight: bold; text-align: center; border: 1px solid transparent; border-radius: 4px; outline: none; transition: 0.2s; box-sizing: border-box; background: transparent;}
         .shift-input:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 2px var(--brand-blue-soft); }
@@ -73,7 +71,7 @@
         .btn-primary { background: var(--brand-blue); color: white; }
         .btn-success { background: #0f9d58; color: white; }
         .btn-warning { background: var(--brand-yellow); color: var(--brand-blue); }
-        .btn-info { background: #17a2b8; color: #fff; }
+        .btn-danger { background: #d93025; color: white; }
         
         input[type="text"], input[type="password"], input[type="date"], input[type="month"], select, input[type="number"] { 
             padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; width: 100%; box-sizing: border-box; transition: 0.2s;
@@ -82,6 +80,21 @@
 
         .hr-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; background: #fcfcfc; padding: 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
         .form-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: var(--brand-blue); }
+        
+        /* 列印薪資單專用設定 */
+        @media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+            .payslip { width: 48%; display: inline-block; box-sizing: border-box; padding: 20px; border: 2px dashed #999; margin: 1%; vertical-align: top; page-break-inside: avoid; }
+            .page-break { page-break-after: always; display: block; height: 0; }
+        }
+        
+        .payslip-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 15px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
+        .payslip-day { text-align: center; font-size: 11px; padding: 4px; background: white; border-radius: 4px; border: 1px solid #eee; }
+        .payslip-day.off { color: #d93025; background: #fce8e6; }
+        .payslip-day .d-num { font-weight: bold; color: var(--brand-blue); margin-bottom: 2px; }
+        .payslip-cash { background: #fff3cd; padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 4px solid var(--brand-yellow); font-size: 13px; color: #856404; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -107,14 +120,14 @@
             <button class="tab-btn active" onclick="switchTab('viewSchedule', this)">📅 專業週班表</button>
             <button class="tab-btn" onclick="switchTab('viewEmployees', this)">👥 人事維護與計薪</button>
             <button class="tab-btn" onclick="switchTab('viewPayroll', this)">💰 薪資單自動結算</button>
+            <button class="tab-btn" id="tabStores" style="display:none;" onclick="switchTab('viewStores', this)">🏢 門市管理設定</button>
         </div>
 
         <div id="viewSchedule" class="view-section active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-                <h3>門市排班管理 <span style="font-size:14px; color:#999; font-weight:normal; margin-left:10px;">(自動加總版)</span></h3>
+                <h3>門市排班管理 <span style="font-size:14px; color:#999; font-weight:normal; margin-left:10px;">(動態職稱版)</span></h3>
                 <div style="display: flex; gap: 10px;">
                     <button class="btn btn-warning" onclick="copyLastWeek()"><span style="font-size: 16px;">🔄</span> 複製上週</button>
-                    <button class="btn btn-info" onclick="exportCSV()"><span style="font-size: 16px;">📥</span> 匯出本週 Excel</button>
                     <button class="btn btn-success" onclick="saveWeeklySchedule()"><span style="font-size: 16px;">💾</span> 儲存排班</button>
                 </div>
             </div>
@@ -126,17 +139,7 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-weight: bold; color: var(--brand-blue); font-size: 15px;">過濾檢視門市</span>
-                    <select id="schedStore" onchange="renderWeeklySchedule()" style="width: 220px; background: #f8f9fa;">
-                        <option value="呷呼霸土城店">呷呼霸土城店</option>
-                        <option value="呷呼霸南崁店">呷呼霸南崁店</option>
-                        <option value="呷呼霸長榮店">呷呼霸長榮店</option>
-                        <option value="呷呼霸蘆洲中山店">呷呼霸蘆洲中山店</option>
-                        <option value="呷呼霸林口店">呷呼霸林口店</option>
-                        <option value="呷呼霸汐止店">呷呼霸汐止店</option>
-                        <option value="呷呼霸淡大店">呷呼霸淡大店</option>
-                        <option value="呷呼霸淡水店">呷呼霸淡水店</option>
-                        <option value="總公司">總公司</option>
-                    </select>
+                    <select id="schedStore" class="dynamic-store-select" onchange="renderWeeklySchedule()" style="width: 220px; background: #f8f9fa;"></select>
                 </div>
             </div>
             
@@ -161,19 +164,8 @@
 
             <div class="hr-form-grid">
                 <div class="form-group"><label>員工姓名</label><input type="text" id="empName"></div>
-                <div class="form-group"><label>所屬門市</label>
-                    <select id="empStore">
-                        <option value="呷呼霸土城店">呷呼霸土城店</option>
-                        <option value="呷呼霸南崁店">呷呼霸南崁店</option>
-                        <option value="呷呼霸長榮店">呷呼霸長榮店</option>
-                        <option value="呷呼霸蘆洲中山店">呷呼霸蘆洲中山店</option>
-                        <option value="呷呼霸林口店">呷呼霸林口店</option>
-                        <option value="呷呼霸汐止店">呷呼霸汐止店</option>
-                        <option value="呷呼霸淡大店">呷呼霸淡大店</option>
-                        <option value="總公司">總公司</option>
-                    </select>
-                </div>
-                <div class="form-group"><label>權限角色</label>
+                <div class="form-group"><label>所屬門市</label><select id="empStore" class="dynamic-store-select"></select></div>
+                <div class="form-group"><label>職稱 / 權限角色</label>
                     <select id="empRole">
                         <option value="正職">正職</option>
                         <option value="PT">PT</option>
@@ -200,7 +192,7 @@
                 </div>
             </div>
 
-            <div class="table-responsive" style="max-height: 50vh;">
+            <div class="table-responsive" style="max-height: 40vh;">
                 <table id="empTable" style="min-width: 1000px;">
                     <thead><tr><th>姓名</th><th>門市</th><th>角色</th><th>密碼</th><th>狀態</th><th>計薪</th><th>底薪/時薪</th><th>操作選項</th></tr></thead>
                     <tbody id="empBody"></tbody>
@@ -209,22 +201,46 @@
         </div>
 
         <div id="viewPayroll" class="view-section">
-            <h3>薪資單自動結算與列印</h3>
-            <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <h3>薪資單自動結算與列印 <span style="font-size:14px; color:#999; font-weight:normal; margin-left:10px;">(支援每日工時與面額計算)</span></h3>
+            <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <span style="font-weight: bold; color: var(--brand-blue); font-size: 16px;">選擇結算月份</span>
                     <input type="month" id="payrollMonth" style="width: 180px; background: #f8f9fa;">
+                    <span style="font-weight: bold; color: var(--brand-blue); font-size: 16px; margin-left: 10px;">選擇門市</span>
+                    <select id="payrollStore" class="dynamic-store-select" style="width: 200px; background: #f8f9fa;">
+                        <option value="全公司">全公司 (所有門市)</option>
+                    </select>
                 </div>
-                <button class="btn btn-success" style="padding: 14px 28px; font-size: 16px;" onclick="generatePayslips()">🖨️ 產生四合一薪資單</button>
+                <button class="btn btn-success" style="padding: 14px 28px; font-size: 16px;" onclick="generatePayslips()">🖨️ 生成實體薪資單</button>
             </div>
             <div id="printArea" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border); display: none;"></div>
+        </div>
+
+        <!-- 隱藏版門市管理 (僅老闆可見) -->
+        <div id="viewStores" class="view-section">
+            <h3>🏢 門市管理設定</h3>
+            <div class="hr-form-grid">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>新增門市名稱</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="newStoreName" placeholder="例如：呷呼霸板橋店">
+                        <button class="btn btn-warning" onclick="addStore()">➕ 新增</button>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive" style="max-width: 600px;">
+                <table style="min-width: 100%;">
+                    <thead><tr><th>門市名稱</th><th>操作</th></tr></thead>
+                    <tbody id="storeListBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbxMqYMpwUCNOwrsNGcYDdCAO723_Qgu26syp0CZJXLHIgp1nul2dzFW0XinwKZ-1_u5/exec";
         let currentUser = {};
-        let globalData = { schedule: [], employees: [] };
+        let globalData = { schedule: [], employees: [], stores: [] };
 
         async function fetchApi(payload) {
             const res = await fetch(API_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) });
@@ -248,17 +264,11 @@
                     document.getElementById('userStore').innerText = res.store;
                     
                     let now = new Date();
-                    let dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-                    let mStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+                    document.getElementById('schedWeekDate').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                    document.getElementById('payrollMonth').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
                     
-                    document.getElementById('schedWeekDate').value = dateStr;
-                    document.getElementById('payrollMonth').value = mStr;
-                    
-                    if(res.role === '店長' || res.role === '副店長') {
-                        document.getElementById('schedStore').value = res.store;
-                        document.getElementById('schedStore').disabled = true; 
-                        document.getElementById('empStore').value = res.store;
-                        document.getElementById('empStore').disabled = true;
+                    if(res.role === '老闆') {
+                        document.getElementById('tabStores').style.display = 'flex';
                     }
                     Swal.close(); loadData();
                 } else { Swal.fire('失敗', res.msg, 'error'); }
@@ -275,8 +285,10 @@
                 currentUser.role = '老闆'; 
                 document.getElementById('schedStore').disabled = false;
                 document.getElementById('empStore').disabled = false;
+                document.getElementById('payrollStore').disabled = false;
                 document.getElementById('userRole').innerText = '最高管理員 (解鎖)';
                 document.getElementById('userRole').style.color = '#d93025';
+                document.getElementById('tabStores').style.display = 'flex';
                 Swal.fire('解鎖成功！', '已開啟跨門市權限', 'success');
                 loadData(); 
             } else if (key) { Swal.fire('錯誤', '金鑰無效', 'error'); }
@@ -290,26 +302,76 @@
             if(tabId === 'viewEmployees') updateEmpDropdown();
         }
 
+        function updateAllStoreDropdowns() {
+            let optionsHTML = '';
+            globalData.stores.forEach(s => optionsHTML += `<option value="${s}">${s}</option>`);
+            document.querySelectorAll('.dynamic-store-select').forEach(sel => {
+                let keepAllOpt = sel.id === 'payrollStore';
+                let html = keepAllOpt ? '<option value="全公司">全公司 (所有門市)</option>' : '';
+                sel.innerHTML = html + optionsHTML;
+                if(currentUser.role !== '老闆' && sel.id !== 'payrollStore') {
+                    sel.value = currentUser.store;
+                    sel.disabled = true;
+                }
+            });
+            renderStoreManagerList();
+        }
+
         async function loadData() {
             Swal.fire({title: '資料同步中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
-                const res = await fetchApi({action: 'getData', name: currentUser.name, role: currentUser.role, store: document.getElementById('schedStore').value});
+                const res = await fetchApi({action: 'getData', name: currentUser.name, role: currentUser.role, store: document.getElementById('schedStore').value || currentUser.store});
                 if(res.status === 'success') {
                     globalData = res.data;
+                    updateAllStoreDropdowns();
+                    if(document.getElementById('schedStore').value === "") document.getElementById('schedStore').value = currentUser.store;
                     renderWeeklySchedule(); renderEmployees(); updateEmpDropdown(); Swal.close();
                 }
             } catch(e) {}
         }
 
-        // ================= 班表與自動計算邏輯 =================
+        // ================= 門市動態管理 =================
+        function renderStoreManagerList() {
+            let html = '';
+            globalData.stores.forEach((s, idx) => {
+                html += `<tr><td style="font-weight:bold; color:var(--brand-blue);">${s}</td>
+                <td><button class="btn btn-danger" style="padding:4px 10px; font-size:12px;" onclick="deleteStore(${idx})">刪除</button></td></tr>`;
+            });
+            document.getElementById('storeListBody').innerHTML = html;
+        }
+
+        async function addStore() {
+            let val = document.getElementById('newStoreName').value.trim();
+            if(!val) return;
+            if(globalData.stores.includes(val)) return Swal.fire('錯誤', '門市已存在', 'error');
+            globalData.stores.push(val);
+            saveStoresToBackend();
+        }
+
+        async function deleteStore(idx) {
+            if(!confirm(`確定要刪除 ${globalData.stores[idx]} 嗎？`)) return;
+            globalData.stores.splice(idx, 1);
+            saveStoresToBackend();
+        }
+
+        async function saveStoresToBackend() {
+            Swal.fire({title: '更新門市資料庫...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+            try {
+                const res = await fetchApi({ action: 'updateStores', stores: globalData.stores });
+                if(res.status === 'success') {
+                    document.getElementById('newStoreName').value = "";
+                    updateAllStoreDropdowns();
+                    Swal.fire('成功', '門市清單已更新', 'success');
+                }
+            } catch(e) {}
+        }
+
+        // ================= 排班表 =================
         function handleShiftChange(input) {
             let val = input.value.trim();
             if(!input.getAttribute('data-emp').includes('[系統]')) {
-                if(val === '休' || val === '排休') {
-                    input.className = 'shift-input is-off';
-                } else {
-                    input.className = 'shift-input is-work';
-                }
+                if(val === '休' || val === '排休') input.className = 'shift-input is-off';
+                else input.className = 'shift-input is-work';
             }
             calculateTotals();
         }
@@ -336,54 +398,37 @@
             let weekDates = [];
             let theadHtml = '<tr><th class="col-role">職稱方向</th><th class="col-name">姓名</th>';
             for(let i=0; i<7; i++) {
-                let d = new Date(selectedDate);
-                d.setDate(selectedDate.getDate() + i);
-                weekDates.push(d);
+                let d = new Date(selectedDate); d.setDate(selectedDate.getDate() + i); weekDates.push(d);
                 let dateStr = `${d.getMonth()+1}/${d.getDate()}`;
                 let wStr = ["日","一","二","三","四","五","六"][d.getDay()];
                 theadHtml += `<th>${dateStr}<br><span style="font-size:12px; font-weight:normal;">星期${wStr}</span></th>`;
             }
-            theadHtml += '</tr>';
-            document.getElementById('schedHead').innerHTML = theadHtml;
+            theadHtml += '</tr>'; document.getElementById('schedHead').innerHTML = theadHtml;
 
             let bodyHtml = '';
-
-            let taskRow1 = `<tr class="sys-task-1">
-                <td class="col-role" style="background:var(--brand-yellow); color:var(--brand-blue);">職稱任務</td>
-                <td class="col-name" style="background:var(--brand-yellow); color:var(--brand-blue);"></td>`;
-            let taskRow2 = `<tr class="sys-task-2">
-                <td class="col-role" style="background:#d1ecf1; color:#0c5460; font-size:12px;">開班備註</td>
-                <td class="col-name" style="background:#d1ecf1; color:#0c5460;"></td>`;
+            let taskRow1 = `<tr class="sys-task-1"><td class="col-role">職稱任務</td><td class="col-name"></td>`;
+            let taskRow2 = `<tr class="sys-task-2"><td class="col-role">開班備註</td><td class="col-name"></td>`;
 
             weekDates.forEach((date, i) => {
-                let monthStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
-                let dd = date.getDate();
-                let t1 = getSysTask(monthStr, dd, '[系統]每日任務', targetStore);
-                let t2 = getSysTask(monthStr, dd, '[系統]開班備註', targetStore);
-
+                let monthStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`; let dd = date.getDate();
+                let t1 = getSysTask(monthStr, dd, '[系統]每日任務', targetStore); let t2 = getSysTask(monthStr, dd, '[系統]開班備註', targetStore);
                 taskRow1 += `<td><input type="text" class="shift-input" value="${t1}" data-emp="[系統]每日任務" data-month="${monthStr}" data-day="${dd}"></td>`;
                 taskRow2 += `<td><input type="text" class="shift-input" value="${t2}" data-emp="[系統]開班備註" data-month="${monthStr}" data-day="${dd}"></td>`;
             });
-            taskRow1 += `</tr>`; taskRow2 += `</tr>`;
-            bodyHtml += taskRow1 + taskRow2;
+            bodyHtml += taskRow1 + `</tr>` + taskRow2 + `</tr>`;
 
             let emps = globalData.employees.filter(e => e[1] === targetStore && e[4] !== "離職");
             const roleOrder = {"老闆":1, "店長":2, "副店長":3, "正職":4, "PT":5};
             emps.sort((a,b) => (roleOrder[a[2]]||99) - (roleOrder[b[2]]||99));
 
             emps.forEach(emp => {
-                let name = emp[0];
-                let hrRole = emp[2]; 
-                // 判斷是否為管理階層，若是則顯示職稱，若否則顯示隱形輸入框
+                let name = emp[0]; let hrRole = emp[2]; 
                 let isManager = (hrRole === '店長' || hrRole === '副店長' || hrRole === '老闆');
                 let displayRoleUI = isManager ? hrRole : `<input type="text" class="custom-role-input" placeholder="填寫方向" oninput="calculateTotals()">`;
 
                 bodyHtml += `<tr><td class="col-role">${displayRoleUI}</td><td class="col-name">${name}</td>`;
-                
-                weekDates.forEach((date, i) => {
-                    let monthStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
-                    let dd = date.getDate();
-                    
+                weekDates.forEach((date) => {
+                    let monthStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`; let dd = date.getDate();
                     let mySched = globalData.schedule.find(s => {
                         let rM = String(s[0]);
                         if(rM.includes('T')) rM = `${new Date(s[0]).getFullYear()}-${String(new Date(s[0]).getMonth()+1).padStart(2,'0')}`;
@@ -397,11 +442,7 @@
                     let isOff = (val === '休' || val === '排休');
                     let textClass = isOff ? 'shift-input is-off' : 'shift-input is-work';
 
-                    bodyHtml += `<td>
-                        <input type="text" class="${textClass}" value="${isOff ? '休' : val}" 
-                            data-emp="${name}" data-month="${monthStr}" data-day="${dd}" 
-                            oninput="handleShiftChange(this)" ondblclick="this.value='休'; handleShiftChange(this)">
-                    </td>`;
+                    bodyHtml += `<td><input type="text" class="${textClass}" value="${isOff ? '休' : val}" data-emp="${name}" data-month="${monthStr}" data-day="${dd}" oninput="handleShiftChange(this)" ondblclick="this.value='休'; handleShiftChange(this)"></td>`;
                 });
                 bodyHtml += '</tr>';
             });
@@ -410,26 +451,19 @@
         }
 
         function calculateTotals() {
-            let earlyCounts = [0,0,0,0,0,0,0];
-            let lateCounts = [0,0,0,0,0,0,0];
-            let closeCounts = [0,0,0,0,0,0,0];
-            
+            let earlyCounts = [0,0,0,0,0,0,0]; let lateCounts = [0,0,0,0,0,0,0]; let closeCounts = [0,0,0,0,0,0,0];
             document.querySelectorAll('#schedBody tr').forEach(tr => {
                 let roleCell = tr.querySelector('.col-role');
-                if(!roleCell) return;
-                if(roleCell.innerText.includes('職稱') || roleCell.innerText.includes('備註')) return; 
+                if(!roleCell || roleCell.innerText.includes('職稱') || roleCell.innerText.includes('備註')) return; 
                 
-                // 抓取機動填寫的職稱方向
                 let roleInput = roleCell.querySelector('.custom-role-input');
                 let roleText = roleInput ? roleInput.value.trim() : roleCell.innerText.trim();
                 
-                let inputs = tr.querySelectorAll('.shift-input');
-                inputs.forEach((inp, idx) => {
+                tr.querySelectorAll('.shift-input').forEach((inp, idx) => {
                     let val = inp.value.trim();
                     if(val && val !== '休' && val !== '排休') {
-                        if(roleText.includes('打烊')) { 
-                            closeCounts[idx]++; 
-                        } else {
+                        if(roleText.includes('打烊')) { closeCounts[idx]++; } 
+                        else {
                             if(val.includes('10') || val.includes('11') || val.includes('12') || val.includes('13') || val.includes('09')) earlyCounts[idx]++;
                             if(val.includes('16') || val.includes('17') || val.includes('18') || val.includes('19')) lateCounts[idx]++;
                             if(val.includes('01') || val.includes('23') || val.includes('24') || val.includes('22:30') || val.includes('22-01')) closeCounts[idx]++;
@@ -438,21 +472,10 @@
                 });
             });
 
-            let footHtml = `
-                <tr class="summary-row">
-                    <td colspan="2" style="text-align:right; padding-right:15px; background:var(--brand-blue-soft);">早班 / 開班人數</td>
-                    ${earlyCounts.map(c => `<td>${c}</td>`).join('')}
-                </tr>
-                <tr class="summary-row alt">
-                    <td colspan="2" style="text-align:right; padding-right:15px; background:#fff8e1;">晚班 / 值班人數</td>
-                    ${lateCounts.map(c => `<td>${c}</td>`).join('')}
-                </tr>
-                <tr class="summary-row">
-                    <td colspan="2" style="text-align:right; padding-right:15px; background:var(--brand-blue-soft);">打烊人數</td>
-                    ${closeCounts.map(c => `<td>${c}</td>`).join('')}
-                </tr>
-            `;
-            document.getElementById('schedFoot').innerHTML = footHtml;
+            document.getElementById('schedFoot').innerHTML = `
+                <tr class="summary-row"><td colspan="2" style="text-align:right; padding-right:15px; background:var(--brand-blue-soft);">早班 / 開班人數</td>${earlyCounts.map(c => `<td>${c}</td>`).join('')}</tr>
+                <tr class="summary-row alt"><td colspan="2" style="text-align:right; padding-right:15px; background:#fff8e1;">晚班 / 值班人數</td>${lateCounts.map(c => `<td>${c}</td>`).join('')}</tr>
+                <tr class="summary-row"><td colspan="2" style="text-align:right; padding-right:15px; background:var(--brand-blue-soft);">打烊人數</td>${closeCounts.map(c => `<td>${c}</td>`).join('')}</tr>`;
         }
 
         async function saveWeeklySchedule() {
@@ -461,36 +484,25 @@
             let store = document.getElementById('schedStore').value;
             
             inputs.forEach(inp => {
-                let empName = inp.getAttribute('data-emp');
-                let monthStr = inp.getAttribute('data-month');
-                let day = parseInt(inp.getAttribute('data-day'));
-                let val = inp.value.trim();
-                
+                let empName = inp.getAttribute('data-emp'); let monthStr = inp.getAttribute('data-month'); let day = parseInt(inp.getAttribute('data-day'));
                 monthsToSave.add(monthStr);
-                
                 let sRow = globalData.schedule.find(s => {
                     let rM = String(s[0]);
                     if(rM.includes('T')) rM = `${new Date(s[0]).getFullYear()}-${String(new Date(s[0]).getMonth()+1).padStart(2,'0')}`;
                     else if(rM.includes('/')) rM = rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0');
                     return rM === monthStr && s[2] === empName && s[1] === store;
                 });
-                
-                if(!sRow) {
-                    sRow = [monthStr, store, empName, ...Array(31).fill("")];
-                    globalData.schedule.push(sRow);
-                }
-                sRow[2 + day] = val;
+                if(!sRow) { sRow = [monthStr, store, empName, ...Array(31).fill("")]; globalData.schedule.push(sRow); }
+                sRow[2 + day] = inp.value.trim();
             });
 
             if(monthsToSave.size === 0) return;
             Swal.fire({title: '儲存與驗證中...', text: '若遇跨月會分批上傳...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-            
             try {
                 for (let m of monthsToSave) {
                     let payloadData = [];
                     let emps = globalData.employees.filter(e => e[1] === store && e[4] !== "離職");
                     let namesToProcess = ['[系統]每日任務', '[系統]開班備註', ...emps.map(e => e[0])];
-                    
                     namesToProcess.forEach(empName => {
                         let sRow = globalData.schedule.find(s => {
                             let rM = String(s[0]);
@@ -502,12 +514,10 @@
                         shifts = shifts.map(x => x == null ? "" : String(x));
                         payloadData.push({name: empName, shifts: shifts});
                     });
-                    
                     let res = await fetchApi({ action: 'saveSchedule', month: m, store: store, scheduleData: payloadData });
                     if(res.status !== 'success') throw new Error(res.msg);
                 }
-                Swal.fire('成功', '排班表儲存成功！', 'success');
-                loadData(); 
+                Swal.fire('成功', '排班表儲存成功！', 'success'); loadData(); 
             } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
 
@@ -517,17 +527,10 @@
                 showCancelButton: true, confirmButtonColor: '#ffc107', confirmButtonText: '確定'
             }).then((result) => {
                 if(result.isConfirmed) {
-                    let inputs = document.querySelectorAll('.shift-input');
-                    inputs.forEach(inp => {
-                        let empName = inp.getAttribute('data-emp');
-                        let currentMonth = inp.getAttribute('data-month');
-                        let currentDay = parseInt(inp.getAttribute('data-day'));
-                        
-                        let [yy, mm] = currentMonth.split('-');
-                        let d = new Date(yy, parseInt(mm)-1, currentDay);
-                        d.setDate(d.getDate() - 7);
-                        let lastWkMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                        let lastWkDay = d.getDate();
+                    document.querySelectorAll('.shift-input').forEach(inp => {
+                        let empName = inp.getAttribute('data-emp'); let currentMonth = inp.getAttribute('data-month'); let currentDay = parseInt(inp.getAttribute('data-day'));
+                        let [yy, mm] = currentMonth.split('-'); let d = new Date(yy, parseInt(mm)-1, currentDay); d.setDate(d.getDate() - 7);
+                        let lastWkMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; let lastWkDay = d.getDate();
 
                         let lastWkRow = globalData.schedule.find(s => {
                             let rM = String(s[0]);
@@ -535,13 +538,11 @@
                             else if(rM.includes('/')) rM = rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0');
                             return rM === lastWkMonth && s[2] === empName && s[1] === document.getElementById('schedStore').value;
                         });
-
                         if (lastWkRow && (2 + lastWkDay) < lastWkRow.length) {
                             let val = lastWkRow[2 + lastWkDay];
                             if(String(val).includes('T')) { val = new Date(val); val = val.getFullYear()<2000 ? String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0') : (val.getMonth()+1)+'-'+val.getDate(); }
                             inp.value = val ? val : "休";
                         } else { inp.value = "休"; }
-                        
                         handleShiftChange(inp);
                     });
                     Swal.fire('已套用', '請確認無誤後點擊「儲存排班」', 'success');
@@ -549,37 +550,38 @@
             });
         }
 
-        function exportCSV() {
-            const dateStr = document.getElementById('schedWeekDate').value;
-            const store = document.getElementById('schedStore').value;
-            let csvContent = "\uFEFF"; 
-            let rows = document.querySelectorAll('#schedTable tr');
-            rows.forEach(row => {
-                let rowData = [];
-                row.querySelectorAll('th, td').forEach(col => {
-                    let customRoleInput = col.querySelector('.custom-role-input');
-                    let shiftInput = col.querySelector('.shift-input');
-                    
-                    if (customRoleInput) {
-                        rowData.push(`"${customRoleInput.value || ''}"`);
-                    } else if (shiftInput) {
-                        rowData.push(`"${shiftInput.value || '休'}"`);
-                    } else {
-                        rowData.push(`"${col.innerText.replace(/\n/g, ' ')}"`);
-                    }
-                });
-                csvContent += rowData.join(",") + "\n";
+        // ================= 智能工時與面額計算引擎 =================
+        function parseTimeStr(t) {
+            if(t.includes(':')) { let p = t.split(':'); return parseInt(p[0])*60 + parseInt(p[1]); }
+            return parseInt(t)*60;
+        }
+
+        function calculateDailyHours(shiftStr) {
+            if (!shiftStr || shiftStr === '休' || shiftStr === '排休') return 0;
+            let cleanStr = shiftStr.replace(/\(.*?\)/g, ''); // 移除 (廁), (洗) 等備註
+            let regex = /(\d{1,2}(?::\d{2})?)\s*-\s*(\d{1,2}(?::\d{2})?)/g;
+            let match; let totalMinutes = 0;
+            while ((match = regex.exec(cleanStr)) !== null) {
+                let start = parseTimeStr(match[1]);
+                let end = parseTimeStr(match[2]);
+                if (end < start) end += 24 * 60; // 跨夜班 (例如 22-01)
+                totalMinutes += (end - start);
+            }
+            return totalMinutes / 60;
+        }
+
+        function getCashBreakdown(amount) {
+            let res = []; let remaining = Math.round(amount);
+            [1000, 500, 100, 50, 10, 5, 1].forEach(d => {
+                let count = Math.floor(remaining / d);
+                if (count > 0) { res.push(`$${d} x ${count}`); remaining %= d; }
             });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
-            link.download = `${store}_週班表_${dateStr}.csv`;
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            return res.join(' , ');
         }
 
         // ================= 人事維護與計薪 =================
         function updateEmpDropdown() {
-            let sel = document.getElementById('filterEmp');
-            sel.innerHTML = '<option value="">請選擇員工...</option>';
+            let sel = document.getElementById('filterEmp'); sel.innerHTML = '<option value="">請選擇員工...</option>';
             let displayEmps = globalData.employees;
             if(currentUser.role === '店長' || currentUser.role === '副店長') displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
             displayEmps.forEach(e => { sel.innerHTML += `<option value="${e[0]}">${e[0]} - ${e[1]}</option>`; });
@@ -604,7 +606,7 @@
             document.getElementById('empRole').value = "正職"; document.getElementById('empDutyType').value = "一般員工"; document.getElementById('empObDate').value = "";
             document.getElementById('empAnnualLeave').value = ""; ['empBonus', 'empLaborIns', 'empHealthIns', 'empDependents'].forEach(id => document.getElementById(id).value = "0");
             ['empPhone', 'empAddress'].forEach(id => document.getElementById(id).value = "");
-            document.getElementById('empStore').value = (currentUser.role === '店長' || currentUser.role === '副店長') ? currentUser.store : "呷呼霸土城店";
+            document.getElementById('empStore').value = (currentUser.role === '店長' || currentUser.role === '副店長') ? currentUser.store : globalData.stores[0];
         }
 
         async function saveEmployee() {
@@ -616,24 +618,17 @@
             };
             if(!payload.name) return Swal.fire('提示', '姓名必填寫！', 'warning');
             Swal.fire({title: '儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-            try {
-                const res = await fetchApi(payload);
-                if(res.status === 'success') { Swal.fire('成功', '已儲存！', 'success'); loadData(); clearForm(); }
-            } catch(e) {}
+            try { const res = await fetchApi(payload); if(res.status === 'success') { Swal.fire('成功', '已儲存！', 'success'); loadData(); clearForm(); } } catch(e) {}
         }
 
         async function deleteEmployee(empName) {
             if(!confirm(`確定徹底刪除【${empName}】的資料嗎？`)) return;
             Swal.fire({title: '刪除中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-            try {
-                const res = await fetchApi({ action: 'deleteEmployee', name: empName });
-                if(res.status === 'success') { Swal.fire('已刪除', res.msg, 'success'); loadData(); clearForm(); }
-            } catch(e) {}
+            try { const res = await fetchApi({ action: 'deleteEmployee', name: empName }); if(res.status === 'success') { Swal.fire('已刪除', res.msg, 'success'); loadData(); clearForm(); } } catch(e) {}
         }
 
         function renderEmployees() {
-            let html = '';
-            let displayEmps = globalData.employees;
+            let html = ''; let displayEmps = globalData.employees;
             if(currentUser.role === '店長' || currentUser.role === '副店長') displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
             displayEmps.forEach(emp => {
                 html += `<tr>
@@ -650,32 +645,88 @@
 
         function generatePayslips() {
             const printArea = document.getElementById('printArea'); printArea.style.display = 'block';
-            let html = ''; let count = 0; const targetMonth = document.getElementById('payrollMonth').value;
+            let html = ''; let count = 0; 
+            const targetMonth = document.getElementById('payrollMonth').value;
+            const selectedStore = document.getElementById('payrollStore').value;
+            
             let targetEmps = globalData.employees.filter(e => e[4] !== "離職");
             if(currentUser.role === "店長" || currentUser.role === "副店長") targetEmps = targetEmps.filter(e => e[1] === currentUser.store);
+            else if(selectedStore !== "全公司") targetEmps = targetEmps.filter(e => e[1] === selectedStore);
+
+            const daysInMonth = new Date(targetMonth.split('-')[0], targetMonth.split('-')[1], 0).getDate();
 
             targetEmps.forEach((emp) => {
-                let name = emp[0]; let store = emp[1]; let payType = emp[6] || '月薪'; let base = Number(emp[7]) || 0; let hourlyDeduct = payType === '月薪' ? Math.round(base/30/8) : 0;
+                let name = emp[0]; let store = emp[1]; let payType = emp[6] || '月薪'; let baseRate = Number(emp[7]) || 0; 
+                let laborIns = Number(emp[12]) || 0; let healthIns = Number(emp[13]) || 0;
+                
+                // 抓取排班紀錄計算工時
+                let sRow = globalData.schedule.find(s => {
+                    let rM = String(s[0]);
+                    if(rM.includes('T')) rM = `${new Date(s[0]).getFullYear()}-${String(new Date(s[0]).getMonth()+1).padStart(2,'0')}`;
+                    else if(rM.includes('/')) rM = rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0');
+                    return rM === targetMonth && s[2] === name;
+                });
+
+                let totalRegularHours = 0; let totalOTHours = 0;
+                let daysHTML = '';
+
+                for(let i=1; i<=daysInMonth; i++) {
+                    let shiftStr = sRow ? sRow[2+i] : "";
+                    if(shiftStr && String(shiftStr).includes('T')) { shiftStr = new Date(shiftStr); shiftStr = shiftStr.getFullYear()<2000 ? String(shiftStr.getHours()).padStart(2,'0')+':'+String(shiftStr.getMinutes()).padStart(2,'0') : (shiftStr.getMonth()+1)+'-'+shiftStr.getDate(); }
+                    
+                    let dailyHours = calculateDailyHours(shiftStr);
+                    let isOff = (!shiftStr || shiftStr === '休' || shiftStr === '排休' || dailyHours === 0);
+                    
+                    if(payType === '時薪' && dailyHours > 0) {
+                        let reg = Math.min(8, dailyHours);
+                        let otRaw = Math.max(0, dailyHours - 8);
+                        let otCalculated = Math.floor(otRaw / 0.5) * 0.5; // 以 0.5 小時為基數
+                        totalRegularHours += reg;
+                        totalOTHours += otCalculated;
+                    }
+
+                    daysHTML += `<div class="payslip-day ${isOff?'off':''}"><div class="d-num">${i}號</div><div style="font-size:10px;">${isOff?'休': dailyHours+'h'}</div></div>`;
+                }
+
+                let finalPay = baseRate;
+                let calculationDetail = '';
+                if(payType === '時薪') {
+                    let regPay = totalRegularHours * baseRate;
+                    let otPay = totalOTHours * (baseRate * 1.34); // 假設基礎加班費率 1.34 倍，可依需求調整
+                    finalPay = Math.round(regPay + otPay);
+                    calculationDetail = `(正常 ${totalRegularHours}h + 加班 ${totalOTHours}h)`;
+                }
+
+                // 扣除勞健保
+                let totalDeduct = laborIns + healthIns;
+                let actualPay = finalPay - totalDeduct;
+                let breakdownStr = getCashBreakdown(actualPay);
+
                 html += `<div class="payslip">
-                    <div style="display:flex; justify-content:space-between; border-bottom: 2px solid var(--brand-blue); padding-bottom:8px; margin-bottom:15px;">
+                    <div style="display:flex; justify-content:space-between; border-bottom: 2px solid var(--brand-blue); padding-bottom:8px; margin-bottom:10px;">
                         <h3 style="margin:0; color:var(--brand-blue); font-size:18px; border:none; padding:0;">呷呼霸 員工薪資單</h3><span style="font-weight:bold; color:#555;">${targetMonth}</span>
                     </div>
                     <div style="font-size:14px; line-height:1.8;">
                         <span style="display:inline-block; width:48%;"><strong>門市：</strong> ${store}</span><span style="display:inline-block; width:48%;"><strong>計薪：</strong> ${payType}</span><br>
-                        <span style="display:inline-block; width:48%;"><strong>姓名：</strong> <span style="font-size:16px; color:var(--brand-blue); font-weight:bold;">${name}</span></span><span style="display:inline-block; width:48%;"><strong>底薪/時薪：</strong> $${base}</span>
+                        <span style="display:inline-block; width:48%;"><strong>姓名：</strong> <span style="font-size:16px; color:var(--brand-blue); font-weight:bold;">${name}</span></span><span style="display:inline-block; width:48%;"><strong>底薪/時薪：</strong> $${baseRate}</span>
                     </div>
-                    <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
-                    <table style="width:100%; text-align:left; border:none; margin:0; min-width:auto;">
-                        <tr><td style="border:none; padding:4px; text-align:left;">🔹 伙食津貼 / 獎金：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$0</td></tr>
-                        <tr><td style="border:none; padding:4px; text-align:left;">🔸 加班費 (含颱風加給)：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$0</td></tr>
-                        <tr><td style="border:none; padding:4px; text-align:left;">🔻 遲到扣款 (費率 $${hourlyDeduct}/hr)：</td><td style="border:none; text-align:right; color:#d93025; font-weight:bold;">-$0</td></tr>
+                    
+                    <div style="font-size:12px; font-weight:bold; color:var(--brand-blue); margin-top:10px;">📅 每日工時明細</div>
+                    <div class="payslip-grid">${daysHTML}</div>
+
+                    <table style="width:100%; text-align:left; border:none; margin:0; font-size:13px;">
+                        <tr><td style="border:none; padding:4px;">🔹 結算底薪 ${calculationDetail}：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$${finalPay}</td></tr>
+                        <tr><td style="border:none; padding:4px;">🔻 勞健保扣除額：</td><td style="border:none; text-align:right; color:#d93025; font-weight:bold;">-$${totalDeduct}</td></tr>
                     </table>
-                    <div style="background: var(--brand-blue-soft); padding:12px; border-radius:8px; margin-top:15px; text-align:right;">
-                        <span style="font-size:13px; color:var(--brand-blue); margin-right:15px;">實發總計</span><span style="font-size:22px; font-weight:900; color:var(--brand-blue);"> $${base} </span>
+                    
+                    <div class="payslip-cash">💰 實體面額配發參考：<br><span style="color:#d93025; font-size:15px;">${breakdownStr}</span></div>
+                    
+                    <div style="background: var(--brand-blue-soft); padding:12px; border-radius:8px; margin-top:10px; text-align:right;">
+                        <span style="font-size:13px; color:var(--brand-blue); margin-right:15px;">實發總計</span><span style="font-size:22px; font-weight:900; color:var(--brand-blue);"> $${actualPay} </span>
                     </div></div>`;
-                count++; if(count % 4 === 0) html += '<div class="page-break"></div>';
+                count++; if(count % 2 === 0) html += '<div class="page-break"></div>';
             });
-            printArea.innerHTML = html; setTimeout(() => window.print(), 500);
+            printArea.innerHTML = html || '<h3 style="text-align:center;">該門市無員工資料可供列印</h3>'; setTimeout(() => window.print(), 500);
         }
     </script>
 </body>
