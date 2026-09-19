@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>呷呼霸 - 員工專屬 App V5 (防呆提醒版)</title>
+    <title>呷呼霸 - 員工專屬 App V6 (GPS對接版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -35,7 +35,6 @@
         .user-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--brand-yellow); background: #eee; box-shadow: 0 3px 10px rgba(0,0,0,0.3); cursor: pointer;}
         .avatar-edit-badge { position: absolute; bottom: 0; right: 0; background: var(--brand-yellow); color: var(--brand-blue); border-radius: 50%; width: 24px; height: 24px; font-size: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold;}
 
-        /* 防呆警告橫幅 */
         #punchWarning { display: none; background: #fce8e6; color: #c5221f; border-left: 5px solid #d93025; padding: 15px; margin: 20px 20px 0 20px; border-radius: 10px; font-size: 14px; font-weight: bold; box-shadow: 0 2px 8px rgba(217,48,37,0.1); animation: shake 0.5s ease-in-out; }
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
 
@@ -174,7 +173,6 @@
                 <input type="radio" name="mgrType" id="mgrTabDir" value="dir" onchange="toggleMgrView()"><label for="mgrTabDir">📖 通訊錄</label>
             </div>
 
-            <!-- 全新：手機版出勤與手動補登 -->
             <div id="mgrSectionAtt">
                 <div class="app-form" style="padding:12px; margin-bottom:12px; display:flex; gap:10px;">
                     <div style="flex:1;"><label style="font-weight:bold; color:var(--brand-blue); font-size:13px; margin-bottom:5px;">出勤日期</label><input type="date" id="mgrAttDate" class="form-control" onchange="loadAttendanceRecords()"></div>
@@ -226,11 +224,15 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbxMqYMpwUCNOwrsNGcYDdCAO723_Qgu26syp0CZJXLHIgp1nul2dzFW0XinwKZ-1_u5/exec";
     let userProfile = {}; let userLat = null, userLon = null; let isWithinRange = false; const ALLOWED_DIST = 300; let appGlobalData = null; 
 
+    // 【核心更新】：刪除淡水店，更新長榮店名稱為「呷呼霸蘆洲長榮店」
     const STORE_LOCATIONS = {
-        "呷呼霸土城店": { lat: 24.9796939917096, lon: 121.44271680000001 }, "呷呼霸南崁店": { lat: 25.04907755650072, lon: 121.29537739385484 },
-        "呷呼霸長榮店": { lat: 25.105350833998052, lon: 121.46181640409846 }, "呷呼霸蘆洲中山店": { lat: 25.087309049331484, lon: 121.47824063907836 },
-        "呷呼霸汐止店": { lat: 25.07326757123323, lon: 121.65359859249163 }, "呷呼霸林口店": { lat: 25.080390558411217, lon: 121.38304709932427 },
-        "呷呼霸淡大店": { lat: 25.188705903698462, lon: 121.44580752353794 }, "呷呼霸淡水店": { lat: 25.188705903698462, lon: 121.44580752353794 } 
+        "呷呼霸土城店": { lat: 24.9796939917096, lon: 121.44271680000001 },
+        "呷呼霸南崁店": { lat: 25.04907755650072, lon: 121.29537739385484 },
+        "呷呼霸蘆洲長榮店": { lat: 25.105350833998052, lon: 121.46181640409846 },
+        "呷呼霸蘆洲中山店": { lat: 25.087309049331484, lon: 121.47824063907836 },
+        "呷呼霸汐止店": { lat: 25.07326757123323, lon: 121.65359859249163 },
+        "呷呼霸林口店": { lat: 25.080390558411217, lon: 121.38304709932427 },
+        "呷呼霸淡大店": { lat: 25.188705903698462, lon: 121.44580752353794 }
     };
 
     window.onload = () => { const saved = localStorage.getItem('jiaHubaUser'); if (saved) { userProfile = JSON.parse(saved); showMainScreen(); initGPS(); } };
@@ -261,32 +263,22 @@
         document.getElementById('dispName').innerText = userProfile.name; document.getElementById('dispStore').innerText = userProfile.store;
         if (userProfile.avatar) document.getElementById('dispAvatar').src = userProfile.avatar;
         if (userProfile.role === '店長' || userProfile.role === '副店長' || userProfile.role === '老闆') document.getElementById('navManager').style.display = 'flex';
-        checkMyDailyPunch(); // 登入後自動執行防呆檢查
+        checkMyDailyPunch(); 
     }
 
-    // ================= 新增：防呆漏打卡警告邏輯 =================
     async function checkMyDailyPunch() {
         let now = new Date();
         let todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-        
         try {
-            // 先取得我的今日排班，看是否有班
             const resData = await fetchApi({ action: "getData", name: userProfile.name, store: userProfile.store, role: userProfile.role });
             if(resData.status !== "success") return;
-            
             let mySched = resData.data.schedule.find(s => String(s[0]).includes(todayStr.substring(0,7)) && s[2] === userProfile.name);
-            let val = mySched ? mySched[2 + now.getDate()] : "";
-            let isOff = (!val || val === "休" || val === "排休");
-            
-            // 如果今天有排班，去查我今天的打卡次數
+            let val = mySched ? mySched[2 + now.getDate()] : ""; let isOff = (!val || val === "休" || val === "排休");
             if (!isOff) {
                 const pRes = await fetchApi({ action: "checkMyPunches", name: userProfile.name, date: todayStr });
                 if(pRes.status === "success") {
-                    let punches = pRes.punches; // 例如 ["上班", "下班"]
-                    // 只有一個紀錄（可能忘了下班或上班），或者完全沒紀錄，給予警告
-                    if (punches.length === 0 || punches.length === 1) {
-                        document.getElementById('punchWarning').style.display = 'block';
-                    }
+                    let punches = pRes.punches; 
+                    if (punches.length === 0 || punches.length === 1) document.getElementById('punchWarning').style.display = 'block';
                 }
             }
         } catch(e) {}
