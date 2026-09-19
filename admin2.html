@@ -3,24 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 營運管理中心 V18 (完整無損修復版)</title>
+    <title>呷呼霸 - 營運管理中心 V19 (手機完美適配版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --brand-blue: #003b6d; --brand-blue-soft: #e8f0fe; --brand-yellow: #ffc107; --bg: #f4f7f6; --text-main: #202124; --text-sub: #5f6368; --border: #dadce0; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin:0; padding:20px; color: var(--text-main); }
         .container { max-width: 1400px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+        
+        /* 導航列與標題 */
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
-        .nav-title { font-size: 26px; font-weight: 900; color: var(--brand-blue); display: flex; align-items: center; gap: 10px; letter-spacing: 1px;}
+        .nav-title { font-size: 26px; font-weight: 900; color: var(--brand-blue); display: flex; align-items: center; gap: 10px; letter-spacing: 1px; white-space: nowrap;}
         .nav-title span { color: var(--brand-blue); background: var(--brand-yellow); padding: 4px 10px; border-radius: 8px; font-size: 18px; cursor: pointer; transition: 0.2s;}
         .nav-title span:hover { filter: brightness(0.95); }
-        .user-badge { background: var(--brand-blue-soft); color: var(--brand-blue); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+        .user-badge { background: var(--brand-blue-soft); color: var(--brand-blue); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; white-space: nowrap;}
+        
         .nav-tabs { display: flex; gap: 12px; margin-bottom: 30px; border-bottom: 2px solid var(--border); padding-bottom: 0; }
-        .nav-tabs button { padding: 12px 24px; border: none; background: transparent; cursor: pointer; font-weight: bold; color: var(--text-sub); transition: 0.2s; font-size: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 4px solid transparent; margin-bottom: -2px;}
+        .nav-tabs button { padding: 12px 24px; border: none; background: transparent; cursor: pointer; font-weight: bold; color: var(--text-sub); transition: 0.2s; font-size: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 4px solid transparent; margin-bottom: -2px; white-space: nowrap;}
         .nav-tabs button:hover, .nav-tabs button.active { color: var(--brand-blue); border-bottom: 4px solid var(--brand-yellow); }
+        
         .view-section { display: none; animation: fadeIn 0.3s ease; } .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         h3 { color: var(--brand-blue); border-left: 5px solid var(--brand-yellow); padding-left: 15px; margin-top: 0; font-size: 20px;}
         
+        /* 表格區塊 */
         .table-responsive { width: 100%; max-height: 70vh; overflow: auto; background: white; border-radius: 10px; border: 1px solid var(--border); box-shadow: inset 0 0 5px rgba(0,0,0,0.02); }
         table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1200px; }
         th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 6px; text-align: center; vertical-align: middle; }
@@ -30,6 +35,7 @@
         th.col-role, th.col-name { z-index: 21; background: var(--brand-blue-soft); color: var(--brand-blue); }
         tr:hover td { background-color: #fdfdfd; } tr:hover td.col-role { background-color: #fcf8e3; } tr:hover td.col-name { background-color: #fafafa; }
         
+        /* 排班輸入框與系統列 */
         .sys-task-1 td { background: var(--brand-yellow) !important; color: var(--brand-blue) !important; border-bottom: 1px solid #d39e00;}
         .sys-task-1 input { background: #fff3cd !important; color: #856404 !important; font-weight: 900;}
         .sys-task-2 td { background: #d1ecf1 !important; color: #0c5460 !important; border-bottom: 1px solid #bee5eb;}
@@ -46,7 +52,9 @@
         .custom-role-input:focus { border: 1px solid var(--brand-blue); background: #fff;}
         .summary-row td { background: var(--brand-blue-soft); color: var(--brand-blue); font-weight: 900; font-size: 16px; border-top: 2px solid var(--brand-blue); padding: 12px 6px;}
         .summary-row.alt td { background: #fff8e1; color: #b07d00; border-top: 1px solid #ffe082;}
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 15px; }
+        
+        /* 按鈕與表單 */
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 15px; white-space: nowrap;}
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-primary { background: var(--brand-blue); color: white; } .btn-success { background: #0f9d58; color: white; }
         .btn-warning { background: var(--brand-yellow); color: var(--brand-blue); } .btn-danger { background: #d93025; color: white; }
@@ -58,6 +66,7 @@
         .att-badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
         .badge-in { background: #e6f4ea; color: #137333; } .badge-out { background: #fce8e6; color: #c5221f; }
         
+        /* 列印設定 */
         @media print {
             body * { visibility: hidden; } #printArea, #printArea * { visibility: visible; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; }
@@ -71,6 +80,37 @@
         .payslip-day.annual { color: #0f9d58; background: #e6f4ea; border-color:#c3e6cb;}
         .payslip-day .d-num { font-weight: bold; color: var(--brand-blue); margin-bottom: 2px; }
         .payslip-cash { background: #fff3cd; padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 4px solid var(--brand-yellow); font-size: 13px; color: #856404; font-weight: bold; }
+
+        /* ========================================= */
+        /* 手機版 RWD 完美響應式優化 (防擠壓設計) */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            .container { padding: 15px; border-radius: 12px; }
+            
+            /* 頂部導航改為垂直堆疊 */
+            .top-nav { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .top-nav > div { width: 100%; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+            
+            /* 標籤頁水平滑動防擠壓 */
+            .nav-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 5px; margin-bottom: 15px; border-bottom: none;}
+            .nav-tabs button { flex: 0 0 auto; font-size: 15px; padding: 8px 16px; border-bottom: 3px solid transparent; margin-bottom: 0;}
+            .nav-tabs button.active { border-bottom: 3px solid var(--brand-yellow); }
+            
+            /* 強制區塊上下堆疊 */
+            .mobile-stack { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+            .mobile-stack > div { width: 100% !important; align-items: flex-start !important; flex-direction: column !important; gap: 6px !important;}
+            .mobile-stack .btn { width: 100% !important; margin: 0 !important; }
+            .mobile-stack input, .mobile-stack select { width: 100% !important; margin-top: 4px; font-size: 16px; /* 防止 iOS 縮放 */ }
+            
+            /* 表單區塊變單欄 */
+            .hr-form-grid { grid-template-columns: 1fr; padding: 15px; }
+            
+            /* 避免表格超出版面太多 */
+            .table-responsive { max-height: 60vh; border-radius: 8px; }
+            
+            h3 { font-size: 18px; margin-bottom: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -100,20 +140,22 @@
 
         <!-- 排班表 -->
         <div id="viewSchedule" class="view-section active">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-                <h3>門市排班管理 <span style="font-size:14px; color:#999; font-weight:normal; margin-left:10px;">(動態職稱版)</span></h3>
-                <div style="display: flex; gap: 10px;">
+            <div class="mobile-stack" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <h3 style="margin-bottom:0;">門市排班管理 <span style="font-size:14px; color:#999; font-weight:normal; margin-left:10px;">(動態職稱版)</span></h3>
+                <div class="mobile-stack" style="display: flex; gap: 10px;">
                     <button class="btn btn-warning" onclick="copyLastWeek()"><span style="font-size: 16px;">🔄</span> 複製上週</button>
                     <button class="btn btn-success" onclick="saveWeeklySchedule()"><span style="font-size: 16px;">💾</span> 儲存排班</button>
                 </div>
             </div>
             
-            <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: flex; gap: 30px; align-items: center;">
+            <div class="mobile-stack" style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: flex; gap: 30px; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-weight: bold; color: var(--brand-blue); font-size: 15px;">選擇日期 (跳至該週)</span><input type="date" id="schedWeekDate" onchange="renderWeeklySchedule()" style="width: 160px; background: #f8f9fa;">
+                    <span style="font-weight: bold; color: var(--brand-blue); font-size: 15px; white-space: nowrap;">選擇日期 (跳至該週)</span>
+                    <input type="date" id="schedWeekDate" onchange="renderWeeklySchedule()" style="width: 160px; background: #f8f9fa;">
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-weight: bold; color: var(--brand-blue); font-size: 15px;">過濾檢視門市</span><select id="schedStore" class="dynamic-store-select" onchange="loadData()" style="width: 220px; background: #f8f9fa;"></select>
+                    <span style="font-weight: bold; color: var(--brand-blue); font-size: 15px; white-space: nowrap;">過濾檢視門市</span>
+                    <select id="schedStore" class="dynamic-store-select" onchange="loadData()" style="width: 220px; background: #f8f9fa;"></select>
                 </div>
             </div>
             <div class="table-responsive"><table id="schedTable"><thead id="schedHead"></thead><tbody id="schedBody"></tbody><tfoot id="schedFoot"></tfoot></table></div>
@@ -122,14 +164,14 @@
         <!-- 出勤紀錄與手動補登 -->
         <div id="viewAttendance" class="view-section">
             <h3>員工出勤紀錄與手動補登</h3>
-            <div style="background: var(--brand-blue-soft); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #cce5ff; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
-                <div><label style="font-weight:bold; color:var(--brand-blue); margin-bottom:8px; display:block;">出勤日期</label><input type="date" id="attDate" onchange="loadAdminAttendance()"></div>
-                <div><label style="font-weight:bold; color:var(--brand-blue); margin-bottom:8px; display:block;">門市篩選</label><select id="attStore" class="dynamic-store-select" onchange="loadAdminAttendance()"></select></div>
+            <div class="mobile-stack" style="background: var(--brand-blue-soft); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #cce5ff; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                <div style="flex:1;"><label style="font-weight:bold; color:var(--brand-blue); margin-bottom:8px; display:block;">出勤日期</label><input type="date" id="attDate" onchange="loadAdminAttendance()"></div>
+                <div style="flex:1;"><label style="font-weight:bold; color:var(--brand-blue); margin-bottom:8px; display:block;">門市篩選</label><select id="attStore" class="dynamic-store-select" onchange="loadAdminAttendance()"></select></div>
                 <button class="btn btn-warning" onclick="document.getElementById('manualPunchPanel').style.display='block'">➕ 展開手動補登面板</button>
             </div>
             <div id="manualPunchPanel" style="display:none; background:#fff3cd; border-left: 5px solid var(--brand-yellow); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
                 <h4 style="margin-top:0; color:#856404;">主管手動補登作業</h4>
-                <div style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap;">
+                <div class="mobile-stack" style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap;">
                     <div><label style="font-size:13px; font-weight:bold;">選擇員工</label><select id="manualEmp" style="background:#fff;"></select></div>
                     <div><label style="font-size:13px; font-weight:bold;">補登日期</label><input type="date" id="manualDate" style="background:#fff;"></div>
                     <div><label style="font-size:13px; font-weight:bold;">補登時間</label><input type="time" id="manualTime" style="background:#fff;"></div>
@@ -144,7 +186,7 @@
         <!-- 人事維護 -->
         <div id="viewEmployees" class="view-section">
             <h3>員工基本檔與計薪設定</h3>
-            <div style="background: var(--brand-blue-soft); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #cce5ff; display: flex; gap: 20px; align-items: flex-end;">
+            <div class="mobile-stack" style="background: var(--brand-blue-soft); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #cce5ff; display: flex; gap: 20px; align-items: flex-end;">
                 <div style="flex: 1;"><label style="font-size: 15px; font-weight: bold; color: var(--brand-blue); display: block; margin-bottom: 8px;">編輯現有員工資料</label><select id="filterEmp" onchange="loadEmpDetails()" style="background: white;"><option value="">請點此選擇要編輯的員工...</option></select></div>
                 <div><button class="btn btn-warning" onclick="clearForm()" style="color:var(--brand-blue);">➕ 建立新員工 / 清空表單</button></div>
             </div>
@@ -153,11 +195,7 @@
                 <div class="form-group"><label>所屬門市</label><select id="empStore" class="dynamic-store-select"></select></div>
                 <div class="form-group"><label>職稱 / 權限角色</label>
                     <select id="empRole">
-                        <option value="正職">正職</option>
-                        <option value="PT">PT</option>
-                        <option value="副店長">副店長</option>
-                        <option value="店長">店長</option>
-                        <option value="老闆">老闆</option>
+                        <option value="正職">正職</option><option value="PT">PT</option><option value="副店長">副店長</option><option value="店長">店長</option><option value="老闆">老闆</option>
                     </select>
                 </div>
                 <div class="form-group"><label>APP 登入密碼</label><input type="text" id="empPwd" placeholder="預設建議: 1234"></div>
@@ -181,12 +219,12 @@
         <!-- 薪資結算 -->
         <div id="viewPayroll" class="view-section">
             <h3>薪資單自動結算與列印</h3>
-            <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <span style="font-weight: bold; color: var(--brand-blue); font-size: 16px;">選擇結算月份</span><input type="month" id="payrollMonth" style="width: 180px; background: #f8f9fa;">
-                    <span style="font-weight: bold; color: var(--brand-blue); font-size: 16px; margin-left: 10px;">選擇門市</span><select id="payrollStore" class="dynamic-store-select" style="width: 200px; background: #f8f9fa;"><option value="全公司">全公司 (所有門市)</option></select>
+            <div class="mobile-stack" style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;">
+                <div class="mobile-stack" style="display: flex; align-items: center; gap: 15px; flex:1;">
+                    <div style="flex:1;"><span style="font-weight: bold; color: var(--brand-blue); font-size: 16px; display:block; margin-bottom:5px;">選擇結算月份</span><input type="month" id="payrollMonth" style="width: 100%; background: #f8f9fa;"></div>
+                    <div style="flex:1;"><span style="font-weight: bold; color: var(--brand-blue); font-size: 16px; display:block; margin-bottom:5px;">選擇門市</span><select id="payrollStore" class="dynamic-store-select" style="width: 100%; background: #f8f9fa;"><option value="全公司">全公司 (所有門市)</option></select></div>
                 </div>
-                <div style="display:flex; gap:10px;">
+                <div class="mobile-stack" style="display:flex; gap:10px;">
                     <button id="btnBossSummary" class="btn btn-warning" style="padding: 14px 24px; font-size: 16px; display: none;" onclick="generateBossSummary()">📊 總薪資與面額分配表</button>
                     <button class="btn btn-success" style="padding: 14px 24px; font-size: 16px;" onclick="generatePayslips()">🖨️ 生成實體薪資單</button>
                 </div>
@@ -200,7 +238,7 @@
             <div class="hr-form-grid">
                 <div class="form-group" style="grid-column: 1 / -1;">
                     <label>新增門市與定位</label>
-                    <div style="display:flex; gap:10px; align-items:center;">
+                    <div class="mobile-stack" style="display:flex; gap:10px; align-items:center;">
                         <input type="text" id="newStoreName" placeholder="門市名稱 (例: 呷呼霸板橋店)" style="width:30%;">
                         <input type="text" id="newStoreGPS" placeholder="GPS 座標 (例: 25.049, 121.295)" style="width:50%;">
                         <button class="btn btn-warning" onclick="addStore()" style="width:20%;">➕ 新增</button>
@@ -218,7 +256,6 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbxMqYMpwUCNOwrsNGcYDdCAO723_Qgu26syp0CZJXLHIgp1nul2dzFW0XinwKZ-1_u5/exec";
         let currentUser = {}; let globalData = { schedule: [], employees: [], stores: [] };
 
-        // === 【連線防護強化區】攔截網路錯誤並轉譯 ===
         async function fetchApi(payload) { 
             try {
                 const res = await fetch(API_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); 
@@ -265,7 +302,7 @@
                     if(res.role === '老闆') {
                         document.getElementById('tabStores').style.display = 'flex'; 
                         document.getElementById('groupAnnualLeave').style.display = 'block';
-                        document.getElementById('btnBossSummary').style.display = 'inline-block'; 
+                        document.getElementById('btnBossSummary').style.display = 'block'; 
                     } else if(res.role === '店長' || res.role === '副店長') {
                         document.getElementById('schedStore').value = res.store; document.getElementById('schedStore').disabled = true; 
                         document.getElementById('empStore').value = res.store; document.getElementById('empStore').disabled = true;
@@ -282,7 +319,7 @@
             if (key === 'boss888') {
                 currentUser.role = '老闆'; document.getElementById('userRole').innerText = '最高管理員 (解鎖)'; document.getElementById('userRole').style.color = '#d93025';
                 document.getElementById('tabStores').style.display = 'flex'; document.getElementById('groupAnnualLeave').style.display = 'block';
-                document.getElementById('btnBossSummary').style.display = 'inline-block'; 
+                document.getElementById('btnBossSummary').style.display = 'block'; 
                 document.getElementById('schedStore').disabled = false; document.getElementById('empStore').disabled = false; document.getElementById('payrollStore').disabled = false; document.getElementById('attStore').disabled = false;
                 Swal.fire('解鎖成功！', '已開啟所有權限', 'success'); loadData(); 
             } else if (key) { Swal.fire('錯誤', '金鑰無效', 'error'); }
@@ -396,18 +433,7 @@
             } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
 
-        function handleShiftChange(input) { 
-            let val = input.value.trim(); 
-            if(!input.getAttribute('data-emp').includes('[系統]')) { 
-                input.className = 'shift-input';
-                if(!val || val === '休' || val === '排休') input.classList.add('is-off'); 
-                else if(val.includes('病假')) input.classList.add('is-sick'); 
-                else if(val.includes('特休')) input.classList.add('is-annual'); 
-                else input.classList.add('is-work'); 
-            } 
-            calculateTotals(); 
-        }
-
+        function handleShiftChange(input) { let val = input.value.trim(); if(!input.getAttribute('data-emp').includes('[系統]')) { input.className = 'shift-input'; if(!val || val === '休' || val === '排休') input.classList.add('is-off'); else if(val.includes('病假')) input.classList.add('is-sick'); else if(val.includes('特休')) input.classList.add('is-annual'); else input.classList.add('is-work'); } calculateTotals(); }
         function getSysTask(monthStr, dd, sysName, store) { let mySched = globalData.schedule.find(s => { return getMonthStr(s[0]) === monthStr && s[2] === sysName && s[1] === store; }); return mySched ? mySched[2+dd] : ""; }
         
         function renderWeeklySchedule() {
@@ -532,7 +558,6 @@
             return res.join(' , ');
         }
 
-        // === 【核心補回區】人事維護下拉選單功能 ===
         function updateEmpDropdown() {
             let sel = document.getElementById('filterEmp'); 
             if(!sel) return;
