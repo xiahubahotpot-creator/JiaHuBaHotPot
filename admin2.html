@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 營運管理中心 V10 (自動最高權限版)</title>
+    <title>呷呼霸 - 營運管理中心 V11 (跨店檢視修復版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -108,7 +108,7 @@
 
     <div id="mainScreen" class="container" style="display: none;">
         <div class="top-nav">
-            <div class="nav-title">呷呼霸 <span onclick="unlockMasterKey()" title="點擊輸入金鑰解鎖系統">營運管理中心</span></div>
+            <div class="nav-title">呷呼霸 <span onclick="unlockMasterKey()" title="點擊解鎖最高權限">營運管理中心</span></div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <div class="user-badge"><span id="userRole"></span> : <span id="userName"></span> (<span id="userStore"></span>)</div>
                 <button class="btn" style="background: #f1f3f4; color: var(--text-main); border: 1px solid var(--border);" onclick="location.reload()">登出系統</button>
@@ -124,7 +124,7 @@
 
         <div id="viewSchedule" class="view-section active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-                <h3>門市排班管理 <span style="font-size:14px; color:#999; font-weight:normal; margin-left:10px;">(動態職稱版)</span></h3>
+                <h3>門市排班管理</h3>
                 <div style="display: flex; gap: 10px;">
                     <button class="btn btn-warning" onclick="copyLastWeek()"><span style="font-size: 16px;">🔄</span> 複製上週</button>
                     <button class="btn btn-success" onclick="saveWeeklySchedule()"><span style="font-size: 16px;">💾</span> 儲存排班</button>
@@ -138,7 +138,7 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-weight: bold; color: var(--brand-blue); font-size: 15px;">過濾檢視門市</span>
-                    <select id="schedStore" class="dynamic-store-select" onchange="renderWeeklySchedule()" style="width: 220px; background: #f8f9fa;"></select>
+                    <select id="schedStore" class="dynamic-store-select" onchange="loadData()" style="width: 220px; background: #f8f9fa;"></select>
                 </div>
             </div>
             
@@ -200,15 +200,13 @@
         </div>
 
         <div id="viewPayroll" class="view-section">
-            <h3>薪資單自動結算與列印 <span style="font-size:14px; color:#999; font-weight:normal; margin-left:10px;">(支援每日工時與面額計算)</span></h3>
+            <h3>薪資單自動結算與列印</h3>
             <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <span style="font-weight: bold; color: var(--brand-blue); font-size: 16px;">選擇結算月份</span>
                     <input type="month" id="payrollMonth" style="width: 180px; background: #f8f9fa;">
                     <span style="font-weight: bold; color: var(--brand-blue); font-size: 16px; margin-left: 10px;">選擇門市</span>
-                    <select id="payrollStore" class="dynamic-store-select" style="width: 200px; background: #f8f9fa;">
-                        <option value="全公司">全公司 (所有門市)</option>
-                    </select>
+                    <select id="payrollStore" class="dynamic-store-select" style="width: 200px; background: #f8f9fa;"></select>
                 </div>
                 <button class="btn btn-success" style="padding: 14px 28px; font-size: 16px;" onclick="generatePayslips()">🖨️ 生成實體薪資單</button>
             </div>
@@ -255,7 +253,7 @@
                 if(res.status === 'success') {
                     if(res.role === '員工') return Swal.fire('權限不足', '此為管理後台', 'error');
                     
-                    // 核心修改：陳柏叡與鄭煒霖登入，直接綁定老闆最高權限
+                    // 自動賦予兩位老闆最高權限
                     if (res.name === '陳柏叡' || res.name === '鄭煒霖') {
                         res.role = '老闆';
                     }
@@ -273,14 +271,6 @@
                     
                     if(res.role === '老闆') {
                         document.getElementById('tabStores').style.display = 'flex';
-                        document.getElementById('schedStore').disabled = false;
-                        document.getElementById('empStore').disabled = false;
-                        document.getElementById('payrollStore').disabled = false;
-                    } else if(res.role === '店長' || res.role === '副店長') {
-                        document.getElementById('schedStore').value = res.store;
-                        document.getElementById('schedStore').disabled = true; 
-                        document.getElementById('empStore').value = res.store;
-                        document.getElementById('empStore').disabled = true;
                     }
                     Swal.close(); loadData();
                 } else { Swal.fire('失敗', res.msg, 'error'); }
@@ -295,9 +285,6 @@
             });
             if (key === 'boss888') {
                 currentUser.role = '老闆'; 
-                document.getElementById('schedStore').disabled = false;
-                document.getElementById('empStore').disabled = false;
-                document.getElementById('payrollStore').disabled = false;
                 document.getElementById('userRole').innerText = '最高管理員 (解鎖)';
                 document.getElementById('userRole').style.color = '#d93025';
                 document.getElementById('tabStores').style.display = 'flex';
@@ -317,13 +304,24 @@
         function updateAllStoreDropdowns() {
             let optionsHTML = '';
             globalData.stores.forEach(s => optionsHTML += `<option value="${s}">${s}</option>`);
+            
             document.querySelectorAll('.dynamic-store-select').forEach(sel => {
+                let currentVal = sel.value; 
                 let keepAllOpt = sel.id === 'payrollStore';
                 let html = keepAllOpt ? '<option value="全公司">全公司 (所有門市)</option>' : '';
+                
                 sel.innerHTML = html + optionsHTML;
-                if(currentUser.role !== '老闆' && sel.id !== 'payrollStore') {
+                
+                if (currentVal && sel.innerHTML.includes(`"${currentVal}"`)) {
+                    sel.value = currentVal;
+                } else if (currentUser.role !== '老闆' && sel.id !== 'payrollStore') {
                     sel.value = currentUser.store;
+                }
+                
+                if (currentUser.role !== '老闆' && sel.id !== 'payrollStore') {
                     sel.disabled = true;
+                } else {
+                    sel.disabled = false;
                 }
             });
             renderStoreManagerList();
@@ -332,11 +330,11 @@
         async function loadData() {
             Swal.fire({title: '資料同步中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
-                const res = await fetchApi({action: 'getData', name: currentUser.name, role: currentUser.role, store: document.getElementById('schedStore').value || currentUser.store});
+                let targetStore = document.getElementById('schedStore').value || currentUser.store;
+                const res = await fetchApi({action: 'getData', name: currentUser.name, role: currentUser.role, store: targetStore});
                 if(res.status === 'success') {
                     globalData = res.data;
                     updateAllStoreDropdowns();
-                    if(document.getElementById('schedStore').value === "") document.getElementById('schedStore').value = currentUser.store;
                     renderWeeklySchedule(); renderEmployees(); updateEmpDropdown(); Swal.close();
                 }
             } catch(e) {}
@@ -533,7 +531,7 @@
 
         function copyLastWeek() {
             Swal.fire({
-                title: '確認套用？', text: `確定要將「上週」的班表(包含任務)完全複製到「本週」嗎？`, icon: 'question',
+                title: '確認套用？', text: `確定要將「上週」的班表完全複製到「本週」嗎？`, icon: 'question',
                 showCancelButton: true, confirmButtonColor: '#ffc107', confirmButtonText: '確定'
             }).then((result) => {
                 if(result.isConfirmed) {
@@ -670,7 +668,7 @@
                     let rM = String(s[0]);
                     if(rM.includes('T')) rM = `${new Date(s[0]).getFullYear()}-${String(new Date(s[0]).getMonth()+1).padStart(2,'0')}`;
                     else if(rM.includes('/')) rM = rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0');
-                    return rM === targetMonth && s[2] === name && s[1] === store;
+                    return rM === targetMonth && s[2] === name;
                 });
 
                 let totalRegularHours = 0; let totalOTHours = 0;
@@ -720,7 +718,7 @@
                     <div class="payslip-grid">${daysHTML}</div>
 
                     <table style="width:100%; text-align:left; border:none; margin:0; font-size:13px;">
-                        <tr><td style="border:none; padding:4px;">🔹 結算底薪 ${calculationDetail}：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$${finalPay}</td></tr>
+                        <tr><td style="border:none; padding:4px;">🔹 結算薪資 ${calculationDetail}：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$${finalPay}</td></tr>
                         <tr><td style="border:none; padding:4px;">🔻 勞健保扣除額：</td><td style="border:none; text-align:right; color:#d93025; font-weight:bold;">-$${totalDeduct}</td></tr>
                     </table>
                     
