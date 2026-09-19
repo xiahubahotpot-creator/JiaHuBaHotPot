@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>呷呼霸 - 員工專屬 App (品牌配色版)</title>
+    <title>呷呼霸 - 員工專屬 App V4 (任務同步版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
-            /* 呷呼霸品牌配色 */
             --brand-blue: #003b6d; 
             --brand-blue-light: #e6f0f9;
             --brand-yellow: #ffc107;
@@ -31,7 +30,6 @@
 
         #mainScreen { display: none; flex-direction: column; height: 100%; padding-bottom: 80px; }
         
-        /* 頂部個人卡片：海軍藍背景、左文字右頭像 */
         .header-bg { background: linear-gradient(135deg, #003b6d 0%, #002347 100%); padding: 25px 20px 20px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 4px 15px rgba(0,59,109,0.2); z-index: 10; }
         .app-title { font-weight: 900; color: var(--brand-yellow); font-size: 18px; margin-bottom: 15px;}
         .profile-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
@@ -50,7 +48,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .section-title { font-size: 18px; font-weight: 900; color: var(--brand-blue); margin-bottom: 15px; border-left: 5px solid var(--brand-yellow); padding-left: 10px;}
 
-        /* 打卡按鈕：亮黃色漸層 + 深藍字體 */
         .punch-btn-wrapper { position: relative; width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; margin: 30px auto 15px auto;}
         .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--brand-yellow); animation: pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
         .pulse-ring:nth-child(2) { animation-delay: 0.6s; }
@@ -112,7 +109,6 @@
 
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
 
-    <!-- 登入視圖 -->
     <div id="loginScreen">
         <div class="logo-area">
             <h1>呷呼霸</h1>
@@ -123,12 +119,10 @@
         <button class="btn-login" onclick="doLogin()">安全登入</button>
     </div>
 
-    <!-- 主視圖 -->
     <div id="mainScreen">
         <div class="header-bg">
             <div class="app-title">呷呼霸 JIA HU BA</div>
             <div class="profile-row">
-                <!-- 左側：姓名、門市、改密碼與登出 -->
                 <div class="profile-info">
                     <h2><span id="dispName">員工</span></h2>
                     <div><span class="store-badge" id="dispStore">載入中...</span></div>
@@ -137,7 +131,6 @@
                         <button class="btn-tiny" onclick="doLogout()">🚪 登出</button>
                     </div>
                 </div>
-                <!-- 右側：大頭照 -->
                 <div class="avatar-wrapper" onclick="document.getElementById('avatarFileInput').click()">
                     <img id="dispAvatar" class="user-avatar" src="https://via.placeholder.com/150/003b6d/ffffff?text=呷" alt="頭像">
                     <div class="avatar-edit-badge">📷</div>
@@ -145,7 +138,6 @@
             </div>
         </div>
 
-        <!-- 1. 打卡視圖 -->
         <div id="viewPunch" class="view-section active">
             <div class="toggle-group">
                 <input type="radio" name="punchType" id="typeIn" value="上班" checked>
@@ -165,7 +157,6 @@
             <div class="gps-status" id="gpsStatus">📍 獲取定位中...</div>
         </div>
 
-        <!-- 2. 個人班表視圖 -->
         <div id="viewSchedule" class="view-section">
             <div class="section-title">我的當月班表</div>
             <div style="text-align:center; margin-bottom:15px; font-weight:bold; color:var(--text-sub);">
@@ -174,7 +165,6 @@
             <div id="scheduleContent" style="display:flex; flex-direction:column;"></div>
         </div>
 
-        <!-- 3. 反映視圖 -->
         <div id="viewFeedback" class="view-section">
             <div class="section-title">反應事項回報</div>
             <div class="app-form">
@@ -190,7 +180,6 @@
             </div>
         </div>
 
-        <!-- 4. 店長管理專區 -->
         <div id="viewManager" class="view-section">
             <div class="section-title">主管管理專區</div>
             
@@ -205,7 +194,6 @@
                 <label for="mgrTabDir">📖 通訊錄</label>
             </div>
 
-            <!-- 出勤紀錄子頁面 -->
             <div id="mgrSectionAtt">
                 <div class="app-form" style="padding:12px; margin-bottom:12px;">
                     <div class="form-group" style="margin-bottom:0;">
@@ -216,7 +204,6 @@
                 <div id="mgrAttContent"></div>
             </div>
 
-            <!-- 每日人力子頁面 -->
             <div id="mgrSectionDaily" style="display:none;">
                 <div class="app-form" style="padding:12px; margin-bottom:12px;">
                     <div class="form-group" style="margin-bottom:0;">
@@ -227,7 +214,6 @@
                 <div id="mgrDailyContent"></div>
             </div>
 
-            <!-- 單人排班修改子頁面 -->
             <div id="mgrSectionSched" style="display:none;">
                 <div class="app-form" style="padding:15px;">
                     <div class="form-group">
@@ -235,21 +221,19 @@
                         <input type="month" id="mgrMonth" class="form-control" onchange="renderMgrSchedule()">
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>選擇員工</label>
+                        <label>選擇對象</label>
                         <select id="mgrEmp" class="form-control" onchange="renderMgrSchedule()"></select>
                     </div>
                 </div>
                 <div id="mgrSchedContent" style="display:flex; flex-direction:column;"></div>
-                <button class="btn-action" id="btnSaveMgr" style="display:none; margin-top:15px; background:#0f9d58;" onclick="saveMgrSchedule()">💾 儲存該員工班表</button>
+                <button class="btn-action" id="btnSaveMgr" style="display:none; margin-top:15px; background:#0f9d58;" onclick="saveMgrSchedule()">💾 儲存修改</button>
             </div>
 
-            <!-- 通訊錄子頁面 -->
             <div id="mgrSectionDir" style="display:none;">
                 <div id="dirContent"></div>
             </div>
         </div>
 
-        <!-- 底部導覽列 -->
         <div class="bottom-nav">
             <div class="nav-item active" onclick="switchNav('viewPunch', this)">
                 <div class="nav-icon">📍</div>打卡
@@ -303,12 +287,7 @@
     function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
 
     async function fetchApi(payload) {
-        const res = await fetch(API_URL + "?t=" + new Date().getTime(), {
-            method: 'POST',
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error("伺服器連線異常");
+        const res = await fetch(API_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) });
         return await res.json(); 
     }
 
@@ -360,7 +339,6 @@
         element.classList.add('active');
     }
 
-    // 1. 大頭照上傳與密碼修改
     async function uploadAvatar(input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
@@ -380,20 +358,14 @@
                 const base64Data = canvas.toDataURL('image/jpeg', 0.8);
 
                 try {
-                    const res = await fetchApi({
-                        action: "updateAvatar",
-                        name: userProfile.name,
-                        avatarBase64: base64Data
-                    });
+                    const res = await fetchApi({ action: "updateAvatar", name: userProfile.name, avatarBase64: base64Data });
                     hideLoading();
                     if (res.status === "success") {
                         userProfile.avatar = base64Data;
                         localStorage.setItem('jiaHubaUser', JSON.stringify(userProfile));
                         document.getElementById('dispAvatar').src = base64Data;
                         Swal.fire('成功', '大頭照已更新！', 'success');
-                    } else {
-                        Swal.fire('失敗', res.msg, 'error');
-                    }
+                    } else { Swal.fire('失敗', res.msg, 'error'); }
                 } catch(err) { hideLoading(); Swal.fire('錯誤', err.message, 'error'); }
             };
         };
@@ -402,42 +374,22 @@
 
     async function changeMyPassword() {
         const { value: newPwd } = await Swal.fire({
-            title: '修改登入密碼',
-            input: 'password',
-            inputLabel: '請輸入您的全新密碼',
-            inputPlaceholder: '請輸入 4 位數以上密碼',
-            showCancelButton: true,
-            confirmButtonText: '確認變更',
-            confirmButtonColor: '#003b6d',
-            cancelButtonText: '取消'
+            title: '修改登入密碼', input: 'password', inputPlaceholder: '請輸入 4 位數以上密碼', showCancelButton: true, confirmButtonColor: '#003b6d', confirmButtonText: '確認'
         });
-
         if (newPwd) {
             if (newPwd.length < 4) return Swal.fire('提示', '密碼長度建議至少 4 碼', 'warning');
             showLoading("變更中...");
             try {
-                const res = await fetchApi({
-                    action: "updatePassword",
-                    name: userProfile.name,
-                    newPwd: newPwd
-                });
+                const res = await fetchApi({ action: "updatePassword", name: userProfile.name, newPwd: newPwd });
                 hideLoading();
-                if (res.status === "success") {
-                    Swal.fire('成功', res.msg, 'success');
-                } else {
-                    Swal.fire('失敗', res.msg, 'error');
-                }
+                if (res.status === "success") Swal.fire('成功', res.msg, 'success');
+                else Swal.fire('失敗', res.msg, 'error');
             } catch(err) { hideLoading(); Swal.fire('錯誤', err.message, 'error'); }
         }
     }
 
-    // 2. GPS 定位與打卡
     function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
-        const p1 = lat1 * Math.PI/180;
-        const p2 = lat2 * Math.PI/180;
-        const dp = (lat2-lat1) * Math.PI/180;
-        const dl = (lon2-lon1) * Math.PI/180;
+        const R = 6371e3; const p1 = lat1 * Math.PI/180; const p2 = lat2 * Math.PI/180; const dp = (lat2-lat1) * Math.PI/180; const dl = (lon2-lon1) * Math.PI/180;
         const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
     }
@@ -445,93 +397,50 @@
     function initGPS() {
         if(navigator.geolocation) {
             navigator.geolocation.watchPosition(pos => {
-                userLat = pos.coords.latitude; 
-                userLon = pos.coords.longitude;
-                checkLocation();
+                userLat = pos.coords.latitude; userLon = pos.coords.longitude; checkLocation();
             }, error => {
-                userLat = null; userLon = null;
-                updateGPSUI("⚠️ 無法取得定位，請開啟 GPS 權限", "#d93025", false);
+                userLat = null; userLon = null; updateGPSUI("⚠️ 無法取得定位，請開啟 GPS 權限", "#d93025", false);
             }, { enableHighAccuracy: true });
-        } else {
-            updateGPSUI("⚠️ 裝置不支援 GPS 定位", "#d93025", false);
-        }
+        } else { updateGPSUI("⚠️ 裝置不支援 GPS 定位", "#d93025", false); }
     }
 
     function checkLocation() {
         if (userProfile.role === "老闆" || userProfile.role === "店長" || userProfile.role === "副店長") {
-            isWithinRange = true;
-            updateGPSUI("✅ 主管免定位模式", "#0f9d58", true);
-            return;
+            isWithinRange = true; updateGPSUI("✅ 主管免定位模式", "#0f9d58", true); return;
         }
-
         let store = userProfile.store;
         if (STORE_LOCATIONS[store]) {
-            let target = STORE_LOCATIONS[store];
-            let dist = getDistance(userLat, userLon, target.lat, target.lon);
-            if (dist <= ALLOWED_DIST) {
-                isWithinRange = true;
-                updateGPSUI(`✅ 已進入範圍 (距門市 ${Math.round(dist)}m)`, "#0f9d58", true);
-            } else {
-                isWithinRange = false;
-                updateGPSUI(`❌ 距離過遠無法打卡 (相距 ${Math.round(dist)}m)`, "#d93025", false);
-            }
-        } else {
-            isWithinRange = true; 
-            updateGPSUI("✅ 未設定此門市座標，預設可打卡", "#0f9d58", true);
-        }
+            let dist = getDistance(userLat, userLon, STORE_LOCATIONS[store].lat, STORE_LOCATIONS[store].lon);
+            if (dist <= ALLOWED_DIST) { isWithinRange = true; updateGPSUI(`✅ 已進入範圍 (距門市 ${Math.round(dist)}m)`, "#0f9d58", true); } 
+            else { isWithinRange = false; updateGPSUI(`❌ 距離過遠無法打卡 (相距 ${Math.round(dist)}m)`, "#d93025", false); }
+        } else { isWithinRange = true; updateGPSUI("✅ 未設定此門市座標，預設可打卡", "#0f9d58", true); }
     }
 
     function updateGPSUI(text, color, canPunch) {
         let statusEl = document.getElementById('gpsStatus');
-        if(statusEl) {
-            statusEl.innerText = text;
-            statusEl.style.color = color;
-        }
+        if(statusEl) { statusEl.innerText = text; statusEl.style.color = color; }
         let btn = document.querySelector('.punch-btn');
-        if(btn) {
-            btn.style.pointerEvents = canPunch ? "auto" : "none";
-            btn.style.opacity = canPunch ? "1" : "0.5";
-        }
+        if(btn) { btn.style.pointerEvents = canPunch ? "auto" : "none"; btn.style.opacity = canPunch ? "1" : "0.5"; }
     }
 
     async function submitPunch() {
-        if (!isWithinRange) {
-            return Swal.fire('定位失敗', '您目前不在門市範圍內，無法進行打卡！', 'error');
-        }
-
+        if (!isWithinRange) return Swal.fire('定位失敗', '您目前不在門市範圍內，無法進行打卡！', 'error');
         const type = document.querySelector('input[name="punchType"]:checked').value;
-        
         Swal.fire({
-            title: `確認要打【${type}】卡？`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: '確認打卡',
-            confirmButtonColor: '#003b6d',
-            cancelButtonText: '取消'
+            title: `確認要打【${type}】卡？`, icon: 'question', showCancelButton: true, confirmButtonText: '確認', confirmButtonColor: '#003b6d'
         }).then(async (result) => {
             if (result.isConfirmed) {
                 showLoading("資料傳送中...");
                 try {
-                    const res = await fetchApi({
-                        action: "punch",
-                        name: userProfile.name,
-                        store: userProfile.store,
-                        type: type,
-                        lat: userLat,
-                        lon: userLon
-                    });
+                    const res = await fetchApi({ action: "punch", name: userProfile.name, store: userProfile.store, type: type, lat: userLat, lon: userLon });
                     hideLoading();
-                    if (res.status === "success") {
-                        Swal.fire('成功', res.msg, 'success');
-                    } else {
-                        Swal.fire('失敗', res.msg, 'error');
-                    }
+                    if (res.status === "success") Swal.fire('成功', res.msg, 'success');
+                    else Swal.fire('失敗', res.msg, 'error');
                 } catch(e) { hideLoading(); Swal.fire('錯誤', e.message, 'error'); }
             }
         });
     }
 
-    // 3. 班表查看
     async function loadSchedule() {
         const container = document.getElementById('scheduleContent');
         const monthDisp = document.getElementById('schedMonthDisp');
@@ -547,21 +456,13 @@
             if (res.status === "success") {
                 const scheds = res.data.schedule;
                 const mySched = scheds.find(r => {
-                    let rMonth = String(r[0]);
-                    if (rMonth.includes("GMT") || rMonth.includes("T")) {
-                         let d = new Date(r[0]);
-                         rMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                    } else if (rMonth.includes("/")) {
-                         let parts = rMonth.split('/');
-                         if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
-                    }
-                    return rMonth === monthStr && r[2] === userProfile.name;
+                    let rM = String(r[0]);
+                    if(rM.includes('T')) rM = `${new Date(r[0]).getFullYear()}-${String(new Date(r[0]).getMonth()+1).padStart(2,'0')}`;
+                    else if(rM.includes('/')) rM = rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0');
+                    return rM === monthStr && r[2] === userProfile.name;
                 });
                 
-                if (!mySched) {
-                    container.innerHTML = '<div style="text-align:center; padding:20px; color:#d93025; font-weight:bold;">店長尚未發布您當月的班表喔！</div>';
-                    return;
-                }
+                if (!mySched) return container.innerHTML = '<div style="text-align:center; padding:20px; color:#d93025; font-weight:bold;">店長尚未發布您當月的班表喔！</div>';
 
                 let html = "";
                 const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
@@ -571,52 +472,28 @@
                     let d = new Date(now.getFullYear(), now.getMonth(), i);
                     let weekStr = weekdays[d.getDay()];
                     
-                    let shiftVal = mySched[2 + i];
-                    if (shiftVal == null) shiftVal = "";
-                    else shiftVal = String(shiftVal);
+                    let val = mySched[2 + i] || "";
+                    if (String(val).includes('T')) { val = new Date(val); val = val.getFullYear()<2000 ? String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0') : (val.getMonth()+1)+'-'+val.getDate(); }
 
-                    if (shiftVal.includes('T') && shiftVal.includes('Z')) {
-                        let parsedDate = new Date(shiftVal);
-                        if (!isNaN(parsedDate.getTime())) {
-                            let yr = parsedDate.getFullYear();
-                            if (yr < 2000) {
-                                let hh = String(parsedDate.getHours()).padStart(2, '0');
-                                let mmm = String(parsedDate.getMinutes()).padStart(2, '0');
-                                shiftVal = hh + ':' + mmm;
-                            } else {
-                                shiftVal = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
-                            }
-                        }
-                    }
-
-                    if (!shiftVal) continue; 
-
-                    let isOff = (shiftVal === "休" || shiftVal === "排休");
-                    let cardClass = isOff ? "shift-card shift-off" : "shift-card";
-                    let displayVal = isOff ? "休假" : shiftVal;
-
+                    if (!val) continue; 
+                    let isOff = (val === "休" || val === "排休");
                     html += `
-                        <div class="${cardClass}">
+                        <div class="shift-card ${isOff ? 'shift-off' : ''}">
                             <div class="shift-date">${i} 號 <span style="font-size:13px; color:#999;">(${weekStr})</span></div>
-                            <div class="shift-time">${displayVal}</div>
-                        </div>
-                    `;
+                            <div class="shift-time">${isOff ? '休假' : val}</div>
+                        </div>`;
                 }
                 container.innerHTML = html || '<div style="text-align:center; padding:20px; color:#5f6368;">本月尚無排班資料</div>';
-            } else {
-                container.innerHTML = `<div style="text-align:center; color:red;">${res.msg}</div>`;
-            }
+            } else { container.innerHTML = `<div style="text-align:center; color:red;">${res.msg}</div>`; }
         } catch(e) { container.innerHTML = `<div style="text-align:center; color:red;">連線失敗</div>`; }
     }
 
-    // 4. 主管管理專區邏輯
     function toggleMgrView() {
         let type = document.querySelector('input[name="mgrType"]:checked').value;
         document.getElementById('mgrSectionAtt').style.display = type === 'att' ? 'block' : 'none';
         document.getElementById('mgrSectionDaily').style.display = type === 'daily' ? 'block' : 'none';
         document.getElementById('mgrSectionSched').style.display = type === 'sched' ? 'block' : 'none';
         document.getElementById('mgrSectionDir').style.display = type === 'dir' ? 'block' : 'none';
-
         if (type === 'att') loadAttendanceRecords();
     }
 
@@ -636,21 +513,17 @@
                 if(!document.getElementById('mgrDailyDate').value) document.getElementById('mgrDailyDate').value = dStr;
                 if(!document.getElementById('mgrAttDate').value) document.getElementById('mgrAttDate').value = dStr;
                 
+                // 將系統任務加入下拉選單
                 let sel = document.getElementById('mgrEmp');
-                sel.innerHTML = '<option value="">請點此選擇員工...</option>';
+                sel.innerHTML = '<option value="">請點此選擇對象...</option>';
+                sel.innerHTML += '<option value="[系統]每日任務">⭐ 每日任務 (黃色區)</option>';
+                sel.innerHTML += '<option value="[系統]開班備註">⭐ 開班備註 (藍色區)</option>';
                 appGlobalData.employees.forEach(e => {
-                    if (e[4] !== "離職") {
-                        sel.innerHTML += `<option value="${e[0]}">${e[0]} (${e[2]})</option>`;
-                    }
+                    if (e[4] !== "離職") sel.innerHTML += `<option value="${e[0]}">${e[0]} (${e[2]})</option>`;
                 });
 
-                renderDirectory();
-                renderMgrSchedule();
-                renderDailySchedule();
-                loadAttendanceRecords();
-            } else {
-                Swal.fire('錯誤', res.msg, 'error');
-            }
+                renderDirectory(); renderMgrSchedule(); renderDailySchedule(); loadAttendanceRecords();
+            } else { Swal.fire('錯誤', res.msg, 'error'); }
         } catch(e) { hideLoading(); Swal.fire('錯誤', '連線失敗', 'error'); }
     }
 
@@ -661,29 +534,16 @@
         
         container.innerHTML = '<div style="text-align:center; padding:15px; color:#999;">出勤紀錄載入中...</div>';
         try {
-            const res = await fetchApi({
-                action: "getAttendanceRecords",
-                date: dateStr,
-                store: userProfile.store,
-                role: userProfile.role
-            });
+            const res = await fetchApi({ action: "getAttendanceRecords", date: dateStr, store: userProfile.store, role: userProfile.role });
             if (res.status === "success") {
-                if (res.records.length === 0) {
-                    container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">本日尚無任何員工打卡紀錄</div>';
-                    return;
-                }
+                if (res.records.length === 0) return container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">本日無打卡紀錄</div>';
                 let html = '';
                 res.records.forEach(r => {
-                    let isPunchIn = r.type === "上班";
-                    let badgeClass = isPunchIn ? "att-badge badge-in" : "att-badge badge-out";
+                    let badgeClass = (r.type === "上班") ? "att-badge badge-in" : "att-badge badge-out";
                     let timeOnly = r.time.split(' ')[1] || r.time;
-
                     html += `
                     <div class="att-card">
-                        <div>
-                            <div class="att-name">${r.name}</div>
-                            <div class="att-time">打卡時間：${timeOnly}</div>
-                        </div>
+                        <div><div class="att-name">${r.name}</div><div class="att-time">打卡時間：${timeOnly}</div></div>
                         <div style="text-align:right;">
                             <span class="${badgeClass}">${r.type}</span>
                             ${r.mapLink !== "無定位資料" ? `<div style="margin-top:4px;"><a href="${r.mapLink}" target="_blank" style="font-size:11px; color:#1a73e8; text-decoration:none;">📍 查看定位</a></div>` : ''}
@@ -691,9 +551,7 @@
                     </div>`;
                 });
                 container.innerHTML = html;
-            } else {
-                container.innerHTML = `<div style="color:red; text-align:center;">${res.msg}</div>`;
-            }
+            } else { container.innerHTML = `<div style="color:red; text-align:center;">${res.msg}</div>`; }
         } catch(e) { container.innerHTML = '<div style="color:red; text-align:center;">連線出勤資料失敗</div>'; }
     }
 
@@ -703,55 +561,42 @@
         if(!dateStr || !appGlobalData) return;
 
         let d = new Date(dateStr);
-        let yyyy = d.getFullYear();
-        let mm = String(d.getMonth() + 1).padStart(2, '0');
+        let monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         let dd = d.getDate();
-        let monthStr = `${yyyy}-${mm}`;
+
+        // 取得今日系統任務
+        let sysTaskHTML = '';
+        let t1Obj = appGlobalData.schedule.find(s => String(s[0]).includes(monthStr) && s[2] === '[系統]每日任務' && s[1] === userProfile.store);
+        let t2Obj = appGlobalData.schedule.find(s => String(s[0]).includes(monthStr) && s[2] === '[系統]開班備註' && s[1] === userProfile.store);
+        let t1 = t1Obj ? t1Obj[2+dd] : ""; let t2 = t2Obj ? t2Obj[2+dd] : "";
+        
+        if(t1 || t2) {
+            sysTaskHTML = `
+            <div style="background:#fff3cd; padding:15px; border-radius:12px; margin-bottom:15px; border-left: 5px solid var(--brand-yellow); box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <h4 style="margin:0 0 8px 0; color:#856404; display:flex; align-items:center; gap:5px;">📋 今日任務指示</h4>
+                ${t1 ? `<div style="font-size:14px; color:#856404; line-height:1.5;"><b>[職稱任務]：</b>${t1}</div>` : ''}
+                ${t2 ? `<div style="font-size:14px; color:#0c5460; line-height:1.5; margin-top:5px;"><b>[開班備註]：</b>${t2}</div>` : ''}
+            </div>`;
+        }
 
         let activeEmps = appGlobalData.employees.filter(e => e[1] === userProfile.store && e[4] !== "離職");
-
-        let workingHTML = '';
-        let offHTML = '';
-        let workCount = 0;
-        let offCount = 0;
+        let workingHTML = ''; let offHTML = ''; let workCount = 0; let offCount = 0;
 
         activeEmps.forEach(emp => {
-            let empName = emp[0];
             let mySched = appGlobalData.schedule.find(s => {
-                let rMonth = String(s[0]);
-                if (rMonth.includes("GMT") || rMonth.includes("T")) {
-                     let dateObj = new Date(s[0]);
-                     rMonth = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}`;
-                } else if (rMonth.includes("/")) {
-                     let parts = rMonth.split('/');
-                     if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
-                }
-                return rMonth === monthStr && s[2] === empName;
+                let rM = String(s[0]);
+                if(rM.includes('T')) rM = `${new Date(s[0]).getFullYear()}-${String(new Date(s[0]).getMonth()+1).padStart(2,'0')}`;
+                else if(rM.includes('/')) rM = rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0');
+                return rM === monthStr && s[2] === emp[0];
             });
 
             let val = mySched ? mySched[2 + dd] : "未排班";
-            if (val == null || val === "") val = "未排班";
-            else val = String(val);
-
-            if (val.includes('T') && val.includes('Z')) {
-                let parsedDate = new Date(val);
-                if (!isNaN(parsedDate.getTime())) {
-                    let yr = parsedDate.getFullYear();
-                    if (yr < 2000) {
-                        let hh = String(parsedDate.getHours()).padStart(2, '0');
-                        let mmm = String(parsedDate.getMinutes()).padStart(2, '0');
-                        val = hh + ':' + mmm;
-                    } else {
-                        val = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
-                    }
-                }
-            }
+            if (String(val).includes('T')) { val = new Date(val); val = val.getFullYear()<2000 ? String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0') : (val.getMonth()+1)+'-'+val.getDate(); }
 
             let isOff = (val === '休' || val === '排休' || val === '未排班');
-
             let card = `
             <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #f1f3f4;">
-                <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${empName}</span>
+                <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${emp[0]}</span>
                 <span style="color:${isOff ? '#999' : 'var(--brand-blue)'}; font-weight:bold; font-size:14px;">${val}</span>
             </div>`;
 
@@ -759,7 +604,7 @@
             else { workingHTML += card; workCount++; }
         });
 
-        container.innerHTML = `
+        container.innerHTML = sysTaskHTML + `
         <div style="background:white; border-radius:12px; padding:12px; margin-bottom:12px; border-left: 5px solid #0f9d58;">
             <h4 style="margin:0 0 8px 0; color:#0f9d58; display:flex; justify-content:space-between;"><span>🟢 今日上班</span> <span>${workCount} 人</span></h4>
             ${workingHTML || '<div style="color:#999; font-size:12px; text-align:center;">無人上班</div>'}
@@ -776,19 +621,11 @@
         let activeEmps = appGlobalData.employees.filter(e => e[4] !== "離職");
         
         activeEmps.forEach(emp => {
-            let name = emp[0];
-            let role = emp[2];
-            let phone = emp[15] || '未填寫';
-            let address = emp[16] || '未填寫';
-
             html += `
             <div class="emp-card">
-                <div class="emp-card-header">
-                    <div class="emp-name">${name}</div>
-                    <div class="emp-role">${role}</div>
-                </div>
-                <div class="emp-info">📞 手機：<a href="tel:${phone}" style="color:var(--brand-blue); font-weight:bold; text-decoration:none;">${phone}</a></div>
-                <div class="emp-info">🏠 住址：${address}</div>
+                <div class="emp-card-header"><div class="emp-name">${emp[0]}</div><div class="emp-role">${emp[2]}</div></div>
+                <div class="emp-info">📞 手機：<a href="tel:${emp[15]}" style="color:var(--brand-blue); font-weight:bold; text-decoration:none;">${emp[15]||'未填'}</a></div>
+                <div class="emp-info">🏠 住址：${emp[16]||'未填'}</div>
             </div>`;
         });
         container.innerHTML = html || '<div style="text-align:center; padding:20px; color:#5f6368;">尚無員工資料</div>';
@@ -801,9 +638,8 @@
         const btnSave = document.getElementById('btnSaveMgr');
 
         if (!monthStr || !empName) {
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">請選擇月份與員工開始排班</div>';
-            btnSave.style.display = 'none';
-            return;
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">請選擇月份與對象開始排班</div>';
+            btnSave.style.display = 'none'; return;
         }
 
         let [yy, mm] = monthStr.split('-');
@@ -811,41 +647,20 @@
         const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
         let mySched = appGlobalData.schedule.find(r => {
-            let rMonth = String(r[0]);
-            if (rMonth.includes("GMT") || rMonth.includes("T")) {
-                 let d = new Date(r[0]);
-                 rMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-            } else if (rMonth.includes("/")) {
-                 let parts = rMonth.split('/');
-                 if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
-            }
-            return rMonth === monthStr && r[2] === empName;
+            let rM = String(r[0]);
+            if(rM.includes('T')) rM = `${new Date(r[0]).getFullYear()}-${String(new Date(r[0]).getMonth()+1).padStart(2,'0')}`;
+            else if(rM.includes('/')) rM = rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0');
+            return rM === monthStr && r[2] === empName && r[1] === userProfile.store;
         });
 
         let html = '';
         for (let i = 1; i <= daysInMonth; i++) {
             let d = new Date(yy, parseInt(mm)-1, i);
             let weekStr = weekdays[d.getDay()];
-            let isWeekend = (d.getDay()===0 || d.getDay()===6);
-            let colorStyle = isWeekend ? 'color: var(--brand-blue);' : 'color: var(--text-main);';
+            let colorStyle = (d.getDay()===0||d.getDay()===6) ? 'color: var(--brand-blue);' : 'color: var(--text-main);';
             
             let val = mySched ? mySched[2 + i] : "";
-            if (val == null) val = "";
-            else val = String(val);
-
-            if (val.includes('T') && val.includes('Z')) {
-                let parsedDate = new Date(val);
-                if (!isNaN(parsedDate.getTime())) {
-                    let yr = parsedDate.getFullYear();
-                    if (yr < 2000) {
-                        let hh = String(parsedDate.getHours()).padStart(2, '0');
-                        let mmm = String(parsedDate.getMinutes()).padStart(2, '0');
-                        val = hh + ':' + mmm;
-                    } else {
-                        val = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
-                    }
-                }
-            }
+            if (String(val).includes('T')) { val = new Date(val); val = val.getFullYear()<2000 ? String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0') : (val.getMonth()+1)+'-'+val.getDate(); }
 
             let isOff = (val === '休' || val === '排休');
 
@@ -853,14 +668,12 @@
             <div class="shift-card" style="padding:8px 12px;">
                 <div class="shift-date" style="${colorStyle} width: 55px;">${i} 號<br><span style="font-size:11px; color:#999; font-weight:normal;">(${weekStr})</span></div>
                 <div style="flex:1; display:flex; gap:8px; align-items:center;">
-                    <input type="text" class="form-control" style="padding:6px; font-weight:bold; text-align:center;" id="mgrInput_${i}" value="${isOff ? '休' : val}" placeholder="時間">
+                    <input type="text" class="form-control" style="padding:6px; font-weight:bold; text-align:center;" id="mgrInput_${i}" value="${isOff ? '休' : val}">
                     <button class="btn-action" style="margin:0; padding:6px 10px; background:#e8eaed; color:#333; font-size:13px;" onclick="document.getElementById('mgrInput_${i}').value='休'">休</button>
                 </div>
             </div>`;
         }
-        
-        container.innerHTML = html;
-        btnSave.style.display = 'block';
+        container.innerHTML = html; btnSave.style.display = 'block';
     }
 
     async function saveMgrSchedule() {
@@ -873,26 +686,20 @@
             let inp = document.getElementById(`mgrInput_${i}`);
             shifts.push(inp ? inp.value.trim() : "");
         }
-
         let payloadData = [{ name: empName, shifts: shifts }];
 
-        Swal.fire({title: '驗證與儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+        Swal.fire({title: '儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
         try {
             const res = await fetchApi({ action: 'saveSchedule', month: monthStr, store: userProfile.store, scheduleData: payloadData });
-            if(res.status === 'success') { 
-                Swal.fire('成功', res.msg, 'success'); 
-                loadManagerData();
-            } else { Swal.fire('阻擋', res.msg, 'error'); }
+            if(res.status === 'success') { Swal.fire('成功', res.msg, 'success'); loadManagerData(); } 
+            else { Swal.fire('阻擋', res.msg, 'error'); }
         } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
     }
 
-    // 5. 反映事項
     function getBase64(file) {
         return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
+            const reader = new FileReader(); reader.readAsDataURL(file);
             reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = error => reject(error);
         });
     }
 
@@ -904,24 +711,14 @@
         showLoading("回報傳送中...");
         let base64Image = "";
         if (fileInput.files.length > 0) {
-            try { base64Image = await getBase64(fileInput.files[0]); } 
-            catch(e) { hideLoading(); return Swal.fire('圖片錯誤', '無法讀取圖片', 'error'); }
+            try { base64Image = await getBase64(fileInput.files[0]); } catch(e) { hideLoading(); return Swal.fire('圖片錯誤', '無法讀取圖片', 'error'); }
         }
 
         try {
-            const res = await fetchApi({
-                action: "submitFeedback",
-                name: userProfile.name,
-                store: userProfile.store,
-                text: text,
-                imageBase64: base64Image
-            });
+            const res = await fetchApi({ action: "submitFeedback", name: userProfile.name, store: userProfile.store, text: text, imageBase64: base64Image });
             hideLoading();
-            if (res.status === "success") {
-                Swal.fire('回報成功', res.msg, 'success');
-                document.getElementById('fbText').value = "";
-                document.getElementById('fbImage').value = "";
-            } else { Swal.fire('失敗', res.msg, 'error'); }
+            if (res.status === "success") { Swal.fire('成功', res.msg, 'success'); document.getElementById('fbText').value = ""; document.getElementById('fbImage').value = ""; } 
+            else { Swal.fire('失敗', res.msg, 'error'); }
         } catch(e) { hideLoading(); Swal.fire('錯誤', e.message, 'error'); }
     }
 </script>
