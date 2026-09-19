@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 管理後台 V5 (旗艦版)</title>
+    <title>呷呼霸 - 管理後台 (品牌配色版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
-            --primary: #d93025; 
-            --primary-light: #fce8e6;
+            /* 呷呼霸品牌配色 */
+            --brand-blue: #003b6d; 
+            --brand-blue-light: #e6f0f9;
+            --brand-yellow: #ffcc00;
+            --brand-yellow-hover: #e6b800;
             --bg: #f4f7f6; 
             --text-main: #202124; 
             --text-sub: #5f6368;
@@ -18,53 +21,53 @@
         .container { max-width: 1400px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
         
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
-        .nav-title { font-size: 26px; font-weight: 900; color: var(--text-main); display: flex; align-items: center; gap: 10px; letter-spacing: 1px;}
-        .nav-title span { color: var(--primary); }
-        .user-badge { background: var(--primary-light); color: var(--primary); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+        .nav-title { font-size: 28px; font-weight: 900; color: var(--brand-blue); display: flex; align-items: center; gap: 10px; letter-spacing: 1px;}
+        .nav-title span { color: var(--brand-blue); background: var(--brand-yellow); padding: 4px 10px; border-radius: 8px; font-size: 20px;}
+        .user-badge { background: var(--brand-blue-light); color: var(--brand-blue); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; }
         
         .nav-tabs { display: flex; gap: 12px; margin-bottom: 30px; }
         .nav-tabs button { padding: 14px 28px; border: 1px solid var(--border); background: #fafafa; border-radius: 10px; cursor: pointer; font-weight: bold; color: var(--text-sub); transition: 0.2s; font-size: 16px; display: flex; align-items: center; gap: 8px;}
         .nav-tabs button:hover { background: #f1f3f4; }
-        .nav-tabs button.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(217,48,37,0.25); }
+        .nav-tabs button.active { background: var(--brand-blue); color: var(--brand-yellow); border-color: var(--brand-blue); box-shadow: 0 4px 12px rgba(0,59,109,0.25); }
         
         .view-section { display: none; animation: fadeIn 0.3s ease; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        h3 { color: var(--text-main); border-left: 5px solid var(--primary); padding-left: 15px; margin-top: 0; font-size: 20px;}
+        h3 { color: var(--brand-blue); border-left: 5px solid var(--brand-yellow); padding-left: 15px; margin-top: 0; font-size: 20px;}
         
         .table-responsive { width: 100%; max-height: 65vh; overflow: auto; background: white; border-radius: 10px; border: 1px solid var(--border); box-shadow: inset 0 0 5px rgba(0,0,0,0.02); }
         table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1800px; }
         th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 10px 4px; text-align: center; vertical-align: middle; min-width: 85px; }
         
-        th { background: #f8f9fa; color: var(--text-sub); font-size: 13px; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
-        th:first-child, td:first-child { position: sticky; left: 0; background: white; z-index: 11; font-weight: bold; font-size: 15px; color: var(--primary); box-shadow: 2px 0 5px rgba(0,0,0,0.04); min-width: 100px;}
-        th:first-child { z-index: 12; background: #f8f9fa; color: var(--text-main); }
+        th { background: var(--brand-blue); color: white; font-size: 13px; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.1);}
+        th:first-child, td:first-child { position: sticky; left: 0; background: white; z-index: 11; font-weight: bold; font-size: 15px; color: var(--brand-blue); box-shadow: 2px 0 5px rgba(0,0,0,0.04); min-width: 100px;}
+        th:first-child { z-index: 12; background: var(--brand-blue); color: var(--brand-yellow); }
         
         .weekend-col { background-color: #fffaf0; } 
         tr:hover td { background-color: #fdfdfd; }
         tr:hover td:first-child { background-color: white; }
 
         .shift-input { width: 100%; min-width: 80px; height: 38px; font-size: 13px; font-weight: bold; color: #333; text-align: center; border: 1px solid #ccc; border-radius: 6px; outline: none; transition: 0.2s; box-sizing: border-box; background: #fff;}
-        .shift-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .shift-input:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px var(--brand-blue-light); }
         .btn-off { font-size: 12px; margin-top: 5px; background: #f1f3f4; color: #5f6368; border: none; border-radius: 6px; cursor: pointer; width: 100%; padding: 6px 0; font-weight: bold; transition: 0.2s;}
         .btn-off:hover { background: #e0e0e0; color: #000; }
 
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 15px; }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-primary { background: #1a73e8; color: white; }
-        .btn-danger { background: var(--primary); color: white; }
+        .btn-primary { background: var(--brand-blue); color: white; }
+        .btn-danger { background: #d93025; color: white; }
         .btn-success { background: #0f9d58; color: white; }
-        .btn-warning { background: #f4b400; color: #fff; border: 1px solid #d39e00;}
+        .btn-warning { background: var(--brand-yellow); color: var(--brand-blue); border: 1px solid #d39e00;}
         .btn-info { background: #17a2b8; color: #fff; }
         
         input[type="text"], input[type="password"], input[type="month"], select, input[type="number"], input[type="date"] { 
             padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; width: 100%; box-sizing: border-box; transition: 0.2s;
         }
-        input:focus, select:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px var(--primary-light);}
+        input:focus, select:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 3px var(--brand-blue-light);}
 
         .hr-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; background: #fcfcfc; padding: 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
-        .form-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: var(--text-sub); }
+        .form-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: var(--brand-blue); }
         
         @media print {
             body * { visibility: hidden; }
@@ -78,11 +81,11 @@
 <body>
 
     <div id="loginScreen" class="container" style="max-width: 420px; margin-top: 10vh; text-align: center; padding: 50px 30px;">
-        <h2 style="color: var(--primary); font-size: 36px; font-weight: 900; margin-bottom: 5px; letter-spacing: 2px;">呷呼霸</h2>
-        <p style="color: var(--text-sub); font-weight: bold; margin-bottom: 40px; font-size: 16px;">門市管理後台系統</p>
+        <h2 style="color: var(--brand-blue); font-size: 38px; font-weight: 900; margin-bottom: 5px; letter-spacing: 2px;">呷呼霸</h2>
+        <p style="color: var(--brand-yellow); background: var(--brand-blue); padding: 4px 10px; border-radius: 8px; display: inline-block; font-weight: bold; margin-bottom: 40px; font-size: 16px;">門市管理後台系統</p>
         <input type="text" id="loginName" placeholder="請輸入您的姓名" style="margin-bottom: 20px;"><br>
         <input type="password" id="loginPwd" placeholder="請輸入登入密碼" style="margin-bottom: 30px;"><br>
-        <button class="btn btn-danger" style="width: 100%; padding: 16px; font-size: 18px;" onclick="doLogin()">安全登入</button>
+        <button class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 18px;" onclick="doLogin()">安全登入</button>
     </div>
 
     <div id="mainScreen" class="container" style="display: none;">
@@ -100,7 +103,6 @@
             <button class="tab-btn" onclick="switchTab('viewPayroll', this)">💰 薪資單自動結算</button>
         </div>
 
-        <!-- 1. 排班管理 -->
         <div id="viewSchedule" class="view-section active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                 <h3>門市排班管理</h3>
@@ -113,11 +115,11 @@
             
             <div style="background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: flex; gap: 30px; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-weight: bold; color: var(--text-sub); font-size: 15px;">選擇排班月份</span>
+                    <span style="font-weight: bold; color: var(--brand-blue); font-size: 15px;">選擇排班月份</span>
                     <input type="month" id="schedMonth" onchange="loadData()" style="width: 160px; background: #f8f9fa;">
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-weight: bold; color: var(--text-sub); font-size: 15px;">過濾檢視門市</span>
+                    <span style="font-weight: bold; color: var(--brand-blue); font-size: 15px;">過濾檢視門市</span>
                     <select id="schedStore" onchange="loadData()" style="width: 220px; background: #f8f9fa;">
                         <option value="呷呼霸土城店">呷呼霸土城店</option>
                         <option value="呷呼霸南崁店">呷呼霸南崁店</option>
@@ -131,12 +133,6 @@
                     </select>
                 </div>
             </div>
-            <div style="font-size: 14px; color: #0056b3; background: #e6f2ff; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b3d7ff;">
-                💡 <b>排班操作提示：</b><br>
-                1. 點擊「複製上月班表」可快速帶入上個月的資料。<br>
-                2. 點擊「匯出 Excel」可將排好的班表下載至電腦列印。<br>
-                3. 可直接在格子內自由輸入時間區段（如：10:30-14:30）。點擊「休」即可快速排休。
-            </div>
             
             <div class="table-responsive">
                 <table id="schedTable">
@@ -146,19 +142,18 @@
             </div>
         </div>
 
-        <!-- 2. 人事維護 -->
         <div id="viewEmployees" class="view-section">
             <h3>員工基本檔與計薪設定</h3>
             
-            <div style="background: #f1f8ff; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #cce5ff; display: flex; gap: 20px; align-items: flex-end;">
+            <div style="background: var(--brand-blue-light); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #cce5ff; display: flex; gap: 20px; align-items: flex-end;">
                 <div style="flex: 1;">
-                    <label style="font-size: 15px; font-weight: bold; color: #0056b3; display: block; margin-bottom: 8px;">編輯現有員工資料</label>
+                    <label style="font-size: 15px; font-weight: bold; color: var(--brand-blue); display: block; margin-bottom: 8px;">編輯現有員工資料</label>
                     <select id="filterEmp" onchange="loadEmpDetails()" style="background: white;">
                         <option value="">請點此選擇要編輯的員工...</option>
                     </select>
                 </div>
                 <div>
-                    <button class="btn btn-warning" onclick="clearForm()" style="color:#000;">➕ 建立新員工 / 清空表單</button>
+                    <button class="btn btn-warning" onclick="clearForm()" style="color:var(--brand-blue);">➕ 建立新員工 / 清空表單</button>
                 </div>
             </div>
 
@@ -185,7 +180,7 @@
                         <option value="老闆">老闆</option>
                     </select>
                 </div>
-                <div class="form-group"><label>APP 登入密碼</label><input type="text" id="empPwd" placeholder="預設建議: 1234 或 手機後四碼"></div>
+                <div class="form-group"><label>APP 登入密碼</label><input type="text" id="empPwd" placeholder="預設建議: 1234"></div>
                 <div class="form-group"><label>在職狀態</label>
                     <select id="empStatus">
                         <option value="在職">🟢 在職中</option>
@@ -208,8 +203,8 @@
                 <div class="form-group"><label>到職日期</label><input type="date" id="empObDate"></div>
                 <div class="form-group"><label>剩餘特休天數</label><input type="number" step="0.5" id="empAnnualLeave" placeholder="可輸入小數點"></div>
                 <div class="form-group"><label>變動獎金基數</label><input type="number" id="empBonus" value="0"></div>
-                <div class="form-group"><label>勞保自付額 (每月扣除)</label><input type="number" id="empLaborIns" value="0"></div>
-                <div class="form-group"><label>健保自付額 (每月扣除)</label><input type="number" id="empHealthIns" value="0"></div>
+                <div class="form-group"><label>勞保自付額</label><input type="number" id="empLaborIns" value="0"></div>
+                <div class="form-group"><label>健保自付額</label><input type="number" id="empHealthIns" value="0"></div>
                 <div class="form-group"><label>健保依附眷屬人數</label><input type="number" id="empDependents" value="0"></div>
                 <div class="form-group"><label>聯絡電話 (手機)</label><input type="text" id="empPhone"></div>
                 <div class="form-group"><label>通訊住址</label><input type="text" id="empAddress"></div>
@@ -232,15 +227,14 @@
             </div>
         </div>
 
-        <!-- 3. 薪資結算 -->
         <div id="viewPayroll" class="view-section">
             <h3>薪資單自動結算與列印</h3>
             <div style="background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <span style="font-weight: bold; color: var(--text-main); font-size: 16px;">選擇結算月份</span>
+                    <span style="font-weight: bold; color: var(--brand-blue); font-size: 16px;">選擇結算月份</span>
                     <input type="month" id="payrollMonth" style="width: 180px; background: #f8f9fa;">
                 </div>
-                <button class="btn btn-success" style="padding: 14px 28px; font-size: 16px;" onclick="generatePayslips()">🖨️ 產生四合一薪資單並列印</button>
+                <button class="btn btn-success" style="padding: 14px 28px; font-size: 16px;" onclick="generatePayslips()">🖨️ 產生四合一薪資單</button>
             </div>
             <div id="printArea" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border); display: none;"></div>
         </div>
@@ -252,53 +246,38 @@
         let globalData = { schedule: [], employees: [] };
 
         async function fetchApi(payload) {
-            const res = await fetch(API_URL + "?t=" + new Date().getTime(), { 
-                method: 'POST', 
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload) 
-            });
-            const text = await res.text();
-            try {
-                return JSON.parse(text);
-            } catch (e) {
-                throw new Error("伺服器回傳格式異常，請確認 Apps Script 權限是否已設定為『所有人』。");
-            }
+            const res = await fetch(API_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) });
+            return await res.json();
         }
 
         async function doLogin() {
             const n = document.getElementById('loginName').value.trim();
             const p = document.getElementById('loginPwd').value.trim();
-            if(!n || !p) return Swal.fire('提示', '請填寫姓名與密碼', 'warning');
-            
-            Swal.fire({title: '安全驗證中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+            if(!n || !p) return;
+            Swal.fire({title: '驗證中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
                 const res = await fetchApi({action: 'login', name: n, pwd: p});
                 if(res.status === 'success') {
-                    if(res.role === '員工') {
-                        return Swal.fire('權限不足', '此為管理後台，員工請使用手機版 APP。', 'error');
-                    }
+                    if(res.role === '員工') return Swal.fire('權限不足', '此為管理後台', 'error');
                     currentUser = res;
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('mainScreen').style.display = 'block';
                     document.getElementById('userName').innerText = res.name;
                     document.getElementById('userRole').innerText = res.role;
                     document.getElementById('userStore').innerText = res.store;
-                    
                     let now = new Date();
                     let mStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
                     document.getElementById('schedMonth').value = mStr;
                     document.getElementById('payrollMonth').value = mStr;
-                    
                     if(res.role === '店長' || res.role === '副店長') {
                         document.getElementById('schedStore').value = res.store;
                         document.getElementById('schedStore').disabled = true; 
                         document.getElementById('empStore').value = res.store;
                         document.getElementById('empStore').disabled = true;
                     }
-                    Swal.close();
-                    loadData();
-                } else { Swal.fire('登入失敗', res.msg, 'error'); }
-            } catch(e) { Swal.fire('網路錯誤', e.message, 'error'); }
+                    Swal.close(); loadData();
+                } else { Swal.fire('失敗', res.msg, 'error'); }
+            } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
 
         function switchTab(tabId, btn) {
@@ -312,261 +291,138 @@
         async function loadData() {
             Swal.fire({title: '資料同步中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
-                const res = await fetchApi({
-                    action: 'getData', 
-                    name: currentUser.name, 
-                    role: currentUser.role, 
-                    store: document.getElementById('schedStore').value
-                });
+                const res = await fetchApi({action: 'getData', name: currentUser.name, role: currentUser.role, store: document.getElementById('schedStore').value});
                 if(res.status === 'success') {
                     globalData = res.data;
-                    renderSchedule();
-                    renderEmployees();
-                    updateEmpDropdown();
-                    Swal.close();
-                } else { Swal.fire('錯誤', res.msg, 'error'); }
-            } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
+                    renderSchedule(); renderEmployees(); updateEmpDropdown(); Swal.close();
+                }
+            } catch(e) {}
         }
 
         function renderSchedule() {
             const month = document.getElementById('schedMonth').value;
             if(!month) return;
             const [yy, mm] = month.split('-');
-            
             const daysInMonth = new Date(yy, mm, 0).getDate();
             const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
-            
             let head = '<tr><th>員工姓名</th>';
             for(let i=1; i<=daysInMonth; i++) {
                 let d = new Date(yy, parseInt(mm)-1, i);
                 let isWeekend = (d.getDay()===0 || d.getDay()===6);
                 let bgClass = isWeekend ? ' class="weekend-col"' : '';
-                let colorStyle = isWeekend ? ' style="color:#d93025;"' : '';
+                let colorStyle = isWeekend ? ' style="color:#ffcc00;"' : '';
                 head += `<th${bgClass}${colorStyle}>${i}<br><span style="font-size:11px; font-weight:normal;">(${weekdays[d.getDay()]})</span></th>`;
             }
             head += '</tr>';
             document.getElementById('schedHead').innerHTML = head;
-
             let body = '';
             let targetStore = document.getElementById('schedStore').value;
             let displayEmps = globalData.employees.filter(e => e[1] === targetStore && e[4] !== "離職");
 
             displayEmps.forEach(emp => {
                 let name = emp[0];
-                let mySched = globalData.schedule.find(s => {
-                    // 防禦 Google 表單日期自動轉換
-                    let rMonth = String(s[0]);
-                    if (rMonth.includes("GMT") || rMonth.includes("T")) {
-                         let dateObj = new Date(s[0]);
-                         rMonth = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}`;
-                    } else if (rMonth.includes("/")) {
-                         let parts = rMonth.split('/');
-                         if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
-                    }
-                    return rMonth === month && s[2] === name;
-                });
-                
+                let mySched = globalData.schedule.find(s => String(s[0]).includes(month) && s[2] === name);
                 body += `<tr><td>${name}</td>`;
                 for(let i=1; i<=daysInMonth; i++) {
                     let d = new Date(yy, parseInt(mm)-1, i);
                     let isWeekend = (d.getDay()===0 || d.getDay()===6);
                     let bgClass = isWeekend ? ' class="weekend-col"' : '';
-                    
                     let val = mySched ? mySched[2+i] : "";
-
-                    // 防禦時間亂碼
-                    if (val && String(val).includes('T') && String(val).includes('Z')) {
-                        let parsedDate = new Date(val);
-                        if (!isNaN(parsedDate.getTime())) {
-                            let yr = parsedDate.getFullYear();
-                            if (yr < 2000) {
-                                let hh = String(parsedDate.getHours()).padStart(2, '0');
-                                let mmm = String(parsedDate.getMinutes()).padStart(2, '0');
-                                val = hh + ':' + mmm;
-                            } else {
-                                val = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
-                            }
-                        }
-                    }
-
+                    if(String(val).includes('T')) { val = new Date(val); val = val.getFullYear()<2000 ? String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0') : (val.getMonth()+1)+'-'+val.getDate(); }
                     let isOff = (val === '休' || val === '排休');
-                    
                     body += `<td${bgClass}>
-                        <input type="text" class="shift-input" placeholder="時間" value="${isOff ? '休' : val}">
+                        <input type="text" class="shift-input" value="${isOff ? '休' : val}">
                         <button class="btn-off" onclick="this.previousElementSibling.value='休'">休</button>
                     </td>`;
                 }
                 body += '</tr>';
             });
-            
-            if(displayEmps.length === 0) {
-                document.getElementById('schedBody').innerHTML = `<tr><td colspan="${daysInMonth + 1}" style="padding: 40px; color: var(--text-sub); font-size: 16px;">該門市尚無員工資料，請先至「人事維護」建檔。</td></tr>`;
-            } else {
-                document.getElementById('schedBody').innerHTML = body;
-            }
+            document.getElementById('schedBody').innerHTML = body || `<tr><td colspan="${daysInMonth + 1}" style="padding: 40px;">尚無資料</td></tr>`;
         }
 
         async function saveSchedule() {
             const month = document.getElementById('schedMonth').value;
             const store = document.getElementById('schedStore').value;
             let payloadData = [];
-            
             document.querySelectorAll('#schedBody tr').forEach(tr => {
                 let nameTd = tr.querySelector('td');
-                if(nameTd && !nameTd.innerText.includes("該門市尚無員工資料")) {
+                if(nameTd && !nameTd.innerText.includes("尚無資料")) {
                     let shifts = [];
                     tr.querySelectorAll('.shift-input').forEach(inp => { shifts.push(inp.value.trim()); });
                     payloadData.push({name: nameTd.innerText, shifts: shifts});
                 }
             });
-
             if(payloadData.length === 0) return;
-
-            Swal.fire({title: '驗證勞基法中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+            Swal.fire({title: '儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
                 const res = await fetchApi({ action: 'saveSchedule', month: month, store: store, scheduleData: payloadData });
-                if(res.status === 'success') { Swal.fire('成功', res.msg, 'success'); } 
-                else { Swal.fire('阻擋', res.msg, 'error'); }
-            } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
+                if(res.status === 'success') Swal.fire('成功', res.msg, 'success'); 
+                else Swal.fire('阻擋', res.msg, 'error');
+            } catch(e) {}
         }
 
-        // ================= 新增：複製上月班表功能 =================
         function copyLastMonth() {
             const currentMonthVal = document.getElementById('schedMonth').value;
             if(!currentMonthVal) return;
-
             let [yy, mm] = currentMonthVal.split('-');
-            let d = new Date(yy, parseInt(mm) - 1 - 1, 1); 
+            let d = new Date(yy, parseInt(mm) - 2, 1); 
             let lastMonthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             let store = document.getElementById('schedStore').value;
-
-            let hasData = globalData.schedule.some(s => {
-                let rMonth = String(s[0]);
-                if (rMonth.includes("GMT") || rMonth.includes("T")) {
-                     let dateObj = new Date(s[0]);
-                     rMonth = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}`;
-                } else if (rMonth.includes("/")) {
-                     let parts = rMonth.split('/');
-                     if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
-                }
-                return rMonth === lastMonthStr && s[1] === store;
-            });
-
-            if (!hasData) {
-                return Swal.fire('提示', `找不到該門市 ${lastMonthStr} 的排班資料可供複製！`, 'info');
-            }
+            let hasData = globalData.schedule.some(s => String(s[0]).includes(lastMonthStr) && s[1] === store);
+            if (!hasData) return Swal.fire('提示', `找不到 ${lastMonthStr} 的資料`, 'info');
 
             Swal.fire({
-                title: '確認套用？',
-                text: `確定要將【${lastMonthStr}】的排班紀錄複製到【${currentMonthVal}】嗎？這將覆蓋您目前畫面上輸入的內容。`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#f4b400',
-                confirmButtonText: '確定複製'
+                title: '確認套用？', text: `複製【${lastMonthStr}】到【${currentMonthVal}】？`, icon: 'question',
+                showCancelButton: true, confirmButtonColor: '#ffc107', confirmButtonText: '確定'
             }).then((result) => {
                 if(result.isConfirmed) {
-                    applyLastMonthData(lastMonthStr);
+                    let rows = document.querySelectorAll('#schedBody tr');
+                    rows.forEach(tr => {
+                        let nameTd = tr.querySelector('td');
+                        if(nameTd && !nameTd.innerText.includes("尚無資料")) {
+                            let empName = nameTd.innerText;
+                            let lastMonthSched = globalData.schedule.find(s => String(s[0]).includes(lastMonthStr) && s[2] === empName);
+                            let inputs = tr.querySelectorAll('.shift-input');
+                            inputs.forEach((inp, idx) => {
+                                let dayNumber = idx + 1;
+                                if (lastMonthSched && (2 + dayNumber) < lastMonthSched.length) {
+                                    let val = lastMonthSched[2 + dayNumber];
+                                    if(String(val).includes('T')) { val = new Date(val); val = val.getFullYear()<2000 ? String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0') : (val.getMonth()+1)+'-'+val.getDate(); }
+                                    inp.value = val ? val : "休";
+                                } else { inp.value = "休"; }
+                            });
+                        }
+                    });
+                    Swal.fire('已套用', '請確認無誤後點擊儲存', 'success');
                 }
             });
         }
 
-        function applyLastMonthData(lastMonthStr) {
-            let rows = document.querySelectorAll('#schedBody tr');
-            rows.forEach(tr => {
-                let nameTd = tr.querySelector('td');
-                if(nameTd && !nameTd.innerText.includes("該門市尚無員工資料")) {
-                    let empName = nameTd.innerText;
-                    
-                    let lastMonthSched = globalData.schedule.find(s => {
-                        let rMonth = String(s[0]);
-                        if (rMonth.includes("GMT") || rMonth.includes("T")) {
-                             let dateObj = new Date(s[0]);
-                             rMonth = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}`;
-                        } else if (rMonth.includes("/")) {
-                             let parts = rMonth.split('/');
-                             if(parts.length >= 2) rMonth = `${parts[0]}-${parts[1].padStart(2,'0')}`;
-                        }
-                        return rMonth === lastMonthStr && s[2] === empName;
-                    });
-                    
-                    let inputs = tr.querySelectorAll('.shift-input');
-                    inputs.forEach((inp, idx) => {
-                        let dayNumber = idx + 1;
-                        if (lastMonthSched && (2 + dayNumber) < lastMonthSched.length) {
-                            let val = lastMonthSched[2 + dayNumber];
-                            
-                            // 防禦亂碼
-                            if (val && String(val).includes('T') && String(val).includes('Z')) {
-                                let parsedDate = new Date(val);
-                                if (!isNaN(parsedDate.getTime())) {
-                                    let yr = parsedDate.getFullYear();
-                                    if (yr < 2000) {
-                                        let hh = String(parsedDate.getHours()).padStart(2, '0');
-                                        let mmm = String(parsedDate.getMinutes()).padStart(2, '0');
-                                        val = hh + ':' + mmm;
-                                    } else {
-                                        val = (parsedDate.getMonth() + 1) + '-' + parsedDate.getDate();
-                                    }
-                                }
-                            }
-                            inp.value = val ? val : "休";
-                        } else {
-                            inp.value = "休";
-                        }
-                    });
-                }
-            });
-            Swal.fire('已套用', '已將上月班表填入格子中，請確認無誤後點擊「儲存並驗證班表」。', 'success');
-        }
-
-        // ================= 新增：匯出 Excel (CSV) =================
         function exportCSV() {
             const month = document.getElementById('schedMonth').value;
             const store = document.getElementById('schedStore').value;
-            if(!month) return;
-
-            let csvContent = "\uFEFF"; // 確保 Excel 打開不會中文亂碼
+            let csvContent = "\uFEFF"; 
             let rows = document.querySelectorAll('#schedTable tr');
-            
             rows.forEach(row => {
                 let rowData = [];
-                let cols = row.querySelectorAll('th, td');
-                cols.forEach(col => {
+                row.querySelectorAll('th, td').forEach(col => {
                     let input = col.querySelector('input');
-                    let text = "";
-                    if (input) {
-                        text = input.value || '休';
-                    } else {
-                        // 清除表頭的換行符號
-                        text = col.innerText.replace(/\n/g, ' ');
-                    }
-                    rowData.push(`"${text}"`); // 用引號包覆避免逗號干擾
+                    rowData.push(`"${input ? (input.value || '休') : col.innerText.replace(/\n/g, ' ')}"`);
                 });
                 csvContent += rowData.join(",") + "\n";
             });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `${store}_${month}_排班表.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
+            link.download = `${store}_${month}_排班表.csv`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
         function updateEmpDropdown() {
             let sel = document.getElementById('filterEmp');
-            sel.innerHTML = '<option value="">請點此選擇要編輯的員工...</option>';
+            sel.innerHTML = '<option value="">請選擇員工...</option>';
             let displayEmps = globalData.employees;
-            if(currentUser.role === '店長' || currentUser.role === '副店長') {
-                displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
-            }
-            displayEmps.forEach(e => {
-                let statusMark = e[4] === "離職" ? " (已離職)" : "";
-                sel.innerHTML += `<option value="${e[0]}">${e[0]} - ${e[1]}${statusMark}</option>`;
-            });
+            if(currentUser.role === '店長' || currentUser.role === '副店長') displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
+            displayEmps.forEach(e => { sel.innerHTML += `<option value="${e[0]}">${e[0]} - ${e[1]}</option>`; });
         }
 
         function loadEmpDetails() {
@@ -574,181 +430,92 @@
             if(!name) return clearForm();
             let emp = globalData.employees.find(e => e[0] === name);
             if(emp) {
-                document.getElementById('empName').value = emp[0];
-                document.getElementById('empStore').value = emp[1];
-                document.getElementById('empRole').value = emp[2];
-                document.getElementById('empPwd').value = emp[3];
-                document.getElementById('empStatus').value = emp[4];
-                document.getElementById('empPayType').value = emp[6] || '月薪';
-                document.getElementById('empSalary').value = emp[7] || 0;
-                
-                document.getElementById('empDutyType').value = emp[8] || '一般員工 (有加班費)';
-                document.getElementById('empObDate').value = emp[9] ? String(emp[9]).split('T')[0] : '';
-                document.getElementById('empAnnualLeave').value = emp[10] || 0;
-                document.getElementById('empBonus').value = emp[11] || 0;
-                document.getElementById('empLaborIns').value = emp[12] || 0;
-                document.getElementById('empHealthIns').value = emp[13] || 0;
-                document.getElementById('empDependents').value = emp[14] || 0;
-                document.getElementById('empPhone').value = emp[15] || '';
-                document.getElementById('empAddress').value = emp[16] || '';
+                document.getElementById('empName').value = emp[0]; document.getElementById('empStore').value = emp[1]; document.getElementById('empRole').value = emp[2];
+                document.getElementById('empPwd').value = emp[3]; document.getElementById('empStatus').value = emp[4]; document.getElementById('empPayType').value = emp[6] || '月薪';
+                document.getElementById('empSalary').value = emp[7] || 0; document.getElementById('empDutyType').value = emp[8] || '一般員工'; document.getElementById('empObDate').value = emp[9] ? String(emp[9]).split('T')[0] : '';
+                document.getElementById('empAnnualLeave').value = emp[10] || 0; document.getElementById('empBonus').value = emp[11] || 0; document.getElementById('empLaborIns').value = emp[12] || 0;
+                document.getElementById('empHealthIns').value = emp[13] || 0; document.getElementById('empDependents').value = emp[14] || 0; document.getElementById('empPhone').value = emp[15] || ''; document.getElementById('empAddress').value = emp[16] || '';
             }
         }
 
         function clearForm() {
-            document.getElementById('filterEmp').value = "";
-            document.getElementById('empName').value = "";
-            document.getElementById('empPwd').value = "";
-            document.getElementById('empSalary').value = "";
-            document.getElementById('empStatus').value = "在職";
-            document.getElementById('empPayType').value = "月薪";
-            document.getElementById('empRole').value = "員工";
-            document.getElementById('empDutyType').value = "一般員工 (有加班費)";
-            document.getElementById('empObDate').value = "";
-            document.getElementById('empAnnualLeave').value = "";
-            ['empBonus', 'empLaborIns', 'empHealthIns', 'empDependents'].forEach(id => document.getElementById(id).value = "0");
+            document.getElementById('filterEmp').value = ""; document.getElementById('empName').value = ""; document.getElementById('empPwd').value = "";
+            document.getElementById('empSalary').value = ""; document.getElementById('empStatus').value = "在職"; document.getElementById('empPayType').value = "月薪";
+            document.getElementById('empRole').value = "員工"; document.getElementById('empDutyType').value = "一般員工"; document.getElementById('empObDate').value = "";
+            document.getElementById('empAnnualLeave').value = ""; ['empBonus', 'empLaborIns', 'empHealthIns', 'empDependents'].forEach(id => document.getElementById(id).value = "0");
             ['empPhone', 'empAddress'].forEach(id => document.getElementById(id).value = "");
-
-            if(currentUser.role === '店長' || currentUser.role === '副店長') {
-                document.getElementById('empStore').value = currentUser.store;
-            } else {
-                document.getElementById('empStore').value = "呷呼霸土城店";
-            }
+            document.getElementById('empStore').value = (currentUser.role === '店長' || currentUser.role === '副店長') ? currentUser.store : "呷呼霸土城店";
         }
 
         async function saveEmployee() {
             let payload = {
-                action: "saveEmployee",
-                name: document.getElementById('empName').value.trim(),
-                store: document.getElementById('empStore').value,
-                role: document.getElementById('empRole').value,
-                pwd: document.getElementById('empPwd').value.trim(),
-                status: document.getElementById('empStatus').value,
-                payType: document.getElementById('empPayType').value,
-                salary: document.getElementById('empSalary').value,
-                dutyType: document.getElementById('empDutyType').value,
-                obDate: document.getElementById('empObDate').value,
-                annualLeave: document.getElementById('empAnnualLeave').value,
-                bonus: document.getElementById('empBonus').value,
-                laborIns: document.getElementById('empLaborIns').value,
-                healthIns: document.getElementById('empHealthIns').value,
-                dependents: document.getElementById('empDependents').value,
-                phone: document.getElementById('empPhone').value,
-                address: document.getElementById('empAddress').value
+                action: "saveEmployee", name: document.getElementById('empName').value.trim(), store: document.getElementById('empStore').value, role: document.getElementById('empRole').value,
+                pwd: document.getElementById('empPwd').value.trim(), status: document.getElementById('empStatus').value, payType: document.getElementById('empPayType').value, salary: document.getElementById('empSalary').value,
+                dutyType: document.getElementById('empDutyType').value, obDate: document.getElementById('empObDate').value, annualLeave: document.getElementById('empAnnualLeave').value, bonus: document.getElementById('empBonus').value,
+                laborIns: document.getElementById('empLaborIns').value, healthIns: document.getElementById('empHealthIns').value, dependents: document.getElementById('empDependents').value, phone: document.getElementById('empPhone').value, address: document.getElementById('empAddress').value
             };
             if(!payload.name) return Swal.fire('提示', '姓名必填寫！', 'warning');
-
-            Swal.fire({title: '資料儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+            Swal.fire({title: '儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
                 const res = await fetchApi(payload);
-                if(res.status === 'success') {
-                    Swal.fire('成功', '員工資料已安全儲存！', 'success');
-                    loadData(); 
-                    clearForm();
-                } else { Swal.fire('錯誤', res.msg, 'error'); }
-            } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
+                if(res.status === 'success') { Swal.fire('成功', '已儲存！', 'success'); loadData(); clearForm(); }
+            } catch(e) {}
         }
 
         async function deleteEmployee(empName) {
-            if(!confirm(`⚠️ 嚴重警告：\n您確定要徹底刪除【${empName}】的所有資料嗎？\n此動作無法復原！`)) return;
-            Swal.fire({title: '執行刪除程序...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
+            if(!confirm(`確定徹底刪除【${empName}】的資料嗎？`)) return;
+            Swal.fire({title: '刪除中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
                 const res = await fetchApi({ action: 'deleteEmployee', name: empName });
-                if(res.status === 'success') {
-                    Swal.fire('已刪除', res.msg, 'success');
-                    loadData();
-                    clearForm();
-                } else {
-                    Swal.fire('錯誤', res.msg, 'error');
-                }
-            } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
+                if(res.status === 'success') { Swal.fire('已刪除', res.msg, 'success'); loadData(); clearForm(); }
+            } catch(e) {}
         }
 
         function renderEmployees() {
             let html = '';
             let displayEmps = globalData.employees;
-            if(currentUser.role === '店長' || currentUser.role === '副店長') {
-                displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
-            }
-
+            if(currentUser.role === '店長' || currentUser.role === '副店長') displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
             displayEmps.forEach(emp => {
-                let payType = emp[6] || '月薪';
-                let base = emp[7] || 0;
-                let displayBase = (currentUser.role === "店長" || currentUser.role === "副店長") ? "***" : `$${base}`;
-                let statusBadge = emp[4] === "離職" ? `<span style="color:var(--primary); font-weight:bold;">已離職</span>` : `<span style="color:#0f9d58; font-weight:bold;">在職中</span>`;
-
                 html += `<tr>
-                    <td style="font-weight:bold; color:var(--primary);">${emp[0]}</td>
-                    <td>${emp[1]}</td>
-                    <td>${emp[2]}</td>
-                    <td style="color:#adb5bd; font-size:18px; letter-spacing:3px; vertical-align:middle;">***</td>
-                    <td>${statusBadge}</td>
-                    <td>${payType}</td>
-                    <td style="font-weight:bold;">${displayBase}</td>
-                    <td>
-                        <div style="display:flex; justify-content:center; gap:8px;">
-                            <button class="btn btn-primary" style="padding:6px 12px; font-size:13px;" onclick="quickEdit('${emp[0]}')">編輯</button>
-                            <button class="btn btn-danger" style="padding:6px 12px; font-size:13px;" onclick="deleteEmployee('${emp[0]}')">刪除</button>
-                        </div>
-                    </td>
-                </tr>`;
+                    <td style="font-weight:bold; color:var(--brand-blue);">${emp[0]}</td><td>${emp[1]}</td><td>${emp[2]}</td><td style="color:#adb5bd;">***</td>
+                    <td>${emp[4] === "離職" ? '<span style="color:#d93025; font-weight:bold;">已離職</span>' : '<span style="color:#0f9d58; font-weight:bold;">在職中</span>'}</td>
+                    <td>${emp[6] || '月薪'}</td><td style="font-weight:bold;">${(currentUser.role === "店長" || currentUser.role === "副店長") ? "***" : `$${emp[7]||0}`}</td>
+                    <td><button class="btn btn-primary" style="padding:6px 12px; font-size:13px;" onclick="quickEdit('${emp[0]}')">編輯</button>
+                        <button class="btn btn-danger" style="padding:6px 12px; font-size:13px;" onclick="deleteEmployee('${emp[0]}')">刪除</button></td></tr>`;
             });
             document.getElementById('empBody').innerHTML = html;
         }
 
+        function quickEdit(name) { document.getElementById('filterEmp').value = name; loadEmpDetails(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
         function generatePayslips() {
-            const printArea = document.getElementById('printArea');
-            printArea.style.display = 'block';
-            let html = '';
-            let count = 0;
-            const targetMonth = document.getElementById('payrollMonth').value;
-            
+            const printArea = document.getElementById('printArea'); printArea.style.display = 'block';
+            let html = ''; let count = 0; const targetMonth = document.getElementById('payrollMonth').value;
             let targetEmps = globalData.employees.filter(e => e[4] !== "離職");
-            if(currentUser.role === "店長" || currentUser.role === "副店長") {
-                targetEmps = targetEmps.filter(e => e[1] === currentUser.store);
-            }
+            if(currentUser.role === "店長" || currentUser.role === "副店長") targetEmps = targetEmps.filter(e => e[1] === currentUser.store);
 
             targetEmps.forEach((emp) => {
-                let name = emp[0]; let store = emp[1]; let payType = emp[6] || '月薪'; let base = Number(emp[7]) || 0;
-                let hourlyDeduct = payType === '月薪' ? Math.round(base / 30 / 8) : 0;
-                
-                let payslipHTML = `
-                    <div class="payslip">
-                        <div style="display:flex; justify-content:space-between; border-bottom: 2px solid #333; padding-bottom:8px; margin-bottom:15px;">
-                            <h3 style="margin:0; color:#d93025; font-size:18px; border:none; padding:0;">呷呼霸 員工薪資單</h3>
-                            <span style="font-weight:bold; color:#555;">${targetMonth}</span>
-                        </div>
-                        <div style="font-size:14px; line-height:1.8;">
-                            <span style="display:inline-block; width:48%;"><strong>門市：</strong> ${store}</span>
-                            <span style="display:inline-block; width:48%;"><strong>計薪：</strong> ${payType}</span><br>
-                            <span style="display:inline-block; width:48%;"><strong>姓名：</strong> <span style="font-size:16px; color:#1a73e8; font-weight:bold;">${name}</span></span>
-                            <span style="display:inline-block; width:48%;"><strong>底薪/時薪：</strong> $${base}</span>
-                        </div>
-                        <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
-                        <table style="width:100%; text-align:left; border:none; margin:0; min-width:auto;">
-                            <tr><td style="border:none; padding:4px; text-align:left;">🔹 伙食津貼 / 獎金：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$0</td></tr>
-                            <tr><td style="border:none; padding:4px; text-align:left;">🔸 加班費 (含颱風加給)：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$0</td></tr>
-                            <tr><td style="border:none; padding:4px; text-align:left;">🔻 遲到扣款 (費率 $${hourlyDeduct}/hr)：</td><td style="border:none; text-align:right; color:#d93025; font-weight:bold;">-$0</td></tr>
-                        </table>
-                        <div style="background: #f8f9fa; padding:12px; border-radius:8px; margin-top:15px; text-align:right;">
-                            <span style="font-size:13px; color:#555; margin-right:15px;">實發總計</span>
-                            <span style="font-size:22px; font-weight:900; color:#d93025;">$${base}</span>
-                        </div>
+                let name = emp[0]; let store = emp[1]; let payType = emp[6] || '月薪'; let base = Number(emp[7]) || 0; let hourlyDeduct = payType === '月薪' ? Math.round(base/30/8) : 0;
+                html += `<div class="payslip">
+                    <div style="display:flex; justify-content:space-between; border-bottom: 2px solid var(--brand-blue); padding-bottom:8px; margin-bottom:15px;">
+                        <h3 style="margin:0; color:var(--brand-blue); font-size:18px; border:none; padding:0;">呷呼霸 員工薪資單</h3><span style="font-weight:bold; color:#555;">${targetMonth}</span>
                     </div>
-                `;
-                html += payslipHTML;
-                count++;
-                if(count % 4 === 0) html += '<div class="page-break"></div>';
+                    <div style="font-size:14px; line-height:1.8;">
+                        <span style="display:inline-block; width:48%;"><strong>門市：</strong> ${store}</span><span style="display:inline-block; width:48%;"><strong>計薪：</strong> ${payType}</span><br>
+                        <span style="display:inline-block; width:48%;"><strong>姓名：</strong> <span style="font-size:16px; color:var(--brand-blue); font-weight:bold;">${name}</span></span><span style="display:inline-block; width:48%;"><strong>底薪/時薪：</strong> $${base}</span>
+                    </div>
+                    <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
+                    <table style="width:100%; text-align:left; border:none; margin:0; min-width:auto;">
+                        <tr><td style="border:none; padding:4px; text-align:left;">🔹 伙食津貼 / 獎金：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$0</td></tr>
+                        <tr><td style="border:none; padding:4px; text-align:left;">🔸 加班費 (含颱風加給)：</td><td style="border:none; text-align:right; color:#0f9d58; font-weight:bold;">+$0</td></tr>
+                        <tr><td style="border:none; padding:4px; text-align:left;">🔻 遲到扣款 (費率 $${hourlyDeduct}/hr)：</td><td style="border:none; text-align:right; color:#d93025; font-weight:bold;">-$0</td></tr>
+                    </table>
+                    <div style="background: var(--brand-blue-light); padding:12px; border-radius:8px; margin-top:15px; text-align:right;">
+                        <span style="font-size:13px; color:var(--brand-blue); margin-right:15px;">實發總計</span><span style="font-size:22px; font-weight:900; color:var(--brand-blue);"> $${base} </span>
+                    </div></div>`;
+                count++; if(count % 4 === 0) html += '<div class="page-break"></div>';
             });
-            
-            if(html === '') return Swal.fire('提示', '沒有符合的員工可列印', 'info');
-            
-            printArea.innerHTML = html;
-            Swal.fire({
-                title: '預覽生成完畢',
-                text: '即將開啟列印視窗，請確保列印設定為「預設邊界」並「取消勾選頁首/頁尾」。',
-                icon: 'info',
-                confirmButtonText: '開始列印'
-            }).then(() => { window.print(); });
+            printArea.innerHTML = html; setTimeout(() => window.print(), 500);
         }
     </script>
 </body>
