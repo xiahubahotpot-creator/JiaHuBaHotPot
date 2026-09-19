@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>呷呼霸 - 老闆專屬營運儀表板</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { 
+            --brand-dark: #1a2a40; /* 參考截圖的深灰藍色 */
+            --brand-blue: #003b6d; 
+            --brand-yellow: #ffc107;
+            --bg-color: #f4f6f9; 
+            --card-bg: #ffffff;
+            --text-main: #2c3e50; 
+            --text-sub: #7f8c8d;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); margin: 0; padding: 0; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+        .app-container { width: 100%; max-width: 480px; height: 100%; background: var(--bg-color); position: relative; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;}
+        
+        /* 登入畫面 */
+        #loginScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 30px; background: white; z-index: 100; position: absolute; width: 100%; }
+        .logo-area { text-align: center; margin-bottom: 40px; }
+        .logo-area h1 { color: var(--brand-dark); font-size: 40px; margin: 0; font-weight: 900; }
+        .logo-area p { color: var(--brand-yellow); background: var(--brand-dark); padding: 6px 16px; border-radius: 20px; font-size: 15px; margin-top: 10px; font-weight: bold; display: inline-block;}
+        .login-input { width: 100%; padding: 16px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; outline: none; background: #fafafa; }
+        .login-input:focus { border-color: var(--brand-dark); background: white; }
+        .btn-login { width: 100%; padding: 16px; background: var(--brand-dark); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
+
+        /* 主畫面頭部 (參考截圖的深色底) */
+        #mainScreen { display: none; flex-direction: column; height: 100%; padding-bottom: 80px; }
+        .header-bg { background: var(--brand-dark); padding: 30px 20px 25px 20px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; color: white; position: relative; z-index: 10; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .app-brand { font-size: 20px; font-weight: 900; letter-spacing: 1px; color: white; }
+        .notification-bell { position: relative; font-size: 22px; cursor: pointer;}
+        .bell-badge { position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; border: 2px solid var(--brand-dark); }
+        
+        .profile-row { display: flex; align-items: center; gap: 15px; }
+        .user-avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); object-fit: cover; background: #eee; }
+        .profile-info h2 { margin: 0 0 5px 0; font-size: 22px; font-weight: bold; }
+        .profile-info p { margin: 0; font-size: 13px; color: #aab2bd; }
+
+        /* 視圖切換區塊 */
+        .view-section { display: none; flex: 1; flex-direction: column; padding: 20px; overflow-y: auto;}
+        .view-section.active { display: flex; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 儀表板：今日概況 (四格卡片) */
+        .section-header { font-size: 18px; font-weight: 900; color: var(--brand-dark); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;}
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        .kpi-card { background: var(--card-bg); padding: 15px; border-radius: 16px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .kpi-title { font-size: 13px; color: var(--text-sub); font-weight: bold; margin-bottom: 8px; }
+        .kpi-value { font-size: 28px; font-weight: 900; color: var(--text-main); }
+        .kpi-card.blue .kpi-value { color: #3498db; }
+        .kpi-card.red .kpi-value { color: var(--danger); }
+        .kpi-card.yellow .kpi-value { color: #f39c12; }
+
+        /* 門市動態列表 */
+        .store-list-card { background: var(--card-bg); border-radius: 16px; padding: 5px 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 20px;}
+        .store-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f2f6; }
+        .store-item:last-child { border-bottom: none; }
+        .store-name { font-size: 15px; font-weight: bold; color: var(--text-main); margin-bottom: 4px;}
+        .store-sub { font-size: 12px; color: var(--text-sub); }
+        .store-stats { display: flex; align-items: center; gap: 15px; }
+        .stat-badge { font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; }
+        .badge-normal { background: #e8f8f5; color: var(--success); }
+        .badge-alert { background: #fdedec; color: var(--danger); }
+        .store-salary { font-size: 14px; font-weight: 900; color: var(--brand-dark); text-align: right;}
+
+        /* 店務通報清單 */
+        .notice-card { background: var(--card-bg); border-radius: 16px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border-left: 4px solid var(--brand-yellow); display: flex; justify-content: space-between; align-items: center;}
+        .notice-time { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; }
+        .notice-title { font-size: 15px; font-weight: bold; color: var(--text-main); margin-bottom: 4px; }
+        .notice-desc { font-size: 13px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;}
+        .notice-tag { background: #fff3cd; color: #856404; font-size: 11px; padding: 3px 8px; border-radius: 8px; font-weight: bold;}
+
+        /* 全公司班表查詢 */
+        .schedule-filter { background: white; padding: 15px; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; background-color: var(--bg-color); outline: none; margin-bottom: 10px;}
+        .shift-card { background: white; border-left: 5px solid var(--brand-blue); padding: 12px 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03);}
+        .shift-name { font-size: 15px; font-weight: bold; color: var(--text-main); }
+        .shift-time { font-size: 14px; font-weight: bold; background: var(--bg-color); color: var(--text-main); padding: 5px 12px; border-radius: 6px; }
+        .shift-off { border-left-color: #bdc3c7; } .shift-off .shift-time { color: #bdc3c7; }
+        .shift-sick { border-left-color: #f1c40f; } .shift-sick .shift-time { background: #fef9e7; color: #d4ac0d; }
+        .shift-annual { border-left-color: #2ecc71; } .shift-annual .shift-time { background: #eafaf1; color: #27ae60; }
+
+        /* 底部導航 */
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; display: flex; justify-content: space-around; padding: 10px 0 25px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 50;}
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #aab2bd; font-size: 11px; font-weight: 700; cursor: pointer; flex: 1;}
+        .nav-icon { font-size: 22px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--brand-dark); }
+        .nav-item.active .nav-icon { transform: translateY(-3px); }
+
+        /* 載入遮罩 */
+        #loadingOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--brand-dark); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div id="loadingOverlay"><div class="spinner"></div><div id="loadingText" style="font-weight:bold; color:var(--brand-dark);">數據統整中...</div></div>
+
+    <!-- 登入畫面 -->
+    <div id="loginScreen">
+        <div class="logo-area">
+            <h1>呷呼霸</h1>
+            <p>老闆專屬營運儀表板</p>
+        </div>
+        <input type="text" id="loginName" class="login-input" placeholder="請輸入老闆姓名">
+        <input type="password" id="loginPwd" class="login-input" placeholder="請輸入金鑰密碼">
+        <button class="btn-login" onclick="doLogin()">進入管理系統</button>
+    </div>
+
+    <!-- 主畫面 -->
+    <div id="mainScreen">
+        <div class="header-bg">
+            <div class="header-top">
+                <div class="app-brand">JIA HU BA Boss</div>
+                <div class="notification-bell" onclick="switchNav('viewFeedbacks', document.getElementById('navFb'))">
+                    🔔<div class="bell-badge" id="bellCount" style="display:none;">0</div>
+                </div>
+            </div>
+            <div class="profile-row">
+                <img id="dispAvatar" class="user-avatar" src="https://via.placeholder.com/150/1a2a40/ffffff?text=Boss">
+                <div class="profile-info">
+                    <h2><span id="dispName">老闆</span></h2>
+                    <p id="dispDate">2026/09/19 星期六</p>
+                </div>
+                <div style="margin-left: auto;">
+                    <button style="background:rgba(255,255,255,0.2); border:none; color:white; padding:6px 12px; border-radius:15px; font-size:12px; font-weight:bold;" onclick="doLogout()">登出</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 視圖 1: 首頁儀表板 -->
+        <div id="viewDashboard" class="view-section active">
+            <div class="section-header">📊 今日概況 <span style="font-size:12px; color:#999; font-weight:normal; margin-left:auto;">(全公司)</span></div>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">應到人數</div>
+                    <div class="kpi-value" id="kpiScheduled">0</div>
+                </div>
+                <div class="kpi-card blue">
+                    <div class="kpi-title">實到人數</div>
+                    <div class="kpi-value" id="kpiPunched">0</div>
+                </div>
+                <div class="kpi-card yellow">
+                    <div class="kpi-title">請假/排休</div>
+                    <div class="kpi-value" id="kpiLeave">0</div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-title">未打卡異常</div>
+                    <div class="kpi-value" id="kpiMissing">0</div>
+                </div>
+            </div>
+
+            <div class="section-header">🏢 今日各部門出勤與薪資 <span style="font-size:12px; color:#999; font-weight:normal; margin-left:auto;">(預估)</span></div>
+            <div class="store-list-card" id="dashboardStoreList">
+                <div style="text-align:center; padding:20px; color:#999; font-size:14px;">載入中...</div>
+            </div>
+        </div>
+
+        <!-- 視圖 2: 班表查詢 -->
+        <div id="viewSchedules" class="view-section">
+            <div class="section-header">📅 各店班表與工時查詢</div>
+            <div class="schedule-filter">
+                <label style="font-size:13px; font-weight:bold; color:var(--text-sub); display:block; margin-bottom:5px;">選擇查詢日期</label>
+                <input type="date" id="searchDate" class="form-control" onchange="renderStoreSchedule()">
+                <label style="font-size:13px; font-weight:bold; color:var(--text-sub); display:block; margin-bottom:5px;">選擇門市</label>
+                <select id="searchStore" class="form-control" onchange="renderStoreSchedule()"></select>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; padding:0 5px;">
+                <span style="font-size:14px; font-weight:bold; color:var(--brand-dark);">今日總排班工時：<span id="storeTotalHours" style="color:#27ae60;">0h</span></span>
+            </div>
+            <div id="scheduleListContainer">
+                <div style="text-align:center; padding:20px; color:#999; font-size:14px;">請選擇門市與日期</div>
+            </div>
+        </div>
+
+        <!-- 視圖 3: 店務通報 -->
+        <div id="viewFeedbacks" class="view-section">
+            <div class="section-header">🚨 待您處理 (店務通報)</div>
+            <div id="feedbackListContainer">
+                <div style="text-align:center; padding:20px; color:#999; font-size:14px;">目前無任何通報事項</div>
+            </div>
+        </div>
+
+        <!-- 底部導航 -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchNav('viewDashboard', this)"><div class="nav-icon">🏠</div>首頁</div>
+            <div class="nav-item" onclick="switchNav('viewSchedules', this)"><div class="nav-icon">📅</div>班表</div>
+            <div class="nav-item" id="navFb" onclick="switchNav('viewFeedbacks', this)"><div class="nav-icon">📝</div>通報</div>
+            <div class="nav-item" onclick="loadDashboardData()"><div class="nav-icon">🔄</div>重整</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxMqYMpwUCNOwrsNGcYDdCAO723_Qgu26syp0CZJXLHIgp1nul2dzFW0XinwKZ-1_u5/exec";
+    
+    let userProfile = {}; 
+    let globalData = null; 
+    let todayPunches = new Set(); // 記錄今天有打卡上班的人
+
+    // 解析日期字串
+    function decodeShift(val) {
+        if(val && String(val).includes('T') && String(val).includes('Z')) { 
+            let dObj = new Date(val); 
+            return dObj.getFullYear() < 2000 ? String(dObj.getHours()).padStart(2,'0')+':'+String(dObj.getMinutes()).padStart(2,'0') : (dObj.getMonth()+1)+'-'+dObj.getDate(); 
+        }
+        return val;
+    }
+
+    function getMonthStr(raw) {
+        let rM = String(raw); 
+        if(rM.includes('T')) return `${new Date(raw).getFullYear()}-${String(new Date(raw).getMonth()+1).padStart(2,'0')}`; 
+        if(rM.includes('/')) return rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0'); 
+        return rM;
+    }
+
+    function parseTimeStr(t) {
+        if(t.includes(':')) { let p = t.split(':'); return parseInt(p[0])*60 + parseInt(p[1]); }
+        return parseInt(t)*60;
+    }
+
+    function calculateDailyHours(shiftStr) {
+        if (!shiftStr || shiftStr === '休' || shiftStr === '排休' || shiftStr.includes('病假') || shiftStr.includes('特休')) return 0;
+        let cleanStr = shiftStr.replace(/\(.*?\)/g, ''); let regex = /(\d{1,2}(?::\d{2})?)\s*-\s*(\d{1,2}(?::\d{2})?)/g; let match; let totalMinutes = 0;
+        while ((match = regex.exec(cleanStr)) !== null) {
+            let start = parseTimeStr(match[1]); let end = parseTimeStr(match[2]);
+            if (end < start) end += 24 * 60; totalMinutes += (end - start);
+        }
+        return totalMinutes / 60;
+    }
+
+    window.onload = () => { 
+        const saved = localStorage.getItem('jiaHubaBoss'); 
+        if (saved) { 
+            userProfile = JSON.parse(saved); 
+            initUI(); 
+            loadDashboardData(); 
+        } 
+    };
+
+    function showLoading(text) { document.getElementById('loadingText').innerText = text; document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    async function fetchApi(payload) { 
+        try {
+            const res = await fetch(API_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); 
+            const text = await res.text();
+            return JSON.parse(text);
+        } catch (e) {
+            throw new Error("系統連線異常，請確認網路或後台版本設定。");
+        }
+    }
+
+    async function doLogin() {
+        const n = document.getElementById('loginName').value.trim(); const p = document.getElementById('loginPwd').value.trim();
+        if(!n || !p) return;
+        showLoading("身分驗證中...");
+        try {
+            const res = await fetchApi({ action: "login", name: n, pwd: p });
+            if (res.status === "success") {
+                // 限制只有老闆能登入此 APP
+                if (res.name !== '陳柏叡' && res.name !== '鄭煒霖' && res.role !== '老闆') {
+                    hideLoading(); Swal.fire('權限不足', '此為老闆專屬系統，一般主管請使用員工App。', 'error'); return;
+                }
+                res.role = '老闆';
+                userProfile = res; 
+                localStorage.setItem('jiaHubaBoss', JSON.stringify(userProfile)); 
+                initUI(); 
+                loadDashboardData();
+            } else { hideLoading(); Swal.fire('登入失敗', res.msg, 'error'); }
+        } catch (e) { hideLoading(); Swal.fire('登入異常', e.message, 'error'); }
+    }
+
+    function doLogout() { localStorage.removeItem('jiaHubaBoss'); location.reload(); }
+
+    function initUI() {
+        document.getElementById('loginScreen').style.display = 'none'; 
+        document.getElementById('mainScreen').style.display = 'flex';
+        document.getElementById('dispName').innerText = userProfile.name; 
+        if (userProfile.avatar) document.getElementById('dispAvatar').src = userProfile.avatar;
+        
+        let now = new Date();
+        let weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+        document.getElementById('dispDate').innerText = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 星期${weekdays[now.getDay()]}`;
+        
+        document.getElementById('searchDate').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    }
+
+    function switchNav(viewId, element) {
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); 
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active'); element.classList.add('active');
+    }
+
+    // === 核心：拉取所有資料並計算 Dashboard ===
+    async function loadDashboardData() {
+        showLoading("獲取各店數據...");
+        let now = new Date(); 
+        let yyyy_mm = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        let todayStr = `${yyyy_mm}-${String(now.getDate()).padStart(2,'0')}`;
+        let dd = now.getDate();
+
+        try {
+            // 1. 取得全公司基礎資料 (員工、班表、通報)
+            const res1 = await fetchApi({ action: "getData", name: userProfile.name, store: "全公司", role: "老闆" });
+            if (res1.status !== "success") throw new Error(res1.msg);
+            globalData = res1.data;
+
+            // 2. 取得全公司今日打卡紀錄 (用於比對未打卡)
+            const res2 = await fetchApi({ action: "getAttendanceRecords", date: todayStr, store: "全公司", role: "老闆" });
+            if (res2.status === "success") {
+                todayPunches.clear();
+                res2.records.forEach(r => {
+                    if(r.type === '上班') todayPunches.add(r.name);
+                });
+            }
+
+            processAndRenderDashboard(yyyy_mm, dd);
+            updateFilterDropdown();
+            renderStoreSchedule(); // 預設渲染班表頁
+            renderFeedbacks(); // 渲染通報頁
+
+            hideLoading();
+        } catch(e) { hideLoading(); Swal.fire('數據同步失敗', e.message, 'error'); }
+    }
+
+    function processAndRenderDashboard(monthStr, dayNum) {
+        let storesList = [];
+        globalData.stores.forEach(s => {
+            let sName = typeof s === 'string' ? s : s.name;
+            if(sName !== "總公司") storesList.push(sName);
+        });
+
+        let kpi = { scheduled: 0, punched: todayPunches.size, leave: 0, missing: 0 };
+        let storeStats = {};
+        storesList.forEach(s => {
+            storeStats[s] = { scheduled: 0, punched: 0, leave: 0, missing: 0, dailyHours: 0, monthlySalary: 0, activeEmps: 0 };
+        });
+
+        // 結算當月薪資預估的天數 (計算到月底)
+        let daysInMonth = new Date(monthStr.split('-')[0], monthStr.split('-')[1], 0).getDate();
+
+        // 遍歷所有員工
+        globalData.employees.forEach(emp => {
+            if (emp[4] === "離職") return;
+            let name = emp[0]; let store = emp[1]; let payType = emp[6] || '月薪'; let baseRate = Number(emp[7]) || 0;
+            let laborIns = Number(emp[12]) || 0; let healthIns = Number(emp[13]) || 0;
+
+            if(!storeStats[store]) return; // 略過總公司或其他不明門市
+            storeStats[store].activeEmps++;
+
+            let sRow = globalData.schedule.find(s => getMonthStr(s[0]) === monthStr && s[2] === name);
+            
+            // 1. 處理今日出勤狀態
+            let todayShift = decodeShift(sRow ? sRow[2 + dayNum] : "");
+            let isOff = (!todayShift || todayShift === '休' || todayShift === '排休');
+            let isSick = todayShift.includes('病假');
+            let isAnnual = todayShift.includes('特休');
+
+            if (isOff || isSick || isAnnual) {
+                kpi.leave++;
+                storeStats[store].leave++;
+            } else {
+                kpi.scheduled++;
+                storeStats[store].scheduled++;
+                storeStats[store].dailyHours += calculateDailyHours(todayShift);
+                
+                if (todayPunches.has(name)) {
+                    storeStats[store].punched++;
+                }
+            }
+
+            // 2. 計算本月預估總薪資
+            let totalReg = 0, totalOT = 0, totalSick = 0, totalAnn = 0;
+            for(let i=1; i<=daysInMonth; i++) {
+                let shiftStr = decodeShift(sRow ? sRow[2+i] : "");
+                if(shiftStr.includes('病假')) {
+                    let m = shiftStr.match(/\d+(\.\d+)?/); totalSick += m ? parseFloat(m[0]) : (payType==='時薪'? 4 : 8);
+                } else if(shiftStr.includes('特休')) {
+                    let m = shiftStr.match(/\d+(\.\d+)?/); totalAnn += m ? parseFloat(m[0]) : (payType==='時薪'? 4 : 8);
+                } else {
+                    let dHours = calculateDailyHours(shiftStr);
+                    if(payType === '時薪' && dHours > 0) {
+                        let reg = Math.min(8, dHours); let otRaw = Math.max(0, dHours - 8); let otCalculated = Math.floor(otRaw / 0.5) * 0.5;
+                        totalReg += reg; totalOT += otCalculated;
+                    }
+                }
+            }
+
+            let finalPay = baseRate;
+            if(payType === '時薪') {
+                finalPay = Math.round((totalReg * baseRate) + (totalOT * baseRate * 1.34) + (totalSick * baseRate * 0.5) + (totalAnn * baseRate));
+            } else {
+                let hrRate = Math.round(baseRate / 30 / 8);
+                finalPay = Math.round(baseRate - (totalSick * hrRate * 0.5));
+            }
+            let actualPay = finalPay - (laborIns + healthIns);
+            storeStats[store].monthlySalary += actualPay;
+        });
+
+        // 計算全公司未打卡
+        kpi.missing = Math.max(0, kpi.scheduled - kpi.punched);
+
+        // 渲染頂部 KPI
+        document.getElementById('kpiScheduled').innerText = kpi.scheduled;
+        document.getElementById('kpiPunched').innerText = kpi.punched;
+        document.getElementById('kpiLeave').innerText = kpi.leave;
+        document.getElementById('kpiMissing').innerText = kpi.missing;
+
+        // 渲染各門市列表
+        let listHtml = '';
+        Object.keys(storeStats).forEach(sName => {
+            let st = storeStats[sName];
+            if (st.activeEmps === 0) return;
+
+            st.missing = Math.max(0, st.scheduled - st.punched);
+            
+            let badgeHtml = '';
+            if (st.missing > 0) {
+                badgeHtml = `<span class="stat-badge badge-alert">🔴 缺 ${st.missing} 人</span>`;
+            } else if (st.scheduled > 0) {
+                badgeHtml = `<span class="stat-badge badge-normal">🟢 全員到齊</span>`;
+            } else {
+                badgeHtml = `<span class="stat-badge" style="background:#f1f2f6; color:#999;">本日無排班</span>`;
+            }
+
+            listHtml += `
+            <div class="store-item" onclick="goToStoreSchedule('${sName}')">
+                <div style="flex:1;">
+                    <div class="store-name">${sName}</div>
+                    <div class="store-sub">上班進度: ${st.punched}/${st.scheduled} ｜ 總工時: ${st.dailyHours}h</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="margin-bottom:5px;">${badgeHtml}</div>
+                    <div class="store-salary" style="font-size:12px; color:#999;">本月預估: <span style="color:var(--brand-dark); font-size:15px;">$${(st.monthlySalary/1000).toFixed(1)}k</span></div>
+                </div>
+            </div>`;
+        });
+
+        document.getElementById('dashboardStoreList').innerHTML = listHtml || '<div style="text-align:center; padding:20px; color:#999;">尚無門市資料</div>';
+    }
+
+    // 更新班表查詢的門市選單
+    function updateFilterDropdown() {
+        let sel = document.getElementById('searchStore');
+        sel.innerHTML = '';
+        globalData.stores.forEach(s => {
+            let sName = typeof s === 'string' ? s : s.name;
+            if(sName !== "總公司") sel.innerHTML += `<option value="${sName}">${sName}</option>`;
+        });
+    }
+
+    // 點擊門市列表，直接跳轉到該店班表
+    function goToStoreSchedule(storeName) {
+        document.getElementById('searchStore').value = storeName;
+        switchNav('viewSchedules', document.querySelectorAll('.nav-item')[1]);
+        renderStoreSchedule();
+    }
+
+    // 渲染特定門市特定日期的班表
+    function renderStoreSchedule() {
+        const dateStr = document.getElementById('searchDate').value; 
+        const storeName = document.getElementById('searchStore').value;
+        const container = document.getElementById('scheduleListContainer');
+        const hoursLabel = document.getElementById('storeTotalHours');
+        
+        if(!dateStr || !storeName || !globalData) return;
+
+        let d = new Date(dateStr); 
+        let monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; 
+        let dd = d.getDate();
+
+        let emps = globalData.employees.filter(e => e[1] === storeName && e[4] !== "離職");
+        let html = '';
+        let totalHours = 0;
+
+        emps.forEach(emp => {
+            let mySched = globalData.schedule.find(s => getMonthStr(s[0]) === monthStr && s[2] === emp[0]);
+            let val = decodeShift(mySched ? mySched[2 + dd] : "未排班"); 
+            
+            let isOff = (!val || val === '休' || val === '排休' || val === '未排班');
+            let dayClass = isOff ? 'shift-off' : '';
+            if(String(val).includes('病假')) dayClass = 'shift-sick';
+            if(String(val).includes('特休')) dayClass = 'shift-annual';
+
+            let punchedHtml = '';
+            if(!isOff && !val.includes('假') && !val.includes('休')) {
+                totalHours += calculateDailyHours(val);
+                if (todayPunches.has(emp[0]) && dateStr === document.getElementById('searchDate').value) { // 簡化判斷，如果是今天且有打卡
+                    punchedHtml = `<span style="font-size:11px; background:#e6f4ea; color:#137333; padding:2px 6px; border-radius:4px; margin-left:8px;">已打卡</span>`;
+                } else if(new Date(dateStr).toDateString() === new Date().toDateString()){
+                    punchedHtml = `<span style="font-size:11px; background:#fce8e6; color:#c5221f; padding:2px 6px; border-radius:4px; margin-left:8px;">未打卡</span>`;
+                }
+            }
+
+            html += `
+            <div class="shift-card ${dayClass}">
+                <div class="shift-name">${emp[0]} ${punchedHtml}</div>
+                <div class="shift-time">${isOff ? '休假' : val}</div>
+            </div>`;
+        });
+
+        hoursLabel.innerText = totalHours + "h";
+        container.innerHTML = html || '<div style="text-align:center; padding:20px; color:#999;">該店無人員</div>';
+    }
+
+    // 渲染店務通報清單
+    function renderFeedbacks() {
+        let container = document.getElementById('feedbackListContainer');
+        if(!globalData || !globalData.feedbacks || globalData.feedbacks.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">目前無通報紀錄</div>';
+            document.getElementById('bellCount').style.display = 'none';
+            return;
+        }
+
+        let html = '';
+        let now = new Date();
+        let unreadCount = 0;
+
+        globalData.feedbacks.forEach(fb => {
+            let d = new Date(fb.time);
+            let timeStr = isNaN(d.getTime()) ? fb.time : `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            
+            // 計算72小時內的為新通報
+            if(!isNaN(d.getTime()) && (now - d) / (1000 * 60 * 60) <= 72) {
+                unreadCount++;
+            }
+
+            html += `
+            <div class="notice-card">
+                <div style="flex:1; overflow:hidden;">
+                    <div class="notice-time">${timeStr} ｜ <span class="notice-tag">${fb.store}</span></div>
+                    <div class="notice-title">👤 ${fb.name}</div>
+                    <div class="notice-desc">${fb.text}</div>
+                </div>
+                ${fb.img === '已附照片' ? `<div style="font-size:20px;">📸</div>` : ''}
+            </div>`;
+        });
+
+        container.innerHTML = html;
+
+        if (unreadCount > 0) {
+            document.getElementById('bellCount').innerText = unreadCount;
+            document.getElementById('bellCount').style.display = 'block';
+        } else {
+            document.getElementById('bellCount').style.display = 'none';
+        }
+    }
+
+</script>
+</body>
+</html>
