@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>呷呼霸 - 員工專屬 App V3.2</title>
+    <title>呷呼霸 - 員工專屬 App V3.3</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -30,18 +30,19 @@
 
         #mainScreen { display: none; flex-direction: column; height: 100%; padding-bottom: 80px; }
         
-        /* 個人頂部卡片 (大尺寸頭像與自訂密碼) */
+        /* 頂部個人卡片：左側文字、右側大頭照 */
         .header-bg { background: linear-gradient(135deg, #ffffff 0%, #fef5e7 100%); padding: 25px 20px 20px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
-        .app-title { font-weight: 900; color: var(--primary-dark); font-size: 18px; margin-bottom: 12px;}
-        .profile-row { display: flex; align-items: center; gap: 15px; }
-        .avatar-wrapper { position: relative; width: 75px; height: 75px; flex-shrink: 0; }
-        .user-avatar { width: 75px; height: 75px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee; box-shadow: 0 3px 8px rgba(0,0,0,0.1); cursor: pointer;}
-        .avatar-edit-badge { position: absolute; bottom: 0; right: 0; background: var(--primary-dark); color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; display: flex; align-items: center; justify-content: center; border: 2px solid white;}
+        .app-title { font-weight: 900; color: var(--primary-dark); font-size: 18px; margin-bottom: 10px;}
+        .profile-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
         .profile-info { flex: 1; }
-        .profile-info h2 { font-size: 22px; color: var(--text-main); margin: 0 0 4px 0; font-weight: 800;}
-        .store-badge { display: inline-block; background: var(--primary); color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;}
-        .profile-actions { display: flex; gap: 8px; margin-top: 6px; }
-        .btn-tiny { background: white; border: 1px solid #ddd; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; color: var(--text-sub); cursor: pointer; }
+        .profile-info h2 { font-size: 24px; color: var(--text-main); margin: 0 0 6px 0; font-weight: 800;}
+        .store-badge { display: inline-block; background: var(--primary); color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;}
+        .profile-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .btn-tiny { background: white; border: 1px solid #ddd; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; color: var(--text-sub); cursor: pointer; }
+        
+        .avatar-wrapper { position: relative; width: 78px; height: 78px; flex-shrink: 0; }
+        .user-avatar { width: 78px; height: 78px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee; box-shadow: 0 3px 8px rgba(0,0,0,0.1); cursor: pointer;}
+        .avatar-edit-badge { position: absolute; bottom: 0; right: 0; background: var(--primary-dark); color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; display: flex; align-items: center; justify-content: center; border: 2px solid white;}
 
         .view-section { display: none; flex: 1; flex-direction: column; padding: 20px; overflow-y: auto;}
         .view-section.active { display: flex; animation: fadeIn 0.3s; }
@@ -109,7 +110,6 @@
 <div class="app-container">
     <div id="loadingOverlay"><div class="spinner"></div><div id="loadingText" style="font-weight:bold; color:var(--primary-dark);">處理中...</div></div>
 
-    <!-- 隱藏的換頭像 File Input -->
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
 
     <!-- 登入視圖 -->
@@ -128,17 +128,19 @@
         <div class="header-bg">
             <div class="app-title">呷呼霸 JIA HU BA</div>
             <div class="profile-row">
-                <div class="avatar-wrapper" onclick="document.getElementById('avatarFileInput').click()">
-                    <img id="dispAvatar" class="user-avatar" src="https://via.placeholder.com/150/f39c12/ffffff?text=呷" alt="頭像">
-                    <div class="avatar-edit-badge">📷</div>
-                </div>
+                <!-- 左側：姓名、門市、改密碼與登出 -->
                 <div class="profile-info">
                     <h2><span id="dispName">員工</span></h2>
-                    <span class="store-badge" id="dispStore">載入中...</span>
+                    <div><span class="store-badge" id="dispStore">載入中...</span></div>
                     <div class="profile-actions">
                         <button class="btn-tiny" onclick="changeMyPassword()">🔑 改密碼</button>
                         <button class="btn-tiny" onclick="doLogout()">🚪 登出</button>
                     </div>
+                </div>
+                <!-- 右側：大頭照 -->
+                <div class="avatar-wrapper" onclick="document.getElementById('avatarFileInput').click()">
+                    <img id="dispAvatar" class="user-avatar" src="https://via.placeholder.com/150/f39c12/ffffff?text=呷" alt="頭像">
+                    <div class="avatar-edit-badge">📷</div>
                 </div>
             </div>
         </div>
@@ -358,7 +360,7 @@
         element.classList.add('active');
     }
 
-    // ================= 1. 大頭照上傳與自訂密碼 =================
+    // 1. 大頭照上傳與密碼修改
     async function uploadAvatar(input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
@@ -369,7 +371,6 @@
             const img = new Image();
             img.src = e.target.result;
             img.onload = async () => {
-                // 等比壓縮至寬 200px 節省容量
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 const scale = 200 / img.width;
@@ -389,7 +390,7 @@
                         userProfile.avatar = base64Data;
                         localStorage.setItem('jiaHubaUser', JSON.stringify(userProfile));
                         document.getElementById('dispAvatar').src = base64Data;
-                        Swal.fire('成功', '大頭照已更換！', 'success');
+                        Swal.fire('成功', '大頭照已更新！', 'success');
                     } else {
                         Swal.fire('失敗', res.msg, 'error');
                     }
@@ -430,7 +431,7 @@
         }
     }
 
-    // ================= 2. GPS 與打卡 =================
+    // 2. GPS 定位與打卡
     function getDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const p1 = lat1 * Math.PI/180;
@@ -530,7 +531,7 @@
         });
     }
 
-    // ================= 3. 員工查看班表 =================
+    // 3. 班表查看
     async function loadSchedule() {
         const container = document.getElementById('scheduleContent');
         const monthDisp = document.getElementById('schedMonthDisp');
@@ -608,7 +609,7 @@
         } catch(e) { container.innerHTML = `<div style="text-align:center; color:red;">連線失敗</div>`; }
     }
 
-    // ================= 4. 店長管理專區 =================
+    // 4. 主管管理專區邏輯
     function toggleMgrView() {
         let type = document.querySelector('input[name="mgrType"]:checked').value;
         document.getElementById('mgrSectionAtt').style.display = type === 'att' ? 'block' : 'none';
@@ -653,7 +654,6 @@
         } catch(e) { hideLoading(); Swal.fire('錯誤', '連線失敗', 'error'); }
     }
 
-    // 主管查看出勤打卡明細
     async function loadAttendanceRecords() {
         const dateStr = document.getElementById('mgrAttDate').value;
         const container = document.getElementById('mgrAttContent');
@@ -886,7 +886,7 @@
         } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
     }
 
-    // ================= 5. 反映事項 =================
+    // 5. 反映事項
     function getBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
