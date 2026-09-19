@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>呷呼霸 - 員工專屬 App V7 (GPS與補登升級版)</title>
+    <title>呷呼霸 - 員工專屬 App V8 (防呆除錯旗艦版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -222,7 +222,7 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxMqYMpwUCNOwrsNGcYDdCAO723_Qgu26syp0CZJXLHIgp1nul2dzFW0XinwKZ-1_u5/exec";
     let userProfile = {}; let userLat = null, userLon = null; let isWithinRange = false; const ALLOWED_DIST = 300; let appGlobalData = null; 
-    let STORE_LOCATIONS = {}; // 動態由資料庫獲取
+    let STORE_LOCATIONS = {}; 
 
     window.onload = () => { const saved = localStorage.getItem('jiaHubaUser'); if (saved) { userProfile = JSON.parse(saved); showMainScreen(); loadDataForGPS(); } };
 
@@ -237,12 +237,11 @@
         showLoading("驗證中...");
         try {
             const res = await fetchApi({ action: "login", name: n, pwd: p });
-            hideLoading();
             if (res.status === "success") {
                 if (res.name === '陳柏叡' || res.name === '鄭煒霖') res.role = '老闆';
                 userProfile = res; localStorage.setItem('jiaHubaUser', JSON.stringify(userProfile)); showMainScreen(); loadDataForGPS();
-            } else { Swal.fire('登入失敗', res.msg, 'error'); }
-        } catch (e) { hideLoading(); }
+            } else { hideLoading(); Swal.fire('登入失敗', res.msg, 'error'); }
+        } catch (e) { hideLoading(); Swal.fire('登入異常', '系統無回應，請確認網路連線！', 'error'); }
     }
 
     function doLogout() { localStorage.removeItem('jiaHubaUser'); location.reload(); }
@@ -254,19 +253,28 @@
         if (userProfile.role === '店長' || userProfile.role === '副店長' || userProfile.role === '老闆') document.getElementById('navManager').style.display = 'flex';
     }
 
-    // 啟動時讀取資料庫的 GPS 定位
+    // === 【核心防呆修復區】將所有的 catch 改寫 ===
     async function loadDataForGPS() {
         try {
             const res = await fetchApi({action: 'getData', name: userProfile.name, role: userProfile.role, store: userProfile.store});
+            hideLoading();
             if(res.status === 'success') {
                 appGlobalData = res.data;
                 STORE_LOCATIONS = {};
                 res.data.stores.forEach(s => {
-                    if (s.lat && s.lon) STORE_LOCATIONS[s.name] = { lat: parseFloat(s.lat), lon: parseFloat(s.lon) };
+                    let sName = typeof s === 'string' ? s : s.name;
+                    let sLat = typeof s === 'string' ? '' : s.lat;
+                    let sLon = typeof s === 'string' ? '' : s.lon;
+                    if (sLat && sLon) STORE_LOCATIONS[sName] = { lat: parseFloat(sLat), lon: parseFloat(sLon) };
                 });
                 initGPS(); checkMyDailyPunch(); 
+            } else {
+                Swal.fire('讀取失敗', res.msg, 'error');
             }
-        } catch(e) {}
+        } catch(e) {
+            hideLoading();
+            Swal.fire('連線異常', '請確認您的 Google Apps Script 是否已更新並發布為最新版本！\n錯誤詳情：' + e.message, 'error');
+        }
     }
 
     async function checkMyDailyPunch() {
@@ -305,7 +313,8 @@
                     const res = await fetchApi({ action: "updateAvatar", name: userProfile.name, avatarBase64: base64Data });
                     hideLoading();
                     if (res.status === "success") { userProfile.avatar = base64Data; localStorage.setItem('jiaHubaUser', JSON.stringify(userProfile)); document.getElementById('dispAvatar').src = base64Data; }
-                } catch(err) { hideLoading(); }
+                    else { Swal.fire('更新失敗', res.msg, 'error'); }
+                } catch(err) { hideLoading(); Swal.fire('錯誤', err.message, 'error'); }
             };
         };
         reader.readAsDataURL(file);
@@ -315,7 +324,11 @@
         const { value: newPwd } = await Swal.fire({ title: '修改密碼', input: 'password', showCancelButton: true, confirmButtonColor: '#003b6d', confirmButtonText: '確認' });
         if (newPwd) {
             showLoading("變更中...");
-            try { const res = await fetchApi({ action: "updatePassword", name: userProfile.name, newPwd: newPwd }); hideLoading(); if (res.status === "success") Swal.fire('成功', res.msg, 'success'); } catch(err) { hideLoading(); }
+            try { 
+                const res = await fetchApi({ action: "updatePassword", name: userProfile.name, newPwd: newPwd }); 
+                hideLoading(); 
+                if (res.status === "success") Swal.fire('成功', res.msg, 'success'); else Swal.fire('失敗', res.msg, 'error');
+            } catch(err) { hideLoading(); Swal.fire('錯誤', err.message, 'error'); }
         }
     }
 
@@ -350,8 +363,10 @@
                 showLoading("傳送中...");
                 try {
                     const res = await fetchApi({ action: "punch", name: userProfile.name, store: userProfile.store, type: type, lat: userLat, lon: userLon });
-                    hideLoading(); if (res.status === "success") { Swal.fire('成功', res.msg, 'success'); document.getElementById('punchWarning').style.display='none'; }
-                } catch(e) { hideLoading(); }
+                    hideLoading(); 
+                    if (res.status === "success") { Swal.fire('成功', res.msg, 'success'); document.getElementById('punchWarning').style.display='none'; }
+                    else { Swal.fire('打卡失敗', res.msg, 'error'); }
+                } catch(e) { hideLoading(); Swal.fire('錯誤', e.message, 'error'); }
             }
         });
     }
@@ -403,8 +418,8 @@
                 emps.forEach(e => { sel.innerHTML += `<option value="${e[0]}">${e[0]} (${e[2]})</option>`; mSel.innerHTML += `<option value="${e[0]}">${e[0]} (${e[1]})</option>`; });
                 
                 renderDirectory(); renderMgrSchedule(); renderDailySchedule(); loadAttendanceRecords();
-            }
-        } catch(e) { hideLoading(); }
+            } else { Swal.fire('讀取失敗', res.msg, 'error'); }
+        } catch(e) { hideLoading(); Swal.fire('系統異常', e.message, 'error'); }
     }
 
     async function loadAttendanceRecords() {
@@ -431,8 +446,8 @@
                     </div>`;
                 });
                 container.innerHTML = html;
-            }
-        } catch(e) {}
+            } else { container.innerHTML = `<div style="color:red; text-align:center;">${res.msg}</div>`; }
+        } catch(e) { container.innerHTML = `<div style="color:red; text-align:center;">${e.message}</div>`; }
     }
 
     async function submitMobileManualPunch() {
@@ -452,7 +467,7 @@
                 document.getElementById('mobileManualPanel').style.display = 'none';
                 loadAttendanceRecords(); 
             } else { Swal.fire('失敗', res.msg, 'error'); }
-        } catch(e) {}
+        } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
     }
 
     function handleShiftChange(input) { let val = input.value.trim(); if(!input.getAttribute('data-emp').includes('[系統]')) { if(val === '休' || val === '排休') input.className = 'shift-input is-off'; else input.className = 'shift-input is-work'; } calculateTotals(); }
@@ -545,16 +560,26 @@
             }
         });
     }
-    function getBase64(file) { return new Promise((resolve) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); }); }
+    function parseTimeStr(t) { if(t.includes(':')) { let p = t.split(':'); return parseInt(p[0])*60 + parseInt(p[1]); } return parseInt(t)*60; }
+    function calculateDailyHours(shiftStr) {
+        if (!shiftStr || shiftStr === '休' || shiftStr === '排休') return 0;
+        let cleanStr = shiftStr.replace(/\(.*?\)/g, ''); let regex = /(\d{1,2}(?::\d{2})?)\s*-\s*(\d{1,2}(?::\d{2})?)/g; let match; let totalMinutes = 0;
+        while ((match = regex.exec(cleanStr)) !== null) { let start = parseTimeStr(match[1]); let end = parseTimeStr(match[2]); if (end < start) end += 24 * 60; totalMinutes += (end - start); }
+        return totalMinutes / 60;
+    }
+    function getCashBreakdown(amount) {
+        let res = []; let remaining = Math.round(amount);
+        [1000, 500, 100, 50, 10, 5, 1].forEach(d => { let count = Math.floor(remaining / d); if (count > 0) { res.push(`$${d} x ${count}`); remaining %= d; } }); return res.join(' , ');
+    }
     async function submitFeedback() {
         const text = document.getElementById('fbText').value.trim(); const fileInput = document.getElementById('fbImage');
         if (!text) return Swal.fire('提示', '請填寫狀況說明！', 'warning');
         showLoading("傳送中..."); let base64Image = "";
-        if (fileInput.files.length > 0) { try { base64Image = await getBase64(fileInput.files[0]); } catch(e) { } }
+        if (fileInput.files.length > 0) { try { const reader = new FileReader(); reader.readAsDataURL(fileInput.files[0]); base64Image = await new Promise((res) => { reader.onload = () => res(reader.result.split(',')[1]); }); } catch(e) {} }
         try {
             const res = await fetchApi({ action: "submitFeedback", name: userProfile.name, store: userProfile.store, text: text, imageBase64: base64Image });
-            hideLoading(); if (res.status === "success") { Swal.fire('成功', res.msg, 'success'); document.getElementById('fbText').value = ""; document.getElementById('fbImage').value = ""; } 
-        } catch(e) { hideLoading(); }
+            hideLoading(); if (res.status === "success") { Swal.fire('成功', res.msg, 'success'); document.getElementById('fbText').value = ""; document.getElementById('fbImage').value = ""; } else { Swal.fire('失敗', res.msg, 'error'); }
+        } catch(e) { hideLoading(); Swal.fire('錯誤', e.message, 'error'); }
     }
 </script>
 </body>
