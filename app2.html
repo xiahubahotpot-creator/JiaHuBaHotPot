@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>呷呼霸 - 員工專屬 App V13 (防呆與病特休優化版)</title>
+    <title>呷呼霸 - 員工專屬 App V14 (國假變形工時版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -35,7 +35,6 @@
         .user-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--brand-yellow); background: #eee; box-shadow: 0 3px 10px rgba(0,0,0,0.3); cursor: pointer;}
         .avatar-edit-badge { position: absolute; bottom: 0; right: 0; background: var(--brand-yellow); color: var(--brand-blue); border-radius: 50%; width: 24px; height: 24px; font-size: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold;}
 
-        /* 防呆與店務通報警告橫幅 */
         #punchWarning { display: none; background: #fce8e6; color: #c5221f; border-left: 5px solid #d93025; padding: 15px; margin: 20px 20px 0 20px; border-radius: 10px; font-size: 14px; font-weight: bold; box-shadow: 0 2px 8px rgba(217,48,37,0.1); animation: shake 0.5s ease-in-out; }
         #storeNoticeBanner { display: none; background: #fff3cd; color: #856404; border-left: 5px solid #ffc107; padding: 15px; margin: 20px 20px 0 20px; border-radius: 10px; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s;}
         #storeNoticeBanner:active { transform: scale(0.98); }
@@ -76,6 +75,7 @@
         .shift-off { border-left-color: #5f6368; } .shift-off .shift-time { background: #f1f3f4; color: #5f6368; }
         .shift-sick { border-left-color: #f4b400; } .shift-sick .shift-time { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
         .shift-annual { border-left-color: #0f9d58; } .shift-annual .shift-time { background: #e6f4ea; color: #0f9d58; border: 1px solid #c3e6cb; }
+        .shift-national { border-left-color: #e74c3c; } .shift-national .shift-time { background: #fdedec; color: #e74c3c; border: 1px solid #f5b7b1; } /* 新增國定假日紅字 */
 
         .shift-input { width: 100%; min-width: 80px; height: 38px; font-size: 14px; font-weight: bold; text-align: center; border: 1px solid transparent; border-radius: 4px; outline: none; transition: 0.2s; box-sizing: border-box; background: transparent;}
         .shift-input:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 2px var(--brand-blue-light); }
@@ -83,6 +83,7 @@
         .shift-input.is-work { color: #202124; }
         .shift-input.is-sick { color: #f4b400; } 
         .shift-input.is-annual { color: #0f9d58; }
+        .shift-input.is-national { color: #e74c3c; }
 
         .att-card { background: white; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--brand-blue); box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center;}
         .att-name { font-size: 15px; font-weight: bold; color: var(--brand-blue); }
@@ -143,7 +144,6 @@
 
         <div id="punchWarning">⚠️ 系統偵測到您今日可能漏打卡了！請盡速請店長或副店長協助補登。</div>
         
-        <!-- 全新：店務通報警告橫幅 -->
         <div id="storeNoticeBanner" onclick="goToManagerFeedbacks()">
             <div style="font-weight: bold; font-size: 15px;">🔔 收到 <span id="noticeCount">0</span> 則新店務通報！</div>
             <div style="font-size: 13px; color: #a47600; margin-top: 5px;">點擊前往管理區查看詳情...</div>
@@ -228,7 +228,6 @@
             </div>
 
             <div id="mgrSectionDir" style="display:none;"><div id="dirContent"></div></div>
-            
             <div id="mgrSectionFb" style="display:none;"><div id="mgrFbContent"></div></div>
         </div>
 
@@ -317,51 +316,39 @@
         if(!appGlobalData || !appGlobalData.feedbacks) return;
         if(userProfile.role === '員工') return; 
 
-        let now = new Date();
-        let recentCount = 0;
-        
+        let now = new Date(); let recentCount = 0;
         appGlobalData.feedbacks.forEach(fb => {
             let fbTime = new Date(fb.time);
             if(!isNaN(fbTime.getTime())) {
                 let diffHours = (now - fbTime) / (1000 * 60 * 60);
-                if(diffHours <= 72) { recentCount++; }
-            } else {
-                recentCount++; 
-            }
+                if(diffHours <= 72) recentCount++;
+            } else { recentCount++; }
         });
 
         if(recentCount > 0) {
             document.getElementById('noticeCount').innerText = recentCount;
             document.getElementById('storeNoticeBanner').style.display = 'block';
-        } else {
-            document.getElementById('storeNoticeBanner').style.display = 'none';
-        }
+        } else { document.getElementById('storeNoticeBanner').style.display = 'none'; }
     }
 
     function goToManagerFeedbacks() {
         switchNav('viewManager', document.getElementById('navManager'));
         document.getElementById('mgrTabFb').checked = true;
         toggleMgrView();
-        if(!document.getElementById('mgrFbContent').innerHTML) {
-            loadManagerData();
-        }
+        if(!document.getElementById('mgrFbContent').innerHTML) loadManagerData();
     }
 
     function renderManagerFeedbacks() {
         let container = document.getElementById('mgrFbContent');
         if(!appGlobalData || !appGlobalData.feedbacks || appGlobalData.feedbacks.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">目前無通報紀錄</div>';
-            return;
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">目前無通報紀錄</div>'; return;
         }
         let html = '';
         appGlobalData.feedbacks.forEach(fb => {
             let d = new Date(fb.time);
             let timeStr = isNaN(d.getTime()) ? fb.time : `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
             html += `<div class="emp-card" style="border-left-color: var(--brand-blue);">
-                <div class="emp-card-header">
-                    <div class="emp-name">${fb.name} <span style="font-size:12px; color:#999; font-weight:normal;">(${fb.store})</span></div>
-                    <div style="font-size:12px; color:#999;">${timeStr}</div>
-                </div>
+                <div class="emp-card-header"><div class="emp-name">${fb.name} <span style="font-size:12px; color:#999; font-weight:normal;">(${fb.store})</span></div><div style="font-size:12px; color:#999;">${timeStr}</div></div>
                 <div style="font-size:15px; color:var(--text-main); margin-bottom:8px; line-height:1.5; white-space:pre-wrap;">${fb.text}</div>
                 ${fb.img === '已附照片' ? `<div style="font-size:12px; color:#0f9d58; font-weight:bold;">📸 附有照片 (請至試算表查看)</div>` : ''}
             </div>`;
@@ -369,7 +356,6 @@
         container.innerHTML = html;
     }
 
-    // === 【核心升級：病假與特休防呆】 ===
     async function checkMyDailyPunch() {
         let now = new Date(); let todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
         let monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -377,9 +363,7 @@
             if(!appGlobalData) return;
             let mySched = appGlobalData.schedule.find(s => getMonthStr(s[0]) === monthStr && s[2] === userProfile.name);
             let val = decodeShift(mySched ? mySched[2 + now.getDate()] : ""); 
-            
-            // 加入病假與特休的排除邏輯
-            let isOff = (!val || val === "休" || val === "排休" || val.includes("病假") || val.includes("特休"));
+            let isOff = (!val || val === "休" || val === "排休" || val.includes("病假") || val.includes("特休") || val.includes("國假")); // 病假特休國假不跳警告
             
             if (!isOff) {
                 const pRes = await fetchApi({ action: "checkMyPunches", name: userProfile.name, date: todayStr });
@@ -474,6 +458,7 @@
                     let dayClass = isOff ? 'shift-off' : '';
                     if(String(val).includes('病假')) dayClass = 'shift-sick';
                     if(String(val).includes('特休')) dayClass = 'shift-annual';
+                    if(String(val).includes('國假')) dayClass = 'shift-national';
 
                     html += `<div class="shift-card ${dayClass}"><div class="shift-date">${i} 號 <span style="font-size:13px; color:#999;">(${weekStr})</span></div><div class="shift-time">${isOff ? '休假' : val}</div></div>`;
                 }
@@ -545,7 +530,17 @@
         } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
     }
 
-    function handleShiftChange(input) { let val = input.value.trim(); if(!input.getAttribute('data-emp').includes('[系統]')) { input.className = 'form-control'; if(!val || val === '休' || val === '排休') input.classList.add('is-off'); else if(val.includes('病假')) input.classList.add('is-sick'); else if(val.includes('特休')) input.classList.add('is-annual'); else input.classList.add('is-work'); } }
+    function handleShiftChange(input) { 
+        let val = input.value.trim(); 
+        if(!input.getAttribute('data-emp').includes('[系統]')) { 
+            input.className = 'form-control';
+            if(!val || val === '休' || val === '排休') input.classList.add('is-off'); 
+            else if(val.includes('病假')) input.classList.add('is-sick'); 
+            else if(val.includes('特休')) input.classList.add('is-annual'); 
+            else if(val.includes('國假')) input.classList.add('is-national'); 
+            else input.classList.add('is-work'); 
+        } 
+    }
     
     function renderDailySchedule() {
         const dateStr = document.getElementById('mgrDailyDate').value; const container = document.getElementById('mgrDailyContent');
@@ -559,7 +554,7 @@
             let mySched = appGlobalData.schedule.find(s => getMonthStr(s[0]) === monthStr && s[2] === emp[0]);
             let val = decodeShift(mySched ? mySched[2 + dd] : "未排班"); 
             
-            let isOff = (!val || val === '休' || val === '排休' || val === '未排班' || val.includes('病假') || val.includes('特休'));
+            let isOff = (!val || val === '休' || val === '排休' || val === '未排班' || val.includes('病假') || val.includes('特休') || val.includes('國假'));
             let card = `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #f1f3f4;">
                 <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${emp[0]}</span>
                 <span style="color:${isOff ? '#999' : 'var(--brand-blue)'}; font-weight:bold; font-size:14px;">${val}</span></div>`;
@@ -600,6 +595,7 @@
             if(!val || val === '休' || val === '排休') textClass += ' is-off';
             else if(val.includes('病假')) textClass += ' is-sick';
             else if(val.includes('特休')) textClass += ' is-annual';
+            else if(val.includes('國假')) textClass += ' is-national';
 
             html += `<div class="shift-card" style="padding:8px 12px;">
                 <div class="shift-date" style="${colorStyle} width: 55px;">${i} 號<br><span style="font-size:11px; color:#999;">(${weekStr})</span></div>
