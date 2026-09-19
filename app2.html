@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>呷呼霸 - 員工專屬 App V3.3</title>
+    <title>呷呼霸 - 員工專屬 App (品牌配色版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
-            --primary: #f39c12; 
-            --primary-light: #fef5e7;
-            --primary-dark: #d68910;
+            /* 呷呼霸品牌配色 */
+            --brand-blue: #003b6d; 
+            --brand-blue-light: #e6f0f9;
+            --brand-yellow: #ffc107;
             --bg: #fdfbf7; 
             --text-main: #202124; 
             --text-sub: #5f6368;
@@ -22,93 +23,92 @@
         
         #loginScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 30px; background: white; z-index: 100; position: absolute; width: 100%; }
         .logo-area { text-align: center; margin-bottom: 40px; }
-        .logo-area h1 { color: var(--primary-dark); font-size: 36px; margin: 0; font-weight: 900; letter-spacing: 2px;}
-        .logo-area p { color: var(--text-sub); font-size: 15px; margin-top: 8px; font-weight: bold;}
+        .logo-area h1 { color: var(--brand-blue); font-size: 40px; margin: 0; font-weight: 900; letter-spacing: 2px;}
+        .logo-area p { color: var(--brand-yellow); background: var(--brand-blue); padding: 4px 12px; border-radius: 8px; font-size: 15px; margin-top: 8px; font-weight: bold; display: inline-block;}
         .login-input { width: 100%; padding: 16px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 12px; font-size: 16px; outline: none; background: var(--bg); }
-        .login-input:focus { border-color: var(--primary); background: white; }
-        .btn-login { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(243,156,18,0.3); }
+        .login-input:focus { border-color: var(--brand-blue); background: white; }
+        .btn-login { width: 100%; padding: 16px; background: var(--brand-blue); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,59,109,0.3); }
 
         #mainScreen { display: none; flex-direction: column; height: 100%; padding-bottom: 80px; }
         
-        /* 頂部個人卡片：左側文字、右側大頭照 */
-        .header-bg { background: linear-gradient(135deg, #ffffff 0%, #fef5e7 100%); padding: 25px 20px 20px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
-        .app-title { font-weight: 900; color: var(--primary-dark); font-size: 18px; margin-bottom: 10px;}
+        /* 頂部個人卡片：海軍藍背景、左文字右頭像 */
+        .header-bg { background: linear-gradient(135deg, #003b6d 0%, #002347 100%); padding: 25px 20px 20px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 4px 15px rgba(0,59,109,0.2); z-index: 10; }
+        .app-title { font-weight: 900; color: var(--brand-yellow); font-size: 18px; margin-bottom: 15px;}
         .profile-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
         .profile-info { flex: 1; }
-        .profile-info h2 { font-size: 24px; color: var(--text-main); margin: 0 0 6px 0; font-weight: 800;}
-        .store-badge { display: inline-block; background: var(--primary); color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;}
-        .profile-actions { display: flex; gap: 8px; margin-top: 8px; }
-        .btn-tiny { background: white; border: 1px solid #ddd; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; color: var(--text-sub); cursor: pointer; }
+        .profile-info h2 { font-size: 26px; color: #ffffff; margin: 0 0 8px 0; font-weight: 800; letter-spacing: 1px;}
+        .store-badge { display: inline-block; background: var(--brand-yellow); color: var(--brand-blue); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;}
+        .profile-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-tiny { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; color: #ffffff; cursor: pointer; }
         
-        .avatar-wrapper { position: relative; width: 78px; height: 78px; flex-shrink: 0; }
-        .user-avatar { width: 78px; height: 78px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee; box-shadow: 0 3px 8px rgba(0,0,0,0.1); cursor: pointer;}
-        .avatar-edit-badge { position: absolute; bottom: 0; right: 0; background: var(--primary-dark); color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; display: flex; align-items: center; justify-content: center; border: 2px solid white;}
+        .avatar-wrapper { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+        .user-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--brand-yellow); background: #eee; box-shadow: 0 3px 10px rgba(0,0,0,0.3); cursor: pointer;}
+        .avatar-edit-badge { position: absolute; bottom: 0; right: 0; background: var(--brand-yellow); color: var(--brand-blue); border-radius: 50%; width: 24px; height: 24px; font-size: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold;}
 
         .view-section { display: none; flex: 1; flex-direction: column; padding: 20px; overflow-y: auto;}
         .view-section.active { display: flex; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .section-title { font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 10px;}
+        .section-title { font-size: 18px; font-weight: 900; color: var(--brand-blue); margin-bottom: 15px; border-left: 5px solid var(--brand-yellow); padding-left: 10px;}
 
-        /* 打卡按鈕 */
+        /* 打卡按鈕：亮黃色漸層 + 深藍字體 */
         .punch-btn-wrapper { position: relative; width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; margin: 30px auto 15px auto;}
-        .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--primary); animation: pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+        .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--brand-yellow); animation: pulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
         .pulse-ring:nth-child(2) { animation-delay: 0.6s; }
-        .punch-btn { width: 140px; height: 140px; background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%); border-radius: 50%; box-shadow: 0 10px 25px rgba(243,156,18,0.4); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; cursor: pointer; z-index: 10;}
+        .punch-btn { width: 150px; height: 150px; background: linear-gradient(135deg, #ffe066 0%, #ffc107 100%); border-radius: 50%; box-shadow: 0 10px 25px rgba(255,193,7,0.4); display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--brand-blue); cursor: pointer; z-index: 10;}
         .punch-btn:active { transform: scale(0.95); }
-        .punch-icon { font-size: 40px; margin-bottom: 5px; }
-        .punch-text { font-size: 18px; font-weight: bold; letter-spacing: 2px;}
+        .punch-icon { font-size: 42px; margin-bottom: 5px; }
+        .punch-text { font-size: 20px; font-weight: 900; letter-spacing: 2px;}
         @keyframes pulse { 0% { transform: scale(0.7); opacity: 0.8; } 100% { transform: scale(1.1); opacity: 0; } }
 
         .toggle-group { display: flex; background: white; border-radius: 30px; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin: 0 auto; width: 100%; max-width: 250px;}
         .toggle-group label { flex:1; text-align:center; padding: 12px 0; border-radius: 25px; font-size: 15px; font-weight: bold; color: var(--text-sub); cursor: pointer; transition: 0.3s; }
         .toggle-group input { display: none; }
-        .toggle-group input:checked + label { background: var(--primary-light); color: var(--primary-dark); }
+        .toggle-group input:checked + label { background: var(--brand-blue-light); color: var(--brand-blue); }
         
         .mgr-toggle { max-width: 100%; margin-bottom: 20px; border-radius: 12px; }
         .mgr-toggle label { border-radius: 8px; padding: 10px 0; font-size: 13px;}
-        .gps-status { margin-top: 15px; font-size: 14px; font-weight: bold; color: #0f9d58; text-align: center; background: white; padding: 10px; border-radius: 12px;}
+        .gps-status { margin-top: 15px; font-size: 15px; font-weight: bold; color: #0f9d58; text-align: center; background: white; padding: 12px; border-radius: 12px; border: 1px solid #e6f4ea;}
 
         .app-form { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; width: 100%;}
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 14px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px;}
+        .form-group label { display: block; font-size: 14px; font-weight: 700; color: var(--brand-blue); margin-bottom: 8px;}
         .form-control { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; background-color: var(--bg); outline: none; }
-        .form-control:focus { border-color: var(--primary); background-color: white; }
-        .btn-action { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;}
+        .form-control:focus { border-color: var(--brand-blue); background-color: white; }
+        .btn-action { width: 100%; padding: 14px; background: var(--brand-blue); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;}
 
-        .shift-card { background: white; border-left: 5px solid var(--primary); padding: 12px 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03);}
+        .shift-card { background: white; border-left: 5px solid var(--brand-blue); padding: 12px 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03);}
         .shift-date { font-size: 15px; font-weight: bold; color: var(--text-main); }
-        .shift-time { font-size: 14px; font-weight: bold; background: var(--primary-light); color: var(--primary-dark); padding: 5px 10px; border-radius: 6px; }
+        .shift-time { font-size: 14px; font-weight: bold; background: var(--brand-yellow); color: var(--brand-blue); padding: 5px 12px; border-radius: 6px; }
         .shift-off { border-left-color: #5f6368; }
         .shift-off .shift-time { background: #f1f3f4; color: #5f6368; }
 
-        /* 出勤紀錄卡片 */
-        .att-card { background: white; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center;}
-        .att-name { font-size: 15px; font-weight: bold; color: var(--text-main); }
+        .att-card { background: white; padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--brand-blue); box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center;}
+        .att-name { font-size: 15px; font-weight: bold; color: var(--brand-blue); }
         .att-time { font-size: 13px; color: var(--text-sub); margin-top: 3px; }
         .att-badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
         .badge-in { background: #e6f4ea; color: #137333; }
         .badge-out { background: #fce8e6; color: #c5221f; }
 
-        .emp-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #eee; }
+        .emp-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #eee; border-left: 4px solid var(--brand-yellow);}
         .emp-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #ddd; padding-bottom: 8px;}
-        .emp-name { font-size: 16px; font-weight: bold; color: var(--primary-dark); }
-        .emp-role { font-size: 12px; background: #e8eaed; padding: 2px 8px; border-radius: 10px;}
+        .emp-name { font-size: 16px; font-weight: bold; color: var(--brand-blue); }
+        .emp-role { font-size: 12px; background: var(--brand-blue-light); padding: 2px 8px; border-radius: 10px; color: var(--brand-blue); font-weight: bold;}
 
-        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; display: flex; justify-content: space-around; padding: 10px 0 20px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 50;}
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; display: flex; justify-content: space-around; padding: 10px 0 20px 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.08); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 50;}
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #9aa0a6; font-size: 11px; font-weight: 700; cursor: pointer; flex: 1;}
         .nav-icon { font-size: 22px; margin-bottom: 4px; }
-        .nav-item.active { color: var(--primary-dark); }
+        .nav-item.active { color: var(--brand-blue); }
         .nav-item.active .nav-icon { transform: translateY(-3px); }
 
         #loadingOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--brand-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div id="loadingOverlay"><div class="spinner"></div><div id="loadingText" style="font-weight:bold; color:var(--primary-dark);">處理中...</div></div>
+    <div id="loadingOverlay"><div class="spinner"></div><div id="loadingText" style="font-weight:bold; color:var(--brand-blue);">處理中...</div></div>
 
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
 
@@ -139,7 +139,7 @@
                 </div>
                 <!-- 右側：大頭照 -->
                 <div class="avatar-wrapper" onclick="document.getElementById('avatarFileInput').click()">
-                    <img id="dispAvatar" class="user-avatar" src="https://via.placeholder.com/150/f39c12/ffffff?text=呷" alt="頭像">
+                    <img id="dispAvatar" class="user-avatar" src="https://via.placeholder.com/150/003b6d/ffffff?text=呷" alt="頭像">
                     <div class="avatar-edit-badge">📷</div>
                 </div>
             </div>
@@ -169,7 +169,7 @@
         <div id="viewSchedule" class="view-section">
             <div class="section-title">我的當月班表</div>
             <div style="text-align:center; margin-bottom:15px; font-weight:bold; color:var(--text-sub);">
-                目前顯示：<span id="schedMonthDisp" style="color:var(--primary-dark);">載入中...</span>
+                目前顯示：<span id="schedMonthDisp" style="color:var(--brand-blue);">載入中...</span>
             </div>
             <div id="scheduleContent" style="display:flex; flex-direction:column;"></div>
         </div>
@@ -196,11 +196,11 @@
             
             <div class="toggle-group mgr-toggle">
                 <input type="radio" name="mgrType" id="mgrTabAtt" value="att" checked onchange="toggleMgrView()">
-                <label for="mgrTabAtt">⏱️ 出勤紀錄</label>
+                <label for="mgrTabAtt">⏱️ 出勤</label>
                 <input type="radio" name="mgrType" id="mgrTabDaily" value="daily" onchange="toggleMgrView()">
-                <label for="mgrTabDaily">📅 每日人力</label>
+                <label for="mgrTabDaily">📅 人力</label>
                 <input type="radio" name="mgrType" id="mgrTabSched" value="sched" onchange="toggleMgrView()">
-                <label for="mgrTabSched">✏️ 排班修改</label>
+                <label for="mgrTabSched">✏️ 排班</label>
                 <input type="radio" name="mgrType" id="mgrTabDir" value="dir" onchange="toggleMgrView()">
                 <label for="mgrTabDir">📖 通訊錄</label>
             </div>
@@ -408,7 +408,7 @@
             inputPlaceholder: '請輸入 4 位數以上密碼',
             showCancelButton: true,
             confirmButtonText: '確認變更',
-            confirmButtonColor: '#f39c12',
+            confirmButtonColor: '#003b6d',
             cancelButtonText: '取消'
         });
 
@@ -506,7 +506,7 @@
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: '確認打卡',
-            confirmButtonColor: '#f39c12',
+            confirmButtonColor: '#003b6d',
             cancelButtonText: '取消'
         }).then(async (result) => {
             if (result.isConfirmed) {
@@ -752,7 +752,7 @@
             let card = `
             <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #f1f3f4;">
                 <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${empName}</span>
-                <span style="color:${isOff ? '#999' : 'var(--primary-dark)'}; font-weight:bold; font-size:14px;">${val}</span>
+                <span style="color:${isOff ? '#999' : 'var(--brand-blue)'}; font-weight:bold; font-size:14px;">${val}</span>
             </div>`;
 
             if(isOff) { offHTML += card; offCount++; }
@@ -787,7 +787,7 @@
                     <div class="emp-name">${name}</div>
                     <div class="emp-role">${role}</div>
                 </div>
-                <div class="emp-info">📞 手機：<a href="tel:${phone}" style="color:var(--primary-dark); font-weight:bold; text-decoration:none;">${phone}</a></div>
+                <div class="emp-info">📞 手機：<a href="tel:${phone}" style="color:var(--brand-blue); font-weight:bold; text-decoration:none;">${phone}</a></div>
                 <div class="emp-info">🏠 住址：${address}</div>
             </div>`;
         });
@@ -827,7 +827,7 @@
             let d = new Date(yy, parseInt(mm)-1, i);
             let weekStr = weekdays[d.getDay()];
             let isWeekend = (d.getDay()===0 || d.getDay()===6);
-            let colorStyle = isWeekend ? 'color: var(--primary-dark);' : 'color: var(--text-main);';
+            let colorStyle = isWeekend ? 'color: var(--brand-blue);' : 'color: var(--text-main);';
             
             let val = mySched ? mySched[2 + i] : "";
             if (val == null) val = "";
