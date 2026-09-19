@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 營運管理中心 V13 (GPS座標擴充版)</title>
+    <title>呷呼霸 - 營運管理中心 V14 (防呆除錯旗艦版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --brand-blue: #003b6d; --brand-blue-soft: #e8f0fe; --brand-yellow: #ffc107; --bg: #f4f7f6; --text-main: #202124; --text-sub: #5f6368; --border: #dadce0; }
@@ -185,10 +185,7 @@
                 </div>
             </div>
             <div class="table-responsive" style="max-width: 800px;">
-                <table style="min-width: 100%;">
-                    <thead><tr><th>門市名稱</th><th>GPS 綁定座標</th><th>操作</th></tr></thead>
-                    <tbody id="storeListBody"></tbody>
-                </table>
+                <table style="min-width: 100%;"><thead><tr><th>門市名稱</th><th>GPS 綁定座標</th><th>操作</th></tr></thead><tbody id="storeListBody"></tbody></table>
             </div>
         </div>
     </div>
@@ -197,7 +194,10 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbxMqYMpwUCNOwrsNGcYDdCAO723_Qgu26syp0CZJXLHIgp1nul2dzFW0XinwKZ-1_u5/exec";
         let currentUser = {}; let globalData = { schedule: [], employees: [], stores: [] };
 
-        async function fetchApi(payload) { const res = await fetch(API_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); return await res.json(); }
+        async function fetchApi(payload) { 
+            const res = await fetch(API_URL + "?t=" + new Date().getTime(), { method: 'POST', body: JSON.stringify(payload) }); 
+            return await res.json(); 
+        }
 
         async function doLogin() {
             const n = document.getElementById('loginName').value.trim(); const p = document.getElementById('loginPwd').value.trim();
@@ -206,7 +206,8 @@
             try {
                 const res = await fetchApi({action: 'login', name: n, pwd: p});
                 if(res.status === 'success') {
-                    if(res.role === '員工') return Swal.fire('權限不足', '此為管理後台', 'error');
+                    if(res.role === '員工') { Swal.fire('權限不足', '此為管理後台', 'error'); return; }
+                    
                     if (res.name === '陳柏叡' || res.name === '鄭煒霖') res.role = '老闆';
                     currentUser = res;
                     document.getElementById('loginScreen').style.display = 'none'; document.getElementById('mainScreen').style.display = 'block';
@@ -224,8 +225,8 @@
                         document.getElementById('attStore').value = res.store; document.getElementById('attStore').disabled = true;
                     }
                     Swal.close(); loadData();
-                } else { Swal.fire('失敗', res.msg, 'error'); }
-            } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
+                } else { Swal.fire('登入失敗', res.msg, 'error'); }
+            } catch(e) { Swal.fire('網路錯誤', e.message, 'error'); }
         }
 
         async function unlockMasterKey() {
@@ -246,60 +247,80 @@
         }
 
         function updateAllStoreDropdowns() {
-            let optionsHTML = ''; globalData.stores.forEach(s => optionsHTML += `<option value="${s.name}">${s.name}</option>`);
+            let optionsHTML = ''; 
+            globalData.stores.forEach(s => {
+                let sName = typeof s === 'string' ? s : s.name;
+                optionsHTML += `<option value="${sName}">${sName}</option>`;
+            });
             document.querySelectorAll('.dynamic-store-select').forEach(sel => {
-                let currentVal = sel.value; let keepAllOpt = sel.id === 'payrollStore'; let html = keepAllOpt ? '<option value="全公司">全公司 (所有門市)</option>' : '';
+                let currentVal = sel.value; 
+                let keepAllOpt = sel.id === 'payrollStore'; 
+                let html = keepAllOpt ? '<option value="全公司">全公司 (所有門市)</option>' : '';
                 sel.innerHTML = html + optionsHTML;
-                if (currentVal && sel.innerHTML.includes(`"${currentVal}"`)) { sel.value = currentVal; } else if (currentUser.role !== '老闆' && sel.id !== 'payrollStore') { sel.value = currentUser.store; }
+                if (currentVal && sel.innerHTML.includes(`"${currentVal}"`)) { sel.value = currentVal; } 
+                else if (currentUser.role !== '老闆' && sel.id !== 'payrollStore') { sel.value = currentUser.store; }
                 if (currentUser.role !== '老闆' && sel.id !== 'payrollStore') { sel.disabled = true; } else { sel.disabled = false; }
             });
             renderStoreManagerList();
         }
 
+        // === 【核心防呆修復區】將所有的 catch 改寫，讓系統再也不會無限轉圈 ===
         async function loadData() {
             Swal.fire({title: '資料同步中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
                 let targetStore = document.getElementById('schedStore').value || currentUser.store;
                 const res = await fetchApi({action: 'getData', name: currentUser.name, role: currentUser.role, store: targetStore});
                 if(res.status === 'success') {
-                    globalData = res.data; updateAllStoreDropdowns();
-                    let empSel = document.getElementById('manualEmp'); empSel.innerHTML = "";
-                    let myEmps = globalData.employees.filter(e => e[4] !== "離職"); if (currentUser.role !== '老闆') myEmps = myEmps.filter(e => e[1] === currentUser.store);
-                    myEmps.forEach(e => empSel.innerHTML += `<option value="${e[0]}">${e[0]} (${e[1]})</option>`);
-                    renderWeeklySchedule(); renderEmployees(); updateEmpDropdown(); Swal.close();
+                    globalData = res.data;
+                    if(!globalData.stores) globalData.stores = [];
+                    updateAllStoreDropdowns();
+                    
+                    let empSel = document.getElementById('manualEmp'); 
+                    if(empSel) {
+                        empSel.innerHTML = "";
+                        let myEmps = globalData.employees.filter(e => e[4] !== "離職");
+                        if (currentUser.role !== '老闆') myEmps = myEmps.filter(e => e[1] === currentUser.store);
+                        myEmps.forEach(e => empSel.innerHTML += `<option value="${e[0]}">${e[0]} (${e[1]})</option>`);
+                    }
+                    renderWeeklySchedule(); renderEmployees(); updateEmpDropdown(); 
+                    Swal.close();
+                } else {
+                    Swal.fire('讀取失敗', res.msg, 'error');
                 }
-            } catch(e) {}
+            } catch(e) {
+                Swal.fire('連線異常', '請確認您的 Google Apps Script 是否已更新並發布為最新版本！\n錯誤詳情：' + e.message, 'error');
+            }
         }
 
-        // ================= 門市與 GPS 動態管理 =================
         function renderStoreManagerList() {
             let html = '';
             globalData.stores.forEach((s, idx) => {
-                html += `<tr><td style="font-weight:bold; color:var(--brand-blue);">${s.name}</td>
-                <td style="font-size:13px; color:#555;">${s.lat ? `${s.lat}, ${s.lon}` : '<span style="color:#d93025">未設定</span>'}</td>
+                let sName = typeof s === 'string' ? s : s.name;
+                let sLat = typeof s === 'string' ? '' : s.lat;
+                let sLon = typeof s === 'string' ? '' : s.lon;
+                html += `<tr><td style="font-weight:bold; color:var(--brand-blue);">${sName}</td>
+                <td style="font-size:13px; color:#555;">${sLat ? `${sLat}, ${sLon}` : '<span style="color:#d93025">未設定</span>'}</td>
                 <td><button class="btn btn-danger" style="padding:4px 10px; font-size:12px;" onclick="deleteStore(${idx})">刪除</button></td></tr>`;
             });
             document.getElementById('storeListBody').innerHTML = html;
         }
 
         async function addStore() {
-            let name = document.getElementById('newStoreName').value.trim();
-            let gps = document.getElementById('newStoreGPS').value.trim();
+            let name = document.getElementById('newStoreName').value.trim(); let gps = document.getElementById('newStoreGPS').value.trim();
             if(!name) return Swal.fire('提示', '請輸入門市名稱', 'warning');
-            if(globalData.stores.find(s => s.name === name)) return Swal.fire('錯誤', '門市已存在', 'error');
+            if(globalData.stores.find(s => (typeof s === 'string' ? s : s.name) === name)) return Swal.fire('錯誤', '門市已存在', 'error');
 
             let lat = "", lon = "";
             if (gps) {
                 let parts = gps.split(',');
-                if (parts.length >= 2) { lat = parts[0].trim(); lon = parts[1].trim(); } 
-                else { return Swal.fire('格式錯誤', 'GPS請用逗號分隔緯度與經度，例如: 25.049, 121.295', 'error'); }
+                if (parts.length >= 2) { lat = parts[0].trim(); lon = parts[1].trim(); } else { return Swal.fire('格式錯誤', 'GPS請用逗號分隔，例如: 25.049, 121.295', 'error'); }
             }
-            globalData.stores.push({name: name, lat: lat, lon: lon});
-            saveStoresToBackend();
+            globalData.stores.push({name: name, lat: lat, lon: lon}); saveStoresToBackend();
         }
 
         async function deleteStore(idx) {
-            if(!confirm(`確定要刪除 ${globalData.stores[idx].name} 嗎？`)) return;
+            let sName = typeof globalData.stores[idx] === 'string' ? globalData.stores[idx] : globalData.stores[idx].name;
+            if(!confirm(`確定要刪除 ${sName} 嗎？`)) return;
             globalData.stores.splice(idx, 1); saveStoresToBackend();
         }
 
@@ -307,8 +328,9 @@
             Swal.fire({title: '更新門市資料庫...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
                 const res = await fetchApi({ action: 'updateStores', stores: globalData.stores });
-                if(res.status === 'success') { document.getElementById('newStoreName').value = ""; document.getElementById('newStoreGPS').value = ""; updateAllStoreDropdowns(); Swal.fire('成功', '門市清單與定位已更新', 'success'); }
-            } catch(e) {}
+                if(res.status === 'success') { document.getElementById('newStoreName').value = ""; document.getElementById('newStoreGPS').value = ""; updateAllStoreDropdowns(); Swal.fire('成功', '門市清單已更新', 'success'); }
+                else { Swal.fire('失敗', res.msg, 'error'); }
+            } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
 
         async function loadAdminAttendance() {
@@ -320,12 +342,13 @@
                     if (res.records.length === 0) return container.innerHTML = '<tr><td colspan="6" style="padding:20px; color:#999;">本日無出勤紀錄</td></tr>';
                     let html = '';
                     res.records.forEach(r => {
-                        let badgeClass = (r.type === "上班") ? "att-badge badge-in" : "att-badge badge-out"; let statusColor = (r.status === "手動補登") ? "color:#f4b400; font-weight:bold;" : "color:#5f6368;";
+                        let badgeClass = (r.type === "上班") ? "att-badge badge-in" : "att-badge badge-out";
+                        let timeOnly = r.time.split(' ')[1] || r.time; let statusColor = (r.status === "手動補登") ? "color:#f4b400; font-weight:bold;" : "color:#5f6368;";
                         html += `<tr><td>${r.time}</td><td style="font-weight:bold;">${r.name}</td><td>${r.store}</td><td><span class="${badgeClass}">${r.type}</span></td><td style="${statusColor}">${r.status || '正常打卡'}</td><td>${r.mapLink.includes('http') ? `<a href="${r.mapLink}" target="_blank" style="color:#1a73e8;">📍 定位</a>` : r.mapLink}</td></tr>`;
                     });
                     container.innerHTML = html;
-                }
-            } catch(e) { container.innerHTML = '<tr><td colspan="6" style="color:red;">連線失敗</td></tr>'; }
+                } else { container.innerHTML = `<tr><td colspan="6" style="color:red;">${res.msg}</td></tr>`; }
+            } catch(e) { container.innerHTML = '<tr><td colspan="6" style="color:red;">連線失敗: '+e.message+'</td></tr>'; }
         }
 
         async function submitManualPunch() {
@@ -335,8 +358,9 @@
             Swal.fire({title: '寫入補登紀錄...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
             try {
                 const res = await fetchApi({ action: 'manualPunch', empName: empName, date: dateStr, time: timeStr, type: type, store: empStore });
-                if(res.status === 'success') { Swal.fire('成功', res.msg, 'success'); document.getElementById('manualPunchPanel').style.display = 'none'; loadAdminAttendance(); } else { Swal.fire('失敗', res.msg, 'error'); }
-            } catch(e) {}
+                if(res.status === 'success') { Swal.fire('成功', res.msg, 'success'); document.getElementById('manualPunchPanel').style.display = 'none'; loadAdminAttendance(); } 
+                else { Swal.fire('失敗', res.msg, 'error'); }
+            } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
 
         function handleShiftChange(input) { let val = input.value.trim(); if(!input.getAttribute('data-emp').includes('[系統]')) { if(val === '休' || val === '排休') input.className = 'shift-input is-off'; else input.className = 'shift-input is-work'; } calculateTotals(); }
@@ -418,7 +442,11 @@
                         let [yy, mm] = currentMonth.split('-'); let d = new Date(yy, parseInt(mm)-1, currentDay); d.setDate(d.getDate() - 7);
                         let lastWkMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; let lastWkDay = d.getDate();
                         let lastWkRow = globalData.schedule.find(s => { let rM = String(s[0]); if(rM.includes('T')) rM = `${new Date(s[0]).getFullYear()}-${String(new Date(s[0]).getMonth()+1).padStart(2,'0')}`; else if(rM.includes('/')) rM = rM.split('/')[0] + '-' + rM.split('/')[1].padStart(2,'0'); return rM === lastWkMonth && s[2] === empName && s[1] === document.getElementById('schedStore').value; });
-                        if (lastWkRow && (2 + lastWkDay) < lastWkRow.length) { let val = lastWkRow[2 + lastWkDay]; if(String(val).includes('T')) { val = new Date(val); val = val.getFullYear()<2000 ? String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0') : (val.getMonth()+1)+'-'+val.getDate(); } inp.value = val ? val : "休"; } else { inp.value = "休"; }
+                        if (lastWkRow && (2 + lastWkDay) < lastWkRow.length) {
+                            let val = lastWkRow[2 + lastWkDay];
+                            if(String(val).includes('T')) { val = new Date(val); val = val.getFullYear()<2000 ? String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0') : (val.getMonth()+1)+'-'+val.getDate(); }
+                            inp.value = val ? val : "休";
+                        } else { inp.value = "休"; }
                         handleShiftChange(inp);
                     });
                     Swal.fire('已套用', '請確認無誤後點擊「儲存排班」', 'success');
@@ -466,11 +494,11 @@
                 laborIns: document.getElementById('empLaborIns').value, healthIns: document.getElementById('empHealthIns').value, dependents: document.getElementById('empDependents').value, phone: document.getElementById('empPhone').value, address: document.getElementById('empAddress').value
             };
             if(!payload.name) return Swal.fire('提示', '姓名必填寫！', 'warning'); Swal.fire({title: '儲存中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-            try { const res = await fetchApi(payload); if(res.status === 'success') { Swal.fire('成功', '已儲存！', 'success'); loadData(); clearForm(); } } catch(e) {}
+            try { const res = await fetchApi(payload); if(res.status === 'success') { Swal.fire('成功', '已儲存！', 'success'); loadData(); clearForm(); } else { Swal.fire('失敗', res.msg, 'error'); } } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
         async function deleteEmployee(empName) {
             if(!confirm(`確定徹底刪除【${empName}】的資料嗎？`)) return; Swal.fire({title: '刪除中...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-            try { const res = await fetchApi({ action: 'deleteEmployee', name: empName }); if(res.status === 'success') { Swal.fire('已刪除', res.msg, 'success'); loadData(); clearForm(); } } catch(e) {}
+            try { const res = await fetchApi({ action: 'deleteEmployee', name: empName }); if(res.status === 'success') { Swal.fire('已刪除', res.msg, 'success'); loadData(); clearForm(); } else { Swal.fire('失敗', res.msg, 'error'); } } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
         function renderEmployees() {
             let html = ''; let displayEmps = globalData.employees; if(currentUser.role === '店長' || currentUser.role === '副店長') displayEmps = displayEmps.filter(e => e[1] === currentUser.store);
