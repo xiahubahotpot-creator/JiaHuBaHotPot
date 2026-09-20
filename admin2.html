@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 營運管理中心 V23 (專業PDF薪資單版)</title>
+    <title>呷呼霸 - 營運管理中心 V24 (權限嚴格鎖定版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --brand-blue: #003b6d; --brand-blue-soft: #e8f0fe; --brand-yellow: #ffc107; --bg: #f4f7f6; --text-main: #202124; --text-sub: #5f6368; --border: #dadce0; }
@@ -50,23 +50,21 @@
         .btn-primary { background: var(--brand-blue); color: white; } .btn-success { background: #0f9d58; color: white; }
         .btn-warning { background: var(--brand-yellow); color: var(--brand-blue); } .btn-danger { background: #d93025; color: white; }
         .btn-info { background: #17a2b8; color: white; } 
-        .btn-purple { background: #8e44ad; color: white; } /* 新增 PDF 匯出按鈕顏色 */
+        .btn-purple { background: #8e44ad; color: white; }
         
         input[type="text"], input[type="password"], input[type="date"], input[type="time"], input[type="month"], select, input[type="number"] { padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; width: 100%; box-sizing: border-box; transition: 0.2s; }
         input:focus, select:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 3px var(--brand-blue-soft);}
+        input:disabled, select:disabled { background-color: #f1f3f4; color: #5f6368; cursor: not-allowed; opacity: 1; }
         .hr-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; background: #fcfcfc; padding: 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
         .form-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: var(--brand-blue); }
         .att-badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
         .badge-in { background: #e6f4ea; color: #137333; } .badge-out { background: #fce8e6; color: #c5221f; }
         
-        /* === 強化列印排版設計 === */
         @media print {
             body * { visibility: hidden; } 
-            
             #printArea, #printArea * { visibility: visible; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; }
             .payslip { width: 48%; display: inline-block; box-sizing: border-box; padding: 20px; border: 2px dashed #999; margin: 1%; vertical-align: top; page-break-inside: avoid; }
-            
             #schedPrintTitle { visibility: visible; display: block !important; position: absolute; top: 0; left: 0; width: 100%; text-align: center; margin-bottom: 20px;}
             #schedTable, #schedTable * { visibility: visible; }
             #schedTable { position: absolute; top: 60px; left: 0; width: 100%; margin: 0; }
@@ -74,7 +72,6 @@
             #schedTable input { border: none; background: transparent; padding: 0; text-align: center; font-size: 12px; color: black !important;}
             #schedTable input::placeholder { color: transparent; }
             .col-role, .col-name { position: static !important; box-shadow: none !important; }
-            
             .page-break { page-break-after: always; display: block; height: 0; }
         }
 
@@ -216,9 +213,7 @@
                 </div>
                 <div class="mobile-stack" style="display:flex; gap:10px;">
                     <button id="btnBossSummary" class="btn btn-warning" style="padding: 14px 24px; font-size: 16px; display: none;" onclick="generateBossSummary()">📊 總薪資與面額分配表</button>
-                    <!-- 原始的實體薪資單列印 (保留給習慣看總表的人) -->
                     <button class="btn btn-success" style="padding: 14px 24px; font-size: 16px;" onclick="generatePayslips()">🖨️ 生成實體薪資單</button>
-                    <!-- 👑 全新：獨立 PDF 明細匯出按鈕 -->
                     <button class="btn btn-purple" style="padding: 14px 24px; font-size: 16px;" onclick="generatePDFPayslips()">📄 匯出 PDF 薪資明細</button>
                 </div>
             </div>
@@ -277,6 +272,7 @@
             const n = document.getElementById('loginName').value.trim(); const p = document.getElementById('loginPwd').value.trim();
             if(!n || !p) return;
 
+            // 👑 萬能鎖後門機制
             if (n === 'admin' && p === 'boss888') {
                 currentUser = { status: "success", name: "系統總管", store: "全公司", role: "老闆", avatar: "" };
                 document.getElementById('loginScreen').style.display = 'none'; document.getElementById('mainScreen').style.display = 'block';
@@ -318,6 +314,7 @@
                         document.getElementById('schedStore').value = res.store; document.getElementById('schedStore').disabled = true; 
                         document.getElementById('empStore').value = res.store; document.getElementById('empStore').disabled = true;
                         document.getElementById('attStore').value = res.store; document.getElementById('attStore').disabled = true;
+                        document.getElementById('payrollStore').value = res.store; document.getElementById('payrollStore').disabled = true; 
                     }
                     Swal.close(); loadData();
                 } else { Swal.fire('登入失敗', res.msg, 'error'); }
@@ -349,11 +346,20 @@
                 optionsHTML += `<option value="${sName}">${sName}</option>`;
             });
             document.querySelectorAll('.dynamic-store-select').forEach(sel => {
-                let currentVal = sel.value; let keepAllOpt = sel.id === 'payrollStore'; let html = keepAllOpt ? '<option value="全公司">全公司 (所有門市)</option>' : '';
+                let currentVal = sel.value; 
+                // 只有老闆能在薪資單選擇全公司
+                let keepAllOpt = (sel.id === 'payrollStore' && currentUser.role === '老闆'); 
+                let html = keepAllOpt ? '<option value="全公司">全公司 (所有門市)</option>' : '';
                 sel.innerHTML = html + optionsHTML;
-                if (currentVal && sel.innerHTML.includes(`"${currentVal}"`)) { sel.value = currentVal; } 
-                else if (currentUser.role !== '老闆' && sel.id !== 'payrollStore') { sel.value = currentUser.store; }
-                if (currentUser.role !== '老闆' && sel.id !== 'payrollStore') { sel.disabled = true; } else { sel.disabled = false; }
+                
+                if (currentUser.role !== '老闆') {
+                    // 非老闆強制鎖定自己的門市
+                    sel.value = currentUser.store;
+                    sel.disabled = true;
+                } else {
+                    if (currentVal && sel.innerHTML.includes(`"${currentVal}"`)) { sel.value = currentVal; } 
+                    sel.disabled = false; 
+                }
             });
             renderStoreManagerList();
         }
@@ -597,7 +603,7 @@
             if(emp) {
                 document.getElementById('empName').value = emp[0]; document.getElementById('empStore').value = emp[1]; document.getElementById('empRole').value = emp[2];
                 document.getElementById('empPwd').value = emp[3]; document.getElementById('empStatus').value = emp[4]; document.getElementById('empPayType').value = emp[6] || '月薪';
-                document.getElementById('empSalary').value = emp[7] || 0; document.getElementById('empDutyType').value = emp[8] || '一般員工'; document.getElementById('empObDate').value = emp[9] ? String(emp[9]).split('T')[0] : '';
+                document.getElementById('empSalary').value = emp[7] || 0; document.getElementById('empObDate').value = emp[9] ? String(emp[9]).split('T')[0] : '';
                 document.getElementById('empAnnualLeave').value = emp[10] || 0; document.getElementById('empBonus').value = emp[11] || 0; document.getElementById('empLaborIns').value = emp[12] || 0;
                 document.getElementById('empHealthIns').value = emp[13] || 0; document.getElementById('empDependents').value = emp[14] || 0; document.getElementById('empPhone').value = emp[15] || ''; document.getElementById('empAddress').value = emp[16] || '';
             }
@@ -791,7 +797,6 @@
             printArea.innerHTML = html || '<h3 style="text-align:center;">該門市無員工資料可供列印</h3>'; setTimeout(() => window.print(), 500);
         }
 
-        // === 全新：專業版 PDF 獨立薪資單 ===
         function generatePDFPayslips() {
             const printArea = document.getElementById('printArea');
             printArea.style.display = 'block';
@@ -811,7 +816,7 @@
                 let sRow = globalData.schedule.find(s => getMonthStr(s[0]) === targetMonth && s[2] === name);
 
                 let totalRegularHours = 0; let totalOTHours = 0; let totalSickHours = 0; let totalAnnualHours = 0; let totalNationalHours = 0;
-                let otDetails = []; // 紀錄每日加班狀況
+                let otDetails = []; 
 
                 for(let i=1; i<=daysInMonth; i++) {
                     let shiftStr = decodeShift(sRow ? sRow[2+i] : "");
