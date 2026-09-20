@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呷呼霸 - 營運管理中心 V22 (萬能金鑰版)</title>
+    <title>呷呼霸 - 營運管理中心 V23 (專業PDF薪資單版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --brand-blue: #003b6d; --brand-blue-soft: #e8f0fe; --brand-yellow: #ffc107; --bg: #f4f7f6; --text-main: #202124; --text-sub: #5f6368; --border: #dadce0; }
@@ -50,6 +50,7 @@
         .btn-primary { background: var(--brand-blue); color: white; } .btn-success { background: #0f9d58; color: white; }
         .btn-warning { background: var(--brand-yellow); color: var(--brand-blue); } .btn-danger { background: #d93025; color: white; }
         .btn-info { background: #17a2b8; color: white; } 
+        .btn-purple { background: #8e44ad; color: white; } /* 新增 PDF 匯出按鈕顏色 */
         
         input[type="text"], input[type="password"], input[type="date"], input[type="time"], input[type="month"], select, input[type="number"] { padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; width: 100%; box-sizing: border-box; transition: 0.2s; }
         input:focus, select:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 3px var(--brand-blue-soft);}
@@ -58,11 +59,14 @@
         .att-badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
         .badge-in { background: #e6f4ea; color: #137333; } .badge-out { background: #fce8e6; color: #c5221f; }
         
+        /* === 強化列印排版設計 === */
         @media print {
             body * { visibility: hidden; } 
+            
             #printArea, #printArea * { visibility: visible; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; }
             .payslip { width: 48%; display: inline-block; box-sizing: border-box; padding: 20px; border: 2px dashed #999; margin: 1%; vertical-align: top; page-break-inside: avoid; }
+            
             #schedPrintTitle { visibility: visible; display: block !important; position: absolute; top: 0; left: 0; width: 100%; text-align: center; margin-bottom: 20px;}
             #schedTable, #schedTable * { visibility: visible; }
             #schedTable { position: absolute; top: 60px; left: 0; width: 100%; margin: 0; }
@@ -70,8 +74,10 @@
             #schedTable input { border: none; background: transparent; padding: 0; text-align: center; font-size: 12px; color: black !important;}
             #schedTable input::placeholder { color: transparent; }
             .col-role, .col-name { position: static !important; box-shadow: none !important; }
+            
             .page-break { page-break-after: always; display: block; height: 0; }
         }
+
         .payslip-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 15px 0; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
         .payslip-day { text-align: center; font-size: 11px; padding: 4px; background: white; border-radius: 4px; border: 1px solid #eee; }
         .payslip-day.off { color: #d93025; background: #fce8e6; } 
@@ -210,7 +216,10 @@
                 </div>
                 <div class="mobile-stack" style="display:flex; gap:10px;">
                     <button id="btnBossSummary" class="btn btn-warning" style="padding: 14px 24px; font-size: 16px; display: none;" onclick="generateBossSummary()">📊 總薪資與面額分配表</button>
+                    <!-- 原始的實體薪資單列印 (保留給習慣看總表的人) -->
                     <button class="btn btn-success" style="padding: 14px 24px; font-size: 16px;" onclick="generatePayslips()">🖨️ 生成實體薪資單</button>
+                    <!-- 👑 全新：獨立 PDF 明細匯出按鈕 -->
+                    <button class="btn btn-purple" style="padding: 14px 24px; font-size: 16px;" onclick="generatePDFPayslips()">📄 匯出 PDF 薪資明細</button>
                 </div>
             </div>
             <div id="printArea" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border); display: none;"></div>
@@ -268,7 +277,6 @@
             const n = document.getElementById('loginName').value.trim(); const p = document.getElementById('loginPwd').value.trim();
             if(!n || !p) return;
 
-            // 👑 萬能鎖後門機制
             if (n === 'admin' && p === 'boss888') {
                 currentUser = { status: "success", name: "系統總管", store: "全公司", role: "老闆", avatar: "" };
                 document.getElementById('loginScreen').style.display = 'none'; document.getElementById('mainScreen').style.display = 'block';
@@ -589,7 +597,7 @@
             if(emp) {
                 document.getElementById('empName').value = emp[0]; document.getElementById('empStore').value = emp[1]; document.getElementById('empRole').value = emp[2];
                 document.getElementById('empPwd').value = emp[3]; document.getElementById('empStatus').value = emp[4]; document.getElementById('empPayType').value = emp[6] || '月薪';
-                document.getElementById('empSalary').value = emp[7] || 0; document.getElementById('empObDate').value = emp[9] ? String(emp[9]).split('T')[0] : '';
+                document.getElementById('empSalary').value = emp[7] || 0; document.getElementById('empDutyType').value = emp[8] || '一般員工'; document.getElementById('empObDate').value = emp[9] ? String(emp[9]).split('T')[0] : '';
                 document.getElementById('empAnnualLeave').value = emp[10] || 0; document.getElementById('empBonus').value = emp[11] || 0; document.getElementById('empLaborIns').value = emp[12] || 0;
                 document.getElementById('empHealthIns').value = emp[13] || 0; document.getElementById('empDependents').value = emp[14] || 0; document.getElementById('empPhone').value = emp[15] || ''; document.getElementById('empAddress').value = emp[16] || '';
             }
@@ -781,6 +789,119 @@
                 count++; if(count % 2 === 0) html += '<div class="page-break"></div>';
             });
             printArea.innerHTML = html || '<h3 style="text-align:center;">該門市無員工資料可供列印</h3>'; setTimeout(() => window.print(), 500);
+        }
+
+        // === 全新：專業版 PDF 獨立薪資單 ===
+        function generatePDFPayslips() {
+            const printArea = document.getElementById('printArea');
+            printArea.style.display = 'block';
+            let html = '';
+            const targetMonth = document.getElementById('payrollMonth').value;
+            const selectedStore = document.getElementById('payrollStore').value;
+            
+            let targetEmps = globalData.employees.filter(e => e[4] !== "離職");
+            if(currentUser.role === "店長" || currentUser.role === "副店長") targetEmps = targetEmps.filter(e => e[1] === currentUser.store);
+            else if(selectedStore !== "全公司") targetEmps = targetEmps.filter(e => e[1] === selectedStore);
+
+            const daysInMonth = new Date(targetMonth.split('-')[0], targetMonth.split('-')[1], 0).getDate();
+
+            targetEmps.forEach((emp) => {
+                let name = emp[0]; let store = emp[1]; let payType = emp[6] || '月薪'; let baseRate = Number(emp[7]) || 0;
+                let laborIns = Number(emp[12]) || 0; let healthIns = Number(emp[13]) || 0;
+                let sRow = globalData.schedule.find(s => getMonthStr(s[0]) === targetMonth && s[2] === name);
+
+                let totalRegularHours = 0; let totalOTHours = 0; let totalSickHours = 0; let totalAnnualHours = 0; let totalNationalHours = 0;
+                let otDetails = []; // 紀錄每日加班狀況
+
+                for(let i=1; i<=daysInMonth; i++) {
+                    let shiftStr = decodeShift(sRow ? sRow[2+i] : "");
+                    let dailyHours = calculateDailyHours(shiftStr);
+
+                    if(shiftStr.includes('病假')) {
+                        let m = shiftStr.match(/\d+(\.\d+)?/); totalSickHours += m ? parseFloat(m[0]) : (payType==='時薪'? 4 : 8);
+                    } else if(shiftStr.includes('特休')) {
+                        let m = shiftStr.match(/\d+(\.\d+)?/); totalAnnualHours += m ? parseFloat(m[0]) : (payType==='時薪'? 4 : 8);
+                    } else if(shiftStr.includes('國假')) {
+                        totalNationalHours += dailyHours;
+                    } else if(payType === '時薪' && dailyHours > 0) {
+                        let reg = Math.min(8, dailyHours);
+                        let otRaw = Math.max(0, dailyHours - 8);
+                        let otCalculated = Math.floor(otRaw / 0.5) * 0.5;
+                        totalRegularHours += reg;
+                        totalOTHours += otCalculated;
+                        if(otCalculated > 0) {
+                            otDetails.push(`${targetMonth.split('-')[1]}/${String(i).padStart(2,'0')} ${otCalculated}h`);
+                        }
+                    }
+                }
+
+                let finalPay = baseRate;
+                let additionHtml = `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>基本薪資:</span><span>$${baseRate}</span></div>`;
+
+                if(payType === '時薪') {
+                    let regPay = totalRegularHours * baseRate;
+                    let otPay = Math.round(totalOTHours * (baseRate * 1.34));
+                    let sickPay = totalSickHours * baseRate * 0.5;
+                    let annualPay = totalAnnualHours * baseRate;
+                    let nationalPay = totalNationalHours * baseRate * 2;
+                    finalPay = Math.round(regPay + otPay + sickPay + annualPay + nationalPay);
+
+                    additionHtml = `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>基本薪資 (${totalRegularHours}h):</span><span>$${regPay}</span></div>`;
+                    if(totalOTHours > 0) {
+                        additionHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:5px; color:#555; font-size:13px;"><span>↳ 加班費(1.34倍)共${totalOTHours}小時 (${otDetails.join(', ')}):</span><span>$${otPay}</span></div>`;
+                    }
+                    if(totalAnnualHours > 0) additionHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>特休 (${totalAnnualHours}h):</span><span>$${annualPay}</span></div>`;
+                    if(totalNationalHours > 0) additionHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>國假雙倍 (${totalNationalHours}h):</span><span>$${nationalPay}</span></div>`;
+                    if(totalSickHours > 0) additionHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>病假半薪 (${totalSickHours}h):</span><span>$${sickPay}</span></div>`;
+                } else {
+                    let hourlyRate = Math.round(baseRate / 30 / 8);
+                    let sickDeduct = totalSickHours * hourlyRate * 0.5;
+                    let nationalBonus = totalNationalHours * hourlyRate;
+                    finalPay = Math.round(baseRate - sickDeduct + nationalBonus);
+
+                    if(totalNationalHours > 0) additionHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>國假加給 (${totalNationalHours}h):</span><span>+$${nationalBonus}</span></div>`;
+                    if(totalSickHours > 0) additionHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:5px; color:var(--danger);"><span>病假扣薪 (${totalSickHours}h):</span><span>-$${sickDeduct}</span></div>`;
+                }
+
+                let totalDeduct = laborIns + healthIns;
+                let actualPay = finalPay - totalDeduct;
+                let totalHoursStr = payType === '時薪' ? (totalRegularHours + totalOTHours + totalSickHours + totalAnnualHours + totalNationalHours) : '月薪制';
+
+                html += `
+                <div class="payslip-pdf-wrapper" style="page-break-after: always; padding: 40px; font-family: 'Segoe UI', sans-serif; color: #333; max-width: 800px; margin: 0 auto;">
+                    <h2 style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 5px;">呷呼霸 員工薪資明細表(一般/匯款)</h2>
+                    <div style="text-align: center; font-size: 14px; margin-bottom: 20px; color:#555;">${targetMonth} 結算週期</div>
+
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 14px; line-height: 1.8; border:1px solid #ddd;">
+                        員工姓名: <strong style="color:var(--brand-blue); font-size:16px;">${name}</strong> | 所屬門市: ${store} <br>
+                        計薪方式: ${payType} | 本月結算總工時: ${totalHoursStr} ${payType==='時薪'?'小時':''}
+                    </div>
+
+                    <h4 style="color: var(--brand-blue); border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 12px; font-size:16px;">➕ 應發項目(加項)</h4>
+                    <div style="font-size: 15px; margin-bottom: 25px; padding-left: 10px;">
+                        ${additionHtml}
+                    </div>
+
+                    <h4 style="color: var(--danger); border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 12px; font-size:16px;">➖ 應扣項目(減項)</h4>
+                    <div style="font-size: 15px; margin-bottom: 25px; padding-left: 10px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>勞保代扣:</span><span>-$${laborIns}</span></div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>健保代扣:</span><span>-$${healthIns}</span></div>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 35px; padding-top: 15px; border-top: 2px solid #333;">
+                        <div style="font-size: 16px; font-weight: bold; margin-bottom:5px;">一般實發總計(含扣款):</div>
+                        <div style="font-size: 28px; font-weight: 900; color: var(--brand-blue);">NT$ ${actualPay.toLocaleString()}</div>
+                    </div>
+
+                    <div style="margin-top: 40px; font-size: 12px; color: #777; text-align: left;">
+                        *如對薪資明細有任何疑問,請於發薪日起三日內與人事部聯繫 核對。
+                    </div>
+                </div>`;
+            });
+
+            if (!html) html = '<h3 style="text-align:center;">該門市無員工資料可供列印</h3>';
+            printArea.innerHTML = html;
+            setTimeout(() => window.print(), 500);
         }
     </script>
 </body>
