@@ -919,5 +919,92 @@
             setTimeout(() => window.print(), 500);
         }
     </script>
+    <!-- ========================================== -->
+<!-- 老闆專屬外掛升級包：拖曳 / Excel匯出 / 預設PT -->
+
+<!-- 請將下方兩行網址中的「點」替換為真實的「.」字元 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+window.addEventListener('load', function() {
+    // 1. 覆蓋原本的清空表單功能，預設改為 PT
+    if (typeof clearForm === 'function') {
+        var originalClear = clearForm;
+        clearForm = function() {
+            originalClear();
+            var roleSel = document.getElementById('empRole');
+            if(roleSel) roleSel.value = 'PT';
+        };
+    }
+
+    // 2. 自動加入匯出 Excel 按鈕
+    var printBtn = document.querySelector('button[onclick="printSchedule()"]');
+    if (printBtn && !document.getElementById('btnExportExcel')) {
+        var excelBtn = document.createElement('button');
+        excelBtn.id = 'btnExportExcel';
+        excelBtn.className = 'btn';
+        excelBtn.style.cssText = 'background: #107c41; color: white; margin-right: 10px; padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;';
+        excelBtn.innerHTML = '匯出 Excel';
+        excelBtn.onclick = function() {
+            var s = document.getElementById('schedStore').value;
+            var d = document.getElementById('schedWeekDate').value;
+            if(!d || !s) return alert('請先選擇日期與門市');
+            var ws_data = [];
+            var headers = [];
+            document.querySelectorAll('#schedHead th').forEach(th => headers.push(th.innerText.replace(/\n/g, ' ')));
+            ws_data.push(headers);
+            
+            document.querySelectorAll('#schedBody tr').forEach(tr => {
+                var row = [];
+                var roleCell = tr.querySelector('td');
+                var roleInput = roleCell.querySelector('input');
+                row.push(roleInput ? roleInput.value : roleCell.innerText.trim());
+                row.push(tr.querySelectorAll('td')[1].innerText.trim());
+                tr.querySelectorAll('.shift-input').forEach(inp => row.push(inp.value));
+                ws_data.push(row);
+            });
+            
+            document.querySelectorAll('#schedFoot tr').forEach(tr => {
+                var row = [];
+                var tds = tr.querySelectorAll('td');
+                row.push(tds[0].innerText.trim());
+                row.push(""); 
+                for(var i=1; i<tds.length; i++) { row.push(tds[i].innerText.trim()); }
+                ws_data.push(row);
+            });
+
+            var wb = XLSX.utils.book_new();
+            var ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "週班表");
+            XLSX.writeFile(wb, "呷呼霸_" + s + "_排班表_" + d + ".xlsx");
+        };
+        printBtn.parentNode.insertBefore(excelBtn, printBtn);
+    }
+
+    // 3. 攔截班表渲染，加入拖曳排序
+    if (typeof renderWeeklySchedule === 'function') {
+        var originalRender = renderWeeklySchedule;
+        renderWeeklySchedule = function() {
+            originalRender(); 
+            setTimeout(function() {
+                var tbody = document.getElementById('schedBody');
+                if(window.mySortable) window.mySortable.destroy();
+                window.mySortable = new Sortable(tbody, {
+                    animation: 150,
+                    handle: 'td:first-child', 
+                    ghostClass: 'sortable-ghost'
+                });
+                document.querySelectorAll('#schedBody td:first-child').forEach(td => {
+                    td.style.cursor = 'grab';
+                    td.style.background = '#fffcf0';
+                });
+            }, 300);
+        };
+    }
+});
+</script>
+<!-- ========================================== -->
+
 </body>
 </html>
