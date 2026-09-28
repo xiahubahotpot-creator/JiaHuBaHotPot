@@ -485,9 +485,9 @@
                     
                     let textClass = 'shift-input is-work';
                     if(!val || val === '休' || val === '排休') textClass = 'shift-input is-off';
-                    else if(val.includes('病假')) textClass = 'shift-input is-sick';
-                    else if(val.includes('特休')) textClass = 'shift-input is-annual';
-                    else if(val.includes('國假')) textClass = 'shift-input is-national';
+                    else if(String(val).includes('病假')) textClass = 'shift-input is-sick';
+                    else if(String(val).includes('特休')) textClass = 'shift-input is-annual';
+                    else if(String(val).includes('國假')) textClass = 'shift-input is-national';
 
                     bodyHtml += `<td><input type="text" class="${textClass}" value="${!val ? '休' : val}" data-emp="${name}" data-month="${monthStr}" data-day="${dd}" oninput="handleShiftChange(this)" ondblclick="this.value='休'; handleShiftChange(this)"></td>`;
                 });
