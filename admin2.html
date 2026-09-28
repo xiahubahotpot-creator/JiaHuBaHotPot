@@ -538,7 +538,7 @@
                     let res = await fetchApi({ action: 'saveSchedule', month: m, store: store, scheduleData: payloadData });
                     if(res.status !== 'success') throw new Error(res.msg);
                 }
-                Swal.fire('成功', '排班表儲存成功！', 'success'); loadData(); 
+                Swal.fire('成功', '排班表儲存成功！', 'success'); 
             } catch(e) { Swal.fire('錯誤', e.message, 'error'); }
         }
 
